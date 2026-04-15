@@ -1,0 +1,88 @@
+# =========================
+# General
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+
+# =========================
+# Frontend (React)
+# =========================
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# Environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Coverage
+frontend/coverage/
+frontend/*.lcov
+
+# =========================
+# Backend (Spring Boot)
+# =========================
+backend/target/
+backend/build/
+backend/out/
+
+# Maven
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+backend/.gradle/
+backend/gradle-app.setting
+!backend/gradle/wrapper/gradle-wrapper.jar
+
+# Compiled files
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+
+# Logs
+backend/logs/
+backend/*.log
+
+# Application config (optional – adjust as needed)
+backend/application.properties
+backend/application.yml
+
+# =========================
+# IDEs & Editors
+# =========================
+.idea/
+*.iml
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# =========================
+# OS / Misc
+# =========================
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# Root env safeguard
+# =========================
+.env*
+!.env.example
