@@ -7,6 +7,7 @@ import AddProduct from "./components/AddProduct";
 import Product from "./components/Product";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "./Context/Context";
+import { ToastProvider } from "./components/Toast";
 import UpdateProduct from "./components/UpdateProduct";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -38,7 +39,8 @@ function App() {
 
   return (
     <AppProvider>
-      <BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
         <Navbar onSelectCategory={handleCategorySelect}
          />
         <Routes>
@@ -56,6 +58,7 @@ function App() {
           <Route path="/product/update/:id" element={<UpdateProduct />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AppProvider>
   );
 }

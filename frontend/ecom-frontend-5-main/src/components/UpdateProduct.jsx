@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "../axios";
+import { useToast } from "./Toast";
 
 const UpdateProduct = () => {
   const { id } = useParams();
   const [product, setProduct] = useState({});
-  const [image, setImage] = useState();
+  const [image, setImage] = useState(null);
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [updateProduct, setUpdateProduct] = useState({
     id: null,
     name: "",
@@ -26,13 +29,6 @@ const UpdateProduct = () => {
         );
 
         setProduct(response.data);
-      
-        const responseImage = await axios.get(
-          `http://localhost:8080/api/product/${id}/image`,
-          { responseType: "blob" }
-        );
-       const imageFile = await converUrlToFile(responseImage.data,response.data.imageName)
-        setImage(imageFile);     
         setUpdateProduct(response.data);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -42,44 +38,47 @@ const UpdateProduct = () => {
     fetchProduct();
   }, [id]);
 
-  useEffect(() => {
-    console.log("image Updated", image);
-  }, [image]);
 
 
-
-  const converUrlToFile = async(blobData, fileName) => {
-    const file = new File([blobData], fileName, { type: blobData.type });
-    return file;
-  }
- 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log("images", image)
-    console.log("productsdfsfsf", updateProduct)
-    const updatedProduct = new FormData();
-    updatedProduct.append("imageFile", image);
-    updatedProduct.append(
+    
+    const productData = {
+      name: updateProduct.name || null,
+      brand: updateProduct.brand || null,
+      description: updateProduct.description || null,
+      price: updateProduct.price ? parseFloat(updateProduct.price) : 0,
+      category: updateProduct.category || null,
+      stockQuantity: updateProduct.stockQuantity ? parseInt(updateProduct.stockQuantity) : 0,
+      releaseDate: updateProduct.releaseDate || null,
+      productAvailable: updateProduct.productAvailable,
+      imageUrl: product.imageUrl || null,
+      deleteHash: product.deleteHash || null,
+    };
+    
+    const formData = new FormData();
+    if (image) {
+      formData.append("imageFile", image);
+    }
+    formData.append(
       "product",
-      new Blob([JSON.stringify(updateProduct)], { type: "application/json" })
+      new Blob([JSON.stringify(productData)], { type: "application/json" })
     );
-  
 
-  console.log("formData : ", updatedProduct)
     axios
-      .put(`http://localhost:8080/api/product/${id}`, updatedProduct, {
+      .put(`/product/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
       .then((response) => {
-        console.log("Product updated successfully:", updatedProduct);
-        alert("Product updated successfully!");
+        console.log("Product updated successfully:", response.data);
+        showToast("Product updated successfully!");
+        navigate("/");
       })
       .catch((error) => {
         console.error("Error updating product:", error);
-        console.log("product unsuccessfull update",updateProduct)
-        alert("Failed to update product. Please try again.");
+        showToast("Failed to update product");
       });
   };
  
@@ -196,17 +195,32 @@ const UpdateProduct = () => {
             <label className="form-label">
               <h6>Image</h6>
             </label>
-            <img
-              src={image ? URL.createObjectURL(image) : "Image unavailable"}
-              alt={product.imageName}
-              style={{
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                style={{
+                  width: "100%",
+                  height: "180px",
+                  objectFit: "cover",
+                  padding: "5px",
+                  margin: "0",
+                }}
+              />
+            ) : (
+              <div style={{
                 width: "100%",
                 height: "180px",
-                objectFit: "cover",
-                padding: "5px",
-                margin: "0",
-              }}
-            />
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#f0f0f0",
+                border: "1px solid #ddd",
+                marginBottom: "10px"
+              }}>
+                No Image Available
+              </div>
+            )}
             <input
               className="form-control"
               type="file"

@@ -1,7 +1,13 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../axios";
+import AppContext from "../Context/Context";
+import { useToast } from "./Toast";
 
 const AddProduct = () => {
+  const { refreshData } = useContext(AppContext);
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [product, setProduct] = useState({
     name: "",
     brand: "",
@@ -26,27 +32,44 @@ const AddProduct = () => {
 
   const submitHandler = (event) => {
     event.preventDefault();
+    
+    const productData = {
+      name: product.name || null,
+      brand: product.brand || null,
+      description: product.description || null,
+      price: product.price ? parseFloat(product.price) : 0,
+      category: product.category || null,
+      stockQuantity: product.stockQuantity ? parseInt(product.stockQuantity) : 0,
+      releaseDate: product.releaseDate || null,
+      productAvailable: product.productAvailable,
+      imageUrl: null,
+      deleteHash: null,
+    };
+    
     const formData = new FormData();
-    formData.append("imageFile", image);
+    if (image) {
+      formData.append("imageFile", image);
+    }
     formData.append(
       "product",
-      new Blob([JSON.stringify(product)], { type: "application/json" })
+      new Blob([JSON.stringify(productData)], { type: "application/json" })
     );
 
     axios
-      .post("http://localhost:8080/api/product", formData, {
+      .post("/product", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
       .then((response) => {
         console.log("Product added successfully:", response.data);
-        alert("Product added successfully");
+        refreshData();
+        navigate("/");
       })
       .catch((error) => {
         console.log("Product : ", product)
         console.error("Error adding product:", error);
-        alert("Error adding product");
+        showToast("Error adding product");
       });
   };
 

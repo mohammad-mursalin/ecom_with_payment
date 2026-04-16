@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import AppContext from "../Context/Context";
+import { useToast } from "./Toast";
 import unplugged from "../assets/unplugged.png"
 
 const Home = ({ selectedCategory }) => {
   const { data, isError, addToCart, refreshData } = useContext(AppContext);
-  const [products, setProducts] = useState([]);
+  const { showToast } = useToast();
   const [isDataFetched, setIsDataFetched] = useState(false);
 
   useEffect(() => {
@@ -16,39 +16,6 @@ const Home = ({ selectedCategory }) => {
     }
   }, [refreshData, isDataFetched]);
 
-  useEffect(() => {
-    if (data && data.length > 0) {
-      const fetchImagesAndUpdateProducts = async () => {
-        const updatedProducts = await Promise.all(
-          data.map(async (product) => {
-            try {
-              const response = await axios.get(
-                `http://localhost:8080/api/product/${product.id}/image`,
-                { responseType: "blob" }
-              );
-              const imageUrl = URL.createObjectURL(response.data);
-              return { ...product, imageUrl };
-            } catch (error) {
-              console.error(
-                "Error fetching image for product ID:",
-                product.id,
-                error
-              );
-              return { ...product, imageUrl: "placeholder-image-url" };
-            }
-          })
-        );
-        setProducts(updatedProducts);
-      };
-
-      fetchImagesAndUpdateProducts();
-    }
-  }, [data]);
-
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : products;
-
   if (isError) {
     return (
       <h2 className="text-center" style={{ padding: "18rem" }}>
@@ -56,6 +23,18 @@ const Home = ({ selectedCategory }) => {
       </h2>
     );
   }
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <h2 className="text-center" style={{ padding: "18rem" }}>
+        No Products Available
+      </h2>
+    );
+  }
+
+  const filteredProducts = selectedCategory
+    ? data.filter((product) => product && product.category === selectedCategory)
+    : data;
   return (
     <>
       <div
@@ -81,6 +60,7 @@ const Home = ({ selectedCategory }) => {
           </h2>
         ) : (
           filteredProducts.map((product) => {
+            if (!product) return null;
             const { id, brand, name, price, productAvailable, imageUrl } =
               product;
             const cardStyle = {
@@ -110,18 +90,20 @@ const Home = ({ selectedCategory }) => {
                   to={`/product/${id}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <img
-                    src={imageUrl}
-                    alt={name}
-                    style={{
-                      width: "100%",
-                      height: "150px", 
-                      objectFit: "cover",  
-                      padding: "5px",
-                      margin: "0",
-                      borderRadius: "10px 10px 10px 10px", 
-                    }}
-                  />
+                  {imageUrl && (
+                    <img
+                      src={imageUrl}
+                      alt={name || 'Product'}
+                      style={{
+                        width: "100%",
+                        height: "150px", 
+                        objectFit: "cover",  
+                        padding: "5px",
+                        margin: "0",
+                        borderRadius: "10px 10px 10px 10px", 
+                      }}
+                    />
+                  )}
                   <div
                     className="card-body"
                     style={{
@@ -135,15 +117,15 @@ const Home = ({ selectedCategory }) => {
                     <div>
                       <h5
                         className="card-title"
-                        style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}
+                        style={{ margin: "0 10px 0 0", fontSize: "1.2rem" }}
                       >
-                        {name.toUpperCase()}
+                        {(name || 'Unnamed Product').toUpperCase()}
                       </h5>
                       <i
                         className="card-brand"
                         style={{ fontStyle: "italic", fontSize: "0.8rem" }}
                       >
-                        {"~ " + brand}
+                        {"~ " + (brand || 'Unknown')}
                       </i>
                     </div>
                     <hr className="hr-line" style={{ margin: "10px 0" }} />
@@ -153,7 +135,7 @@ const Home = ({ selectedCategory }) => {
                         style={{ fontWeight: "600", fontSize: "1.1rem",marginBottom:'5px' }}
                       >
                         <i class="bi bi-currency-rupee"></i>
-                        {price}
+                        {price || 0}
                       </h5>
                     </div>
                     <button
@@ -162,6 +144,7 @@ const Home = ({ selectedCategory }) => {
                       onClick={(e) => {
                         e.preventDefault();
                         addToCart(product);
+                        showToast("Product added to cart");
                       }}
                       disabled={!productAvailable}
                     >

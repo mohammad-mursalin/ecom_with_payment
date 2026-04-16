@@ -263,48 +263,37 @@ import AppContext from "../Context/Context";
 import axios from "axios";
 import CheckoutPopup from "./CheckoutPopup";
 import { Button } from 'react-bootstrap';
+import { useToast } from "./Toast";
 
 const Cart = () => {
   const { cart, removeFromCart , clearCart } = useContext(AppContext);
+  const { showToast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [cartImage, setCartImage] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const fetchImagesAndUpdateCart = async () => {
+    const fetchProductData = async () => {
       console.log("Cart", cart);
       try {
         const response = await axios.get("http://localhost:8080/api/products");
-        const backendProductIds = response.data.map((product) => product.id);
+        const backendProducts = response.data;
+        const backendProductMap = new Map(backendProducts.map(p => [p.id, p]));
 
-        const updatedCartItems = cart.filter((item) => backendProductIds.includes(item.id));
-        const cartItemsWithImages = await Promise.all(
-          updatedCartItems.map(async (item) => {
-            try {
-              const response = await axios.get(
-                `http://localhost:8080/api/product/${item.id}/image`,
-                { responseType: "blob" }
-              );
-              const imageFile = await converUrlToFile(response.data, response.data.imageName);
-              setCartImage(imageFile)
-              const imageUrl = URL.createObjectURL(response.data);
-              return { ...item, imageUrl };
-            } catch (error) {
-              console.error("Error fetching image:", error);
-              return { ...item, imageUrl: "placeholder-image-url" };
-            }
-          })
-        );
+        const updatedCartItems = cart.filter((item) => backendProductMap.has(item.id));
+        const cartItemsWithLatestData = updatedCartItems.map(item => ({
+          ...item,
+          ...backendProductMap.get(item.id)
+        }));
         console.log("cart",cart)
-        setCartItems(cartItemsWithImages);
+        setCartItems(cartItemsWithLatestData);
       } catch (error) {
         console.error("Error fetching product data:", error);
       }
     };
 
     if (cart.length) {
-      fetchImagesAndUpdateCart();
+      fetchProductData();
     }
   }, [cart]);
 
@@ -316,18 +305,13 @@ const Cart = () => {
     setTotalPrice(total);
   }, [cartItems]);
 
-  const converUrlToFile = async (blobData, fileName) => {
-    const file = new File([blobData], fileName, { type: blobData.type });
-    return file;
-  }
-
   const handleIncreaseQuantity = (itemId) => {
     const newCartItems = cartItems.map((item) => {
       if (item.id === itemId) {
         if (item.quantity < item.stockQuantity) {
           return { ...item, quantity: item.quantity + 1 };
         } else {
-          alert("Cannot add more than available stock");
+          showToast("Cannot add more than available stock");
         }
       }
       return item;
@@ -361,7 +345,6 @@ const Cart = () => {
         console.log("updated product data", updatedProductData)
   
         const cartProduct = new FormData();
-        cartProduct.append("imageFile", cartImage);
         cartProduct.append(
           "product",
           new Blob([JSON.stringify(updatedProductData)], { type: "application/json" })
@@ -407,11 +390,13 @@ const Cart = () => {
                 >
                  
                   <div>
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="cart-item-image"
-                    />
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="cart-item-image"
+                      />
+                    )}
                   </div>
                   <div className="description">
                     <span>{item.brand}</span>

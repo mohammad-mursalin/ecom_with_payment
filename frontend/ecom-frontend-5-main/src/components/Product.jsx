@@ -3,14 +3,14 @@ import { useContext, useEffect } from "react";
 import { useState } from "react";
 import AppContext from "../Context/Context";
 import axios from "../axios";
-import UpdateProduct from "./UpdateProduct";
+import { useToast } from "./Toast";
 const Product = () => {
   const { id } = useParams();
   const { data, addToCart, removeFromCart, cart, refreshData } =
     useContext(AppContext);
   const [product, setProduct] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -19,20 +19,9 @@ const Product = () => {
           `http://localhost:8080/api/product/${id}`
         );
         setProduct(response.data);
-        if (response.data.imageName) {
-          fetchImage();
-        }
       } catch (error) {
         console.error("Error fetching product:", error);
       }
-    };
-
-    const fetchImage = async () => {
-      const response = await axios.get(
-        `http://localhost:8080/api/product/${id}/image`,
-        { responseType: "blob" }
-      );
-      setImageUrl(URL.createObjectURL(response.data));
     };
 
     fetchProduct();
@@ -40,14 +29,15 @@ const Product = () => {
 
   const deleteProduct = async () => {
     try {
-      await axios.delete(`http://localhost:8080/api/product/${id}`);
+      await axios.delete(`/product/${id}`);
       removeFromCart(id);
       console.log("Product deleted successfully");
-      alert("Product deleted successfully");
+      showToast("Product deleted successfully");
       refreshData();
       navigate("/");
     } catch (error) {
       console.error("Error deleting product:", error);
+      showToast("Error deleting product");
     }
   };
 
@@ -57,7 +47,7 @@ const Product = () => {
 
   const handlAddToCart = () => {
     addToCart(product);
-    alert("Product added to cart");
+    showToast("Product added to cart");
   };
   if (!product) {
     return (
@@ -69,12 +59,14 @@ const Product = () => {
   return (
     <>
       <div className="containers" style={{ display: "flex" }}>
-        <img
-          className="left-column-img"
-          src={imageUrl}
-          alt={product.imageName}
-          style={{ width: "50%", height: "auto" }}
-        />
+        {product.imageUrl && (
+          <img
+            className="left-column-img"
+            src={product.imageUrl}
+            alt={product.name}
+            style={{ width: "50%", height: "auto" }}
+          />
+        )}
 
         <div className="right-column" style={{ width: "50%" }}>
           <div className="product-description">
