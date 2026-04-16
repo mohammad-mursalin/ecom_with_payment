@@ -43,7 +43,7 @@ public class ProductController {
     }
 
     @PostMapping("/product")
-    public ResponseEntity<?> addProduct(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
+    public ResponseEntity<?> addProduct(@RequestPart Product product, @RequestPart(required = false) MultipartFile imageFile) {
         System.out.println("Product controller");
         try {
             return new ResponseEntity<>(service.addProduct(product, imageFile), HttpStatus.CREATED);
@@ -53,17 +53,17 @@ public class ProductController {
     }
 
     @GetMapping("/product/{productId}/image")
-    public ResponseEntity<byte[]> getImage(@PathVariable int productId) {
+    public ResponseEntity<String> getImage(@PathVariable int productId) {
 
         Product product = service.getProductById(productId);
-        byte[] imageFile = product.getImageData();
+        String imageUrl = product.getImageUrl();
 
-        return ResponseEntity.ok().body(imageFile);
+        return ResponseEntity.ok().body(imageUrl);
 //        return ResponseEntity.ok().contentType(MediaType.valueOf(product.getImageType())).body(imageFile);
     }
 
     @PutMapping("/product/{id}")
-    public ResponseEntity<String> updateProduct(@PathVariable int id, @RequestPart Product product, @RequestPart MultipartFile imageFile) {
+    public ResponseEntity<String> updateProduct(@PathVariable int id, @RequestPart Product product, @RequestPart(required = false) MultipartFile imageFile) {
 
         Product product1 = null;
         try {
