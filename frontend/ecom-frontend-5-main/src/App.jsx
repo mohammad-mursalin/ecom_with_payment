@@ -8,7 +8,11 @@ import Product from "./components/Product";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "./Context/Context";
 import { ToastProvider } from "./components/Toast";
+import { WebSocketProvider } from "./Context/WebSocketContext";
 import UpdateProduct from "./components/UpdateProduct";
+import OrderHistory from "./components/OrderHistory";
+import PaymentSuccess from "./components/PaymentSuccess";
+import PaymentCancel from "./components/PaymentCancel";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -40,24 +44,29 @@ function App() {
   return (
     <AppProvider>
       <ToastProvider>
-        <BrowserRouter>
-        <Navbar onSelectCategory={handleCategorySelect}
-         />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Home addToCart={addToCart} selectedCategory={selectedCategory}
-              />
-            }
-          />
-          <Route path="/add_product" element={<AddProduct />} />
-          <Route path="/product" element={<Product  />} />
-          <Route path="product/:id" element={<Product  />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/product/update/:id" element={<UpdateProduct />} />
-        </Routes>
-      </BrowserRouter>
+        <WebSocketProvider>
+          <BrowserRouter>
+          <Navbar onSelectCategory={handleCategorySelect}
+           />
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Home addToCart={addToCart} selectedCategory={selectedCategory}
+                />
+              }
+            />
+            <Route path="/add_product" element={<AddProduct />} />
+            <Route path="/product" element={<Product  />} />
+            <Route path="product/:id" element={<Product  />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/product/update/:id" element={<UpdateProduct />} />
+            <Route path="/orders" element={<OrderHistory />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
+          </Routes>
+        </BrowserRouter>
+        </WebSocketProvider>
       </ToastProvider>
     </AppProvider>
   );

@@ -136,6 +136,11 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
                     Add Product
                   </a>
                 </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="/orders">
+                    Orders
+                  </a>
+                </li>
 
                 <li className="nav-item dropdown">
                   <a

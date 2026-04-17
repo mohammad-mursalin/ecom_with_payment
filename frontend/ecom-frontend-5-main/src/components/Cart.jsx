@@ -259,6 +259,7 @@
 
 
 import React, { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppContext from "../Context/Context";
 import axios from "axios";
 import CheckoutPopup from "./CheckoutPopup";
@@ -271,12 +272,14 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProductData = async () => {
       console.log("Cart", cart);
       try {
-        const response = await axios.get("http://localhost:8080/api/products");
+        const response = await axios.get("/products");
         const backendProducts = response.data;
         const backendProductMap = new Map(backendProducts.map(p => [p.id, p]));
 
@@ -336,38 +339,42 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      showToast("Your cart is empty");
+      return;
+    }
+
+    setIsProcessing(true);
+
     try {
-      for (const item of cartItems) {
-        const { imageUrl, imageName, imageData, imageType, quantity, ...rest } = item;
-        const updatedStockQuantity = item.stockQuantity - item.quantity;
-  
-        const updatedProductData = { ...rest, stockQuantity: updatedStockQuantity };
-        console.log("updated product data", updatedProductData)
-  
-        const cartProduct = new FormData();
-        cartProduct.append(
-          "product",
-          new Blob([JSON.stringify(updatedProductData)], { type: "application/json" })
-        );
-  
-        await axios
-          .put(`http://localhost:8080/api/product/${item.id}`, cartProduct, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          })
-          .then((response) => {
-            console.log("Product updated successfully:", (cartProduct));
-          })
-          .catch((error) => {
-            console.error("Error updating product:", error);
-          });
+      const orderItems = cartItems.map((item) => ({
+        productId: item.id,
+        productName: item.name,
+        productBrand: item.brand,
+        productImageUrl: item.imageUrl,
+        quantity: item.quantity,
+        unitPrice: parseFloat(item.price),
+      }));
+
+      const response = await axios.post(
+        "/payment/create-checkout-session",
+        {
+          items: orderItems,
+          customerEmail: "",
+          shippingAddress: "",
+        }
+      );
+
+      if (response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl;
+      } else {
+        showToast("Error creating checkout session");
       }
-      clearCart();
-      setCartItems([]);
-      setShowModal(false);
     } catch (error) {
-      console.log("error during checkout", error);
+      console.error("Checkout error:", error);
+      showToast("Error during checkout: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -445,8 +452,9 @@ const Cart = () => {
               className="btn btn-primary"
               style={{ width: "100%" }}
               onClick={() => setShowModal(true)}
+              disabled={isProcessing}
             >
-              Checkout
+              {isProcessing ? "Processing..." : "Checkout"}
             </Button>
           </>
         )}
@@ -457,6 +465,7 @@ const Cart = () => {
         cartItems={cartItems}
         totalPrice={totalPrice}
         handleCheckout={handleCheckout}
+        isProcessing={isProcessing}
       />
     </div>
 

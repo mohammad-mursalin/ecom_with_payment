@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
-const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckout }) => {
+const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckout, isProcessing }) => {
   return (
     <div className="checkoutPopup">
    
@@ -13,7 +13,7 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
         <div className="checkout-items">
           {cartItems.map((item) => (
             <div key={item.id} className="checkout-item" style={{ display: 'flex', marginBottom: '10px' }}>
-              <img src={item.imageUrl} alt={item.name} className="cart-item-image" style={{ width: '150px', marginRight: '10px' }} />
+              {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="cart-item-image" style={{ width: '150px', marginRight: '10px' }} />}
               <div>
                 <b><p>{item.name}</p></b>
                 <p>Quantity: {item.quantity}</p>
@@ -27,11 +27,11 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="secondary" onClick={handleClose} disabled={isProcessing}>
           Close
         </Button>
-        <Button variant="primary" onClick={handleCheckout}>
-          Confirm Purchase
+        <Button variant="primary" onClick={handleCheckout} disabled={isProcessing}>
+          {isProcessing ? "Processing..." : "Proceed to Payment"}
         </Button>
       </Modal.Footer>
     </Modal>
