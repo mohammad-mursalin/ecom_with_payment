@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "order_items")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+//@NoArgsConstructor
+//@AllArgsConstructor
 public class OrderItem {
 
     @Id
@@ -42,4 +42,91 @@ public class OrderItem {
 
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
+
+    public OrderItem() {
+    }
+
+    public OrderItem(Long id, Order order, Integer productId, String productName, String productBrand, String productImageUrl, Integer quantity, BigDecimal unitPrice, BigDecimal subtotal) {
+        this.id = id;
+        this.order = order;
+        this.productId = productId;
+        this.productName = productName;
+        this.productBrand = productBrand;
+        this.productImageUrl = productImageUrl;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.subtotal = subtotal;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public Integer getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Integer productId) {
+        this.productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getProductBrand() {
+        return productBrand;
+    }
+
+    public void setProductBrand(String productBrand) {
+        this.productBrand = productBrand;
+    }
+
+    public String getProductImageUrl() {
+        return productImageUrl;
+    }
+
+    public void setProductImageUrl(String productImageUrl) {
+        this.productImageUrl = productImageUrl;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
 }
