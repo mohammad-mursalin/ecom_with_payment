@@ -261,7 +261,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppContext from "../Context/Context";
-import axios from "axios";
+import axios from "../axios";
 import CheckoutPopup from "./CheckoutPopup";
 import { Button } from 'react-bootstrap';
 import { useToast } from "./Toast";
@@ -275,38 +275,55 @@ const Cart = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProductData = async () => {
-      console.log("Cart", cart);
+useEffect(() => {
+    const updateCartItems = async () => {
+      console.log("Cart from context:", cart);
+      
+      if (!cart || cart.length === 0) {
+        setCartItems([]);
+        return;
+      }
+      
       try {
         const response = await axios.get("/products");
-        const backendProducts = response.data;
+        console.log("Products response:", response.data);
+        
+        const backendProducts = Array.isArray(response.data) ? response.data : [];
         const backendProductMap = new Map(backendProducts.map(p => [p.id, p]));
 
+        // Filter cart items that exist in backend
         const updatedCartItems = cart.filter((item) => backendProductMap.has(item.id));
-        const cartItemsWithLatestData = updatedCartItems.map(item => ({
-          ...item,
-          ...backendProductMap.get(item.id)
-        }));
-        console.log("cart",cart)
+        
+        // Merge with latest backend data
+        const cartItemsWithLatestData = updatedCartItems.map(item => {
+          const backendProduct = backendProductMap.get(item.id);
+          return {
+            ...item,
+            ...backendProduct,
+            quantity: item.quantity
+          };
+        });
+        
+        console.log("Cart items with data:", cartItemsWithLatestData);
         setCartItems(cartItemsWithLatestData);
       } catch (error) {
         console.error("Error fetching product data:", error);
+        // Show cart items directly from context if backend fails
+        setCartItems(cart);
       }
     };
 
-    if (cart.length) {
-      fetchProductData();
-    }
+    updateCartItems();
   }, [cart]);
 
   useEffect(() => {
-    const total = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
+    const items = cartItems.length > 0 ? cartItems : (cart || []);
+    const total = items.reduce(
+      (acc, item) => acc + (item.price * item.quantity),
       0
     );
     setTotalPrice(total);
-  }, [cartItems]);
+  }, [cartItems, cart]);
 
   const handleIncreaseQuantity = (itemId) => {
     const newCartItems = cartItems.map((item) => {
@@ -339,7 +356,8 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
-    if (cartItems.length === 0) {
+    const itemsToCheck = cartItems.length > 0 ? cartItems : (cart || []);
+    if (itemsToCheck.length === 0) {
       showToast("Your cart is empty");
       return;
     }
@@ -347,7 +365,7 @@ const Cart = () => {
     setIsProcessing(true);
 
     try {
-      const orderItems = cartItems.map((item) => ({
+      const orderItems = itemsToCheck.map((item) => ({
         productId: item.id,
         productName: item.name,
         productBrand: item.brand,
@@ -382,13 +400,13 @@ const Cart = () => {
     <div className="cart-container">
       <div className="shopping-cart">
         <div className="title">Shopping Bag</div>
-        {cartItems.length === 0 ? (
+        {(!cartItems || cartItems.length === 0) && (!cart || cart.length === 0) ? (
           <div className="empty" style={{ textAlign: "left", padding: "2rem" }}>
             <h4>Your cart is empty</h4>
           </div>
         ) : (
           <>
-            {cartItems.map((item) => (
+            {(cartItems.length > 0 ? cartItems : cart).map((item) => (
               <li key={item.id} className="cart-item">
                 <div
                   className="item"
