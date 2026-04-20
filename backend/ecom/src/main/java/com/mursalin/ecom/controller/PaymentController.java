@@ -24,8 +24,12 @@ public class PaymentController {
     @PostMapping("/create-checkout-session")
     public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(@RequestBody CreateOrderRequest request) {
         try {
+            System.out.println("Received checkout request: " + request);
+            System.out.println("Items: " + request.getItems());
+            
             // Create pending order
             Order order = orderService.createOrder(request);
+            System.out.println("Created order: " + order.getId());
 
             // Create Stripe checkout session
             CheckoutSessionResponse response = stripeService.createCheckoutSession(
@@ -33,12 +37,19 @@ public class PaymentController {
                     order.getId(),
                     request.getCustomerEmail()
             );
+            System.out.println("Stripe session created: " + response.getSessionId());
 
             // Update order with session ID
             orderService.updateOrderSessionId(order.getId(), response.getSessionId());
 
             return ResponseEntity.ok(response);
         } catch (StripeException e) {
+            System.err.println("Stripe error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            System.err.println("General error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
