@@ -58,7 +58,7 @@ public class StripeService {
                 .setSuccessUrl(successUrl + "?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(cancelUrl + "?order_id=" + orderId)
                 .addAllLineItem(lineItems)
-                .setCustomerEmail(customerEmail)
+                .setCustomerEmail(customerEmail != null && !customerEmail.isEmpty() ? customerEmail : null)
                 .putMetadata("order_id", orderId.toString())
                 .build();
 
