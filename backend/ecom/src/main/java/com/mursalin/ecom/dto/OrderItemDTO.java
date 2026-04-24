@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-//@Data
+@Data
 //@NoArgsConstructor
 //@AllArgsConstructor
 public class OrderItemDTO {
