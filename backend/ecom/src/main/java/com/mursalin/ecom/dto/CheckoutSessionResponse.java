@@ -4,9 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
+//@NoArgsConstructor
+//@AllArgsConstructor
 public class CheckoutSessionResponse {
     private String sessionId;
     private String checkoutUrl;
+    private Long orderId;
 
     public CheckoutSessionResponse(String sessionId, String checkoutUrl, Long orderId) {
         this.sessionId = sessionId;
@@ -41,7 +45,4 @@ public class CheckoutSessionResponse {
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
     }
-
-    private Long orderId;
-
 }
