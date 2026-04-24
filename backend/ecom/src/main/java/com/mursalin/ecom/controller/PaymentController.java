@@ -6,6 +6,9 @@ import com.mursalin.ecom.model.Order;
 import com.mursalin.ecom.service.OrderService;
 import com.mursalin.ecom.service.StripeService;
 import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class PaymentController {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+
     @Autowired
     private OrderService orderService;
 
@@ -22,52 +27,49 @@ public class PaymentController {
     private StripeService stripeService;
 
     @PostMapping("/create-checkout-session")
-    public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(
+            @RequestBody CreateOrderRequest request
+    ) {
         try {
-            System.out.println("Received checkout request: " + request);
-            System.out.println("Items: " + request.getItems());
-            
-            // Create pending order
+            // 1. Create pending order
             Order order = orderService.createOrder(request);
-            System.out.println("Created order: " + order.getId());
 
-            // Create Stripe checkout session
+            // 2. Create Stripe checkout session
             CheckoutSessionResponse response = stripeService.createCheckoutSession(
                     request.getItems(),
                     order.getId(),
                     request.getCustomerEmail()
             );
-            System.out.println("Stripe session created: " + response.getSessionId());
 
-            // Update order with session ID
+            // 3. Persist session ID on order and payment
             orderService.updateOrderSessionId(order.getId(), response.getSessionId());
 
+            logger.info("Checkout session created: sessionId={}, orderId={}", response.getSessionId(), order.getId());
             return ResponseEntity.ok(response);
+
         } catch (StripeException e) {
-            System.err.println("Stripe error: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Stripe error while creating checkout session: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
-            System.err.println("General error: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Unexpected error while creating checkout session: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
 
     @GetMapping("/session/{sessionId}")
-    public ResponseEntity<CheckoutSessionResponse> getSessionStatus(@PathVariable String sessionId) {
+    public ResponseEntity<CheckoutSessionResponse> getSessionStatus(
+            @PathVariable String sessionId
+    ) {
         try {
-            var session = stripeService.retrieveSession(sessionId);
-            
+            Session session = stripeService.retrieveSession(sessionId);
+
             CheckoutSessionResponse response = new CheckoutSessionResponse();
             response.setSessionId(session.getId());
             response.setCheckoutUrl(session.getUrl());
-            
-            String paymentStatus = session.getPaymentStatus();
-            // You could get order ID from metadata if needed
-            
+
             return ResponseEntity.ok(response);
         } catch (StripeException e) {
+            logger.error("Session not found or Stripe error for sessionId={}: {}", sessionId, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
