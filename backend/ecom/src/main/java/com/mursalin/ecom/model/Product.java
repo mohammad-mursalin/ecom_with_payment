@@ -1,20 +1,20 @@
 package com.mursalin.ecom.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
+@Table(name = "products")
+@Data
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     private String name;
     private String description;
     private String brand;
@@ -23,7 +23,6 @@ public class Product {
     private Date releaseDate;
     private boolean productAvailable;
     private int stockQuantity;
-
     private String imageUrl;
     private String deleteHash;
 
