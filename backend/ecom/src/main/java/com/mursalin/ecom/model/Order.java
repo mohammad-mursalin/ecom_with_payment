@@ -1,9 +1,8 @@
 package com.mursalin.ecom.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,8 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @Data
-//@NoArgsConstructor
-//@AllArgsConstructor
 public class Order {
 
     @Id
@@ -52,9 +49,11 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @JsonManagedReference("order-items")
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @JsonManagedReference("order-payment")
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
