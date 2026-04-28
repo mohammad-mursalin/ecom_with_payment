@@ -7,6 +7,8 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Service
 public class StripeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(StripeService.class);
 
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
@@ -29,40 +33,51 @@ public class StripeService {
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
+        logger.info("Stripe API key initialised");
     }
 
-    public CheckoutSessionResponse createCheckoutSession(List<OrderItemDTO> items, Long orderId, String customerEmail) throws StripeException {
-        
+    public CheckoutSessionResponse createCheckoutSession(
+            List<OrderItemDTO> items,
+            Long orderId,
+            String customerEmail
+    ) throws StripeException {
+
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
 
         for (OrderItemDTO item : items) {
-            long amountInCents = item.getUnitPrice().multiply(BigDecimal.valueOf(100)).longValue();
-            
+            long amountInCents = item.getUnitPrice()
+                    .multiply(BigDecimal.valueOf(100))
+                    .longValue();
+
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                             .setCurrency("usd")
                             .setUnitAmount(amountInCents)
                             .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                     .setName(item.getProductName())
-                                    .setDescription(item.getProductBrand())
+                                    .setDescription(item.getProductBrand() != null ? item.getProductBrand() : "")
                                     .build())
                             .build())
                     .setQuantity((long) item.getQuantity())
                     .build();
-            
+
             lineItems.add(lineItem);
         }
 
-        SessionCreateParams params = SessionCreateParams.builder()
+        SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl + "?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(cancelUrl + "?order_id=" + orderId)
                 .addAllLineItem(lineItems)
-                .setCustomerEmail(customerEmail != null && !customerEmail.isEmpty() ? customerEmail : null)
-                .putMetadata("order_id", orderId.toString())
-                .build();
+                .putMetadata("order_id", orderId.toString());
 
-        Session session = Session.create(params);
+        if (customerEmail != null && !customerEmail.isBlank()) {
+            paramsBuilder.setCustomerEmail(customerEmail);
+        }
+
+        Session session = Session.create(paramsBuilder.build());
+
+        logger.info("Created Stripe checkout session id={} for orderId={}", session.getId(), orderId);
 
         CheckoutSessionResponse response = new CheckoutSessionResponse();
         response.setSessionId(session.getId());
