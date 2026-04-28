@@ -1,6 +1,8 @@
 package com.mursalin.ecom.service;
 
 import com.mursalin.ecom.model.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,8 @@ import java.util.Map;
 
 @Service
 public class WebSocketService {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketService.class);
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -21,11 +25,9 @@ public class WebSocketService {
         message.put("totalAmount", order.getTotalAmount());
         message.put("customerEmail", order.getCustomerEmail());
         message.put("orderDate", order.getOrderDate().toString());
-        
-        // Send to all subscribers of /topic/orders
+
+        logger.info("Sending order update via WebSocket: orderId={}, status={}", order.getId(), order.getStatus());
         messagingTemplate.convertAndSend("/topic/orders", (Object) message);
-        
-        // Also send to specific order channel
         messagingTemplate.convertAndSend("/topic/orders/" + order.getId(), (Object) message);
     }
 
@@ -33,11 +35,9 @@ public class WebSocketService {
         Map<String, Object> message = new HashMap<>();
         message.put("orderId", orderId);
         message.put("paymentStatus", status);
-        
-        // Send to all subscribers of /topic/payments
+
+        logger.info("Sending payment update via WebSocket: orderId={}, paymentStatus={}", orderId, status);
         messagingTemplate.convertAndSend("/topic/payments", (Object) message);
-        
-        // Also send to specific order payment channel
         messagingTemplate.convertAndSend("/topic/payments/" + orderId, (Object) message);
     }
 
@@ -46,7 +46,8 @@ public class WebSocketService {
         message.put("orderId", orderId);
         message.put("oldStatus", oldStatus);
         message.put("newStatus", newStatus);
-        
+
+        logger.info("Sending order status change via WebSocket: orderId={}, {} -> {}", orderId, oldStatus, newStatus);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId + "/status", (Object) message);
     }
 }
