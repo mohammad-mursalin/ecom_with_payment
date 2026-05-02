@@ -1,12 +1,11 @@
 import "./App.css";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Home from "./components/Home";
 import Navbar from "./components/Navbar";
 import Cart from "./components/Cart";
 import AddProduct from "./components/AddProduct";
 import Product from "./components/Product";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider } from "./Context/Context";
 import { ToastProvider } from "./components/Toast";
 import { WebSocketProvider } from "./Context/WebSocketContext";
 import UpdateProduct from "./components/UpdateProduct";
@@ -42,10 +41,9 @@ function App() {
   };
 
   return (
-    <AppProvider>
-      <ToastProvider>
-        <WebSocketProvider>
-          <BrowserRouter>
+    <ToastProvider>
+      <WebSocketProvider>
+        <BrowserRouter>
           <Navbar onSelectCategory={handleCategorySelect}
            />
           <Routes>
@@ -66,9 +64,8 @@ function App() {
             <Route path="/payment/cancel" element={<PaymentCancel />} />
           </Routes>
         </BrowserRouter>
-        </WebSocketProvider>
-      </ToastProvider>
-    </AppProvider>
+      </WebSocketProvider>
+    </ToastProvider>
   );
 }
 
