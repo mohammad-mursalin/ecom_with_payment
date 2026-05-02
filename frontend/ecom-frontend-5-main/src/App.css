@@ -172,19 +172,27 @@ a {
   padding-top: 500px; 
 }
 
-.card{
-  padding-top: 500px;
-  width: 40px;
-  padding: 1rem;
-  height:  13rem;
-  border-radius: 5%;
+/* .card styles removed - was causing conflicts with Bootstrap card component */
+
+/* Card theme-aware styling */
+.card {
   background-color: var(--card-bg-clr) !important;
-  
- 
+  color: var(--para-clr) !important;
+  border: none !important;
 }
-.card h5,h3,i{
+
+.card-header {
+  background-color: var(--card-bg-clr) !important;
+  color: var(--para-clr) !important;
+  border-bottom: 1px solid var(--hr_line_card) !important;
+  font-weight: 600;
+}
+
+.card-body {
+  background-color: var(--card-bg-clr) !important;
   color: var(--para-clr) !important;
 }
+
 .dropdown-item{
   color: var(--para-clr) !important;
 }
@@ -212,21 +220,9 @@ background: var(--body_background);
 align-items: stretch;
 padding-top: 100px;
 /* box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; */
-border-radius: .5rem;
+  border-radius: .5rem;
 
 }
-.container{
-margin-top: 11%;
-max-width: 120rem;
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-grid-template-rows: 1fr 1fr 1fr;  
-margin: 0 auto;
-}
-/* grid-template-columns: 1fr 1fr 1fr;
-gap: 1.6rem;
-padding-top: 100px;
-} */
 .card-brand{
   font-size: 1.2rem;
   font-weight: 350;
@@ -428,15 +424,8 @@ padding-top: 100px;
 /* <....................................Add Product................................................> */
 
 
-.container{
-  background-color: var(--body_background) !important;
-  color: var(--body_color) !important;
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* Custom .container styles removed - using Bootstrap's container instead */
+
 .center-container {
   position: absolute;
   top: 50%;
