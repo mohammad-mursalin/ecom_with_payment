@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import AppContext from "../Context/Context";
 import { useToast } from "./Toast";
@@ -7,14 +7,6 @@ import unplugged from "../assets/unplugged.png"
 const Home = ({ selectedCategory }) => {
   const { data, isError, addToCart, refreshData } = useContext(AppContext);
   const { showToast } = useToast();
-  const [isDataFetched, setIsDataFetched] = useState(false);
-
-  useEffect(() => {
-    if (!isDataFetched) {
-      refreshData();
-      setIsDataFetched(true);
-    }
-  }, [refreshData, isDataFetched]);
 
   if (isError) {
     return (
