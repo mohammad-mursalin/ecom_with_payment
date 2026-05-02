@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useWebSocket } from "../Context/WebSocketContext";
 import { useToast } from "./Toast";
 import axios from "../axios";
+import AppContext from "../Context/Context";
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -11,6 +12,7 @@ const PaymentSuccess = () => {
   const [status, setStatus] = useState("verifying");
   const { subscribeToOrder, orderUpdates } = useWebSocket();
   const { showToast } = useToast();
+  const { clearCart } = useContext(AppContext);
 
   useEffect(() => {
     if (sessionId) {
@@ -20,32 +22,34 @@ const PaymentSuccess = () => {
     }
   }, [sessionId]);
 
-  useEffect(() => {
-    // Listen for WebSocket updates
-    if (orderUpdates.length > 0) {
-      const latestUpdate = orderUpdates[orderUpdates.length - 1];
-      if (latestUpdate.status === "PAID") {
-        setStatus("success");
-        showToast("Payment successful! Your order has been placed.");
-      }
-    }
-  }, [orderUpdates]);
+   useEffect(() => {
+     // Listen for WebSocket updates
+     if (orderUpdates.length > 0) {
+       const latestUpdate = orderUpdates[orderUpdates.length - 1];
+       if (latestUpdate.status === "PAID") {
+         setStatus("success");
+         showToast("Payment successful! Your order has been placed.");
+         clearCart();
+       }
+     }
+   }, [orderUpdates, clearCart]);
 
-  const verifyPayment = async () => {
-    try {
-      // Subscribe to the specific order via WebSocket
-      // For now, we'll just show success after a brief delay
-      // In production, you'd verify with backend
-      
-      setTimeout(() => {
-        setStatus("success");
-        showToast("Payment successful! Your order has been placed.");
-      }, 2000);
-    } catch (error) {
-      console.error("Error verifying payment:", error);
-      setStatus("error");
-    }
-  };
+   const verifyPayment = async () => {
+     try {
+       // Subscribe to the specific order via WebSocket
+       // For now, we'll just show success after a brief delay
+       // In production, you'd verify with backend
+       
+       setTimeout(() => {
+         setStatus("success");
+         showToast("Payment successful! Your order has been placed.");
+         clearCart();
+       }, 2000);
+     } catch (error) {
+       console.error("Error verifying payment:", error);
+       setStatus("error");
+     }
+   };
 
   if (status === "verifying") {
     return (
@@ -72,7 +76,17 @@ const PaymentSuccess = () => {
 
   return (
     <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-      <div className="alert alert-success" role="alert">
+      <div 
+        className="alert alert-success" 
+        role="alert"
+        style={{
+          color: '#0f5132',
+          backgroundColor: '#d1e7dd',
+          borderColor: '#badbcc',
+          maxWidth: '600px',
+          margin: '0 auto 20px auto'
+        }}
+      >
         <h4 className="alert-heading">Payment Successful!</h4>
         <p>Thank you for your purchase. Your order has been placed successfully.</p>
         <hr />
