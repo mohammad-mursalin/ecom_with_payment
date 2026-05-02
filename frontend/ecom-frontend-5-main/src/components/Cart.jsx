@@ -267,7 +267,7 @@ import { Button } from 'react-bootstrap';
 import { useToast } from "./Toast";
 
 const Cart = () => {
-  const { cart, removeFromCart , clearCart } = useContext(AppContext);
+  const { cart, removeFromCart, clearCart, data: allProducts } = useContext(AppContext);
   const { showToast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -275,46 +275,24 @@ const Cart = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
-useEffect(() => {
-    const updateCartItems = async () => {
-      console.log("Cart from context:", cart);
-      
-      if (!cart || cart.length === 0) {
-        setCartItems([]);
-        return;
-      }
-      
-      try {
-        const response = await axios.get("/products");
-        console.log("Products response:", response.data);
-        
-        const backendProducts = Array.isArray(response.data) ? response.data : [];
-        const backendProductMap = new Map(backendProducts.map(p => [p.id, p]));
+  useEffect(() => {
+    if (!allProducts || allProducts.length === 0) {
+      setCartItems(cart || []);
+      return;
+    }
 
-        // Filter cart items that exist in backend
-        const updatedCartItems = cart.filter((item) => backendProductMap.has(item.id));
-        
-        // Merge with latest backend data
-        const cartItemsWithLatestData = updatedCartItems.map(item => {
-          const backendProduct = backendProductMap.get(item.id);
-          return {
-            ...item,
-            ...backendProduct,
-            quantity: item.quantity
-          };
-        });
-        
-        console.log("Cart items with data:", cartItemsWithLatestData);
-        setCartItems(cartItemsWithLatestData);
-      } catch (error) {
-        console.error("Error fetching product data:", error);
-        // Show cart items directly from context if backend fails
-        setCartItems(cart);
-      }
-    };
-
-    updateCartItems();
-  }, [cart]);
+    const backendProductMap = new Map(allProducts.map(p => [p.id, p]));
+    const updatedCartItems = cart.filter((item) => backendProductMap.has(item.id));
+    const cartItemsWithLatestData = updatedCartItems.map(item => {
+      const backendProduct = backendProductMap.get(item.id);
+      return {
+        ...item,
+        ...backendProduct,
+        quantity: item.quantity
+      };
+    });
+    setCartItems(cartItemsWithLatestData);
+  }, [cart, allProducts]);
 
   useEffect(() => {
     const items = cartItems.length > 0 ? cartItems : (cart || []);
