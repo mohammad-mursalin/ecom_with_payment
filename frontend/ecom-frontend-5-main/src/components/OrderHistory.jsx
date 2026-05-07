@@ -62,7 +62,7 @@ const OrderHistory = () => {
   if (loading) {
     return (
       <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-        <h3>Loading orders...</h3>
+        <h3 style={{ color: '#fffdfdff' }}>Loading orders...</h3>
       </div>
     );
   }

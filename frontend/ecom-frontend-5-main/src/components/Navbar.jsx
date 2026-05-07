@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Home from "./Home"
-import axios from "axios";
+import API from "../axios";
+import { useAuth } from "../Context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const Navbar = ({ onSelectCategory, onSearch }) => {
+const Navbar = ({ onSelectCategory }) => {
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
   const getInitialTheme = () => {
     const storedTheme = localStorage.getItem("theme");
     return storedTheme ? storedTheme : "light-theme";
@@ -13,22 +18,21 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [noResults, setNoResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [showSearchResults,setShowSearchResults] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const handleChange = async (value) => {
     setInput(value);
     if (value.length >= 1) {
-      setShowSearchResults(true)
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/products/search?keyword=${value}`
-      );
-      setSearchResults(response.data);
-      setNoResults(response.data.length === 0);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Error searching:", error);
-    }
+      setShowSearchResults(true);
+      try {
+        const response = await API.get(
+          `/api/products/search?keyword=${value}`
+        );
+        setSearchResults(response.data);
+        setNoResults(response.data.length === 0);
+      } catch (error) {
+        console.error("Error searching:", error);
+      }
     } else {
       setShowSearchResults(false);
       setSearchResults([]);
@@ -110,50 +114,76 @@ const Navbar = ({ onSelectCategory, onSearch }) => {
               className="collapse navbar-collapse"
               id="navbarSupportedContent"
             >
-              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                <li className="nav-item">
-                  <a className="nav-link active" aria-current="page" href="/">
-                    Home
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a className="nav-link" href="/add_product">
-                    Add Product
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a className="nav-link" href="/orders">
-                    Orders
-                  </a>
-                </li>
+               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                 <li className="nav-item">
+                   <a className="nav-link active" aria-current="page" href="/">
+                     Home
+                   </a>
+                 </li>
+                 {isAuthenticated && (
+                   <li className="nav-item">
+                     <a className="nav-link" href="/orders">
+                       Orders
+                     </a>
+                   </li>
+                 )}
+                 {isAdmin && (
+                   <li className="nav-item">
+                     <a className="nav-link" href="/add_product">
+                       Add Product
+                     </a>
+                   </li>
+                 )}
+                 <li className="nav-item dropdown">
+                   <a
+                     className="nav-link dropdown-toggle"
+                     href="/"
+                     role="button"
+                     data-bs-toggle="dropdown"
+                     aria-expanded="false"
+                   >
+                     Categories
+                   </a>
 
-                <li className="nav-item dropdown">
-                  <a
-                    className="nav-link dropdown-toggle"
-                    href="/"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Categories
-                  </a>
-
-                  <ul className="dropdown-menu">
-                    {categories.map((category) => (
-                      <li key={category}>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleCategorySelect(category)}
-                        >
-                          {category}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-
-                <li className="nav-item"></li>
-              </ul>
+                   <ul className="dropdown-menu">
+                     {categories.map((category) => (
+                       <li key={category}>
+                         <button
+                           className="dropdown-item"
+                           onClick={() => handleCategorySelect(category)}
+                         >
+                           {category}
+                         </button>
+                       </li>
+                     ))}
+                   </ul>
+                 </li>
+                 {isAuthenticated && (
+                   <li className="nav-item">
+                     <span className="nav-link">Welcome, {user?.email}</span>
+                   </li>
+                 )}
+                 <li className="nav-item">
+                   {isAuthenticated ? (
+                     <button
+                       className="btn btn-link nav-link"
+                       onClick={logout}
+                       style={{ cursor: "pointer" }}
+                     >
+                       Logout
+                     </button>
+                   ) : (
+                     <>
+                       <a className="nav-link" href="/login">
+                         Login
+                       </a>
+                       <a className="nav-link" href="/register">
+                         Register
+                       </a>
+                     </>
+                   )}
+                 </li>
+               </ul>
               <button className="theme-btn" onClick={() => toggleTheme()}>
                 {theme === "dark-theme" ? (
                   <i className="bi bi-moon-fill"></i>
