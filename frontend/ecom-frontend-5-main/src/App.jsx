@@ -15,6 +15,9 @@ import PaymentCancel from "./components/PaymentCancel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PrivateRoute from "./components/PrivateRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminOrders from "./pages/AdminOrders";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -73,6 +76,30 @@ function App() {
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <AddProduct />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <AdminDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <AdminUsers />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <AdminOrders />
                 </PrivateRoute>
               }
             />

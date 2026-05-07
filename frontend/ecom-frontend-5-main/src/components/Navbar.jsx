@@ -127,13 +127,20 @@ const Navbar = ({ onSelectCategory }) => {
                      </a>
                    </li>
                  )}
-                 {isAdmin && (
-                   <li className="nav-item">
-                     <a className="nav-link" href="/add_product">
-                       Add Product
-                     </a>
-                   </li>
-                 )}
+                  {isAdmin && (
+                    <>
+                      <li className="nav-item">
+                        <a className="nav-link" href="/add_product">
+                          Add Product
+                        </a>
+                      </li>
+                      <li className="nav-item">
+                        <a className="nav-link" href="/admin">
+                          Admin Dashboard
+                        </a>
+                      </li>
+                    </>
+                  )}
                  <li className="nav-item dropdown">
                    <a
                      className="nav-link dropdown-toggle"

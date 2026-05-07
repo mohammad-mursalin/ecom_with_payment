@@ -265,10 +265,12 @@ import axios from "../axios";
 import CheckoutPopup from "./CheckoutPopup";
 import { Button } from 'react-bootstrap';
 import { useToast } from "./Toast";
+import { useAuth } from "../Context/AuthContext";
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart, data: allProducts } = useContext(AppContext);
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -356,7 +358,7 @@ const Cart = () => {
         "/payment/create-checkout-session",
         {
           items: orderItems,
-          customerEmail: "",
+          customerEmail: user?.email || "",
           shippingAddress: "",
         }
       );
