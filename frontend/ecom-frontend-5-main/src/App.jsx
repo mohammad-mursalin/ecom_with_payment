@@ -12,6 +12,9 @@ import UpdateProduct from "./components/UpdateProduct";
 import OrderHistory from "./components/OrderHistory";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentCancel from "./components/PaymentCancel";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import PrivateRoute from "./components/PrivateRoute";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -44,22 +47,45 @@ function App() {
     <ToastProvider>
       <WebSocketProvider>
         <BrowserRouter>
-          <Navbar onSelectCategory={handleCategorySelect}
-           />
+          <Navbar onSelectCategory={handleCategorySelect} />
           <Routes>
+            <Route path="/" element={<Home addToCart={addToCart} selectedCategory={selectedCategory} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route
-              path="/"
+              path="/cart"
               element={
-                <Home addToCart={addToCart} selectedCategory={selectedCategory}
-                />
+                <PrivateRoute>
+                  <Cart />
+                </PrivateRoute>
               }
             />
-            <Route path="/add_product" element={<AddProduct />} />
-            <Route path="/product" element={<Product  />} />
-            <Route path="product/:id" element={<Product  />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/product/update/:id" element={<UpdateProduct />} />
-            <Route path="/orders" element={<OrderHistory />} />
+            <Route
+              path="/orders"
+              element={
+                <PrivateRoute>
+                  <OrderHistory />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/add_product"
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <AddProduct />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/product/update/:id"
+              element={
+                <PrivateRoute requiredRole="ADMIN">
+                  <UpdateProduct />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/product" element={<Product />} />
+            <Route path="product/:id" element={<Product />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
           </Routes>
