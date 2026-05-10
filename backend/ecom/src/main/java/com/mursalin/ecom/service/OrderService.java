@@ -12,6 +12,7 @@ import com.mursalin.ecom.repository.ProductRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +41,7 @@ public class OrderService {
     // -------------------------------------------------------------------------
 
     @Transactional
-    public Order createOrder(CreateOrderRequest request) {
+    public Order createOrder(CreateOrderRequest request, Long userId, String customerEmail) {
         // 1. Calculate total amount
         BigDecimal totalAmount = request.getItems().stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
@@ -48,10 +49,11 @@ public class OrderService {
 
         // 2. Build Order
         Order order = new Order();
-        order.setCustomerEmail(request.getCustomerEmail());
+        order.setCustomerEmail(customerEmail); // Use authenticated user's email (not from request)
         order.setShippingAddress(request.getShippingAddress());
         order.setTotalAmount(totalAmount);
         order.setStatus(Order.OrderStatus.PENDING);
+        order.setUserId(userId);
 
         // 3. Build OrderItems
         for (OrderItemDTO itemDTO : request.getItems()) {
@@ -220,8 +222,24 @@ public class OrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
+    public Order getOrderByIdForUser(Long id, Long userId) {
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order == null) {
+            return null;
+        }
+        // Verify ownership
+        if (!order.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Not authorized to access this order");
+        }
+        return order;
+    }
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public List<Order> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId);
     }
 
     @Transactional
