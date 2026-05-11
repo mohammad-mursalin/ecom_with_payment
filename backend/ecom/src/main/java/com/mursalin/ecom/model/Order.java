@@ -19,7 +19,7 @@ public class Order {
     private Long id;
 
     @Column(name = "user_id")
-    private String userId;
+    private Long userId;
 
     @Column(name = "order_date")
     private LocalDateTime orderDate;
@@ -91,7 +91,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(Long id, String userId, LocalDateTime orderDate, BigDecimal totalAmount, OrderStatus status, String stripeSessionId, String stripePaymentIntentId, String customerEmail, String shippingAddress, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems, Payment payment) {
+    public Order(Long id, Long userId, LocalDateTime orderDate, BigDecimal totalAmount, OrderStatus status, String stripeSessionId, String stripePaymentIntentId, String customerEmail, String shippingAddress, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems, Payment payment) {
         this.id = id;
         this.userId = userId;
         this.orderDate = orderDate;
@@ -115,11 +115,11 @@ public class Order {
         this.id = id;
     }
 
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
