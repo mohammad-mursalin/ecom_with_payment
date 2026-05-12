@@ -69,11 +69,12 @@ public class StripeService {
                 .setSuccessUrl(successUrl + "?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(cancelUrl + "?order_id=" + orderId)
                 .addAllLineItem(lineItems)
-                .putMetadata("order_id", orderId.toString());
+                .putMetadata("order_id", orderId.toString())
+                .setCustomerEmail(customerEmail);
 
-        if (customerEmail != null && !customerEmail.isBlank()) {
-            paramsBuilder.setCustomerEmail(customerEmail);
-        }
+//        if (customerEmail != null && !customerEmail.isBlank()) {
+//            paramsBuilder.setCustomerEmail(customerEmail);
+//        }
 
         Session session = Session.create(paramsBuilder.build());
 
