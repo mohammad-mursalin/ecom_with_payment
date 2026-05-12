@@ -3,6 +3,7 @@ package com.mursalin.ecom.controller;
 import com.mursalin.ecom.dto.CheckoutSessionResponse;
 import com.mursalin.ecom.dto.CreateOrderRequest;
 import com.mursalin.ecom.model.Order;
+import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.OrderService;
 import com.mursalin.ecom.service.StripeService;
 import com.stripe.exception.StripeException;
@@ -11,11 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
 @CrossOrigin
+@PreAuthorize("hasRole('USER')")
 public class PaymentController {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
@@ -28,11 +32,15 @@ public class PaymentController {
 
     @PostMapping("/create-checkout-session")
     public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(
-            @RequestBody CreateOrderRequest request
+            @RequestBody CreateOrderRequest request,
+            @AuthenticationPrincipal UserPrinciples userPrinciple
     ) {
         try {
-            // 1. Create pending order
-            Order order = orderService.createOrder(request);
+            // Use authenticated user's email (cannot be spoofed by client)
+            String customerEmail = userPrinciple.getUsername(); // JWT sub claim = email
+
+            // Create pending order linked to authenticated user
+            Order order = orderService.createOrder(request, userPrinciple.getUserId(), customerEmail);
 
             // 2. Create Stripe checkout session
             CheckoutSessionResponse response = stripeService.createCheckoutSession(
