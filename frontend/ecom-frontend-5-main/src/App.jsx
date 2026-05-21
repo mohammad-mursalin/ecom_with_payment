@@ -14,6 +14,7 @@ import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentCancel from "./components/PaymentCancel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import PrivateRoute from "./components/PrivateRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
@@ -115,6 +116,15 @@ function App() {
             <Route path="product/:id" element={<Product />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/unauthorized" element={<div className="container text-center" style={{ marginTop: "100px" }}><h2>401 — Unauthorized</h2><p>You do not have permission to access this page.</p></div>} />
           </Routes>
         </BrowserRouter>
       </WebSocketProvider>

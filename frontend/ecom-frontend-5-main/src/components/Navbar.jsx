@@ -165,13 +165,22 @@ const Navbar = ({ onSelectCategory }) => {
                      ))}
                    </ul>
                  </li>
-                 {isAuthenticated && (
-                   <li className="nav-item">
-                     <span className="nav-link">Welcome, {user?.email}</span>
-                   </li>
-                 )}
-                 <li className="nav-item">
-                   {isAuthenticated ? (
+                  {isAuthenticated && (
+                    <li className="nav-item">
+                      <span className="nav-link">
+                        Welcome, {user?.fullName || user?.email}
+                      </span>
+                    </li>
+                  )}
+                  {isAuthenticated && (
+                    <li className="nav-item">
+                      <a className="nav-link" href="/profile">
+                        Profile
+                      </a>
+                    </li>
+                  )}
+                  <li className="nav-item">
+                    {isAuthenticated ? (
                      <button
                        className="btn btn-link nav-link"
                        onClick={logout}
