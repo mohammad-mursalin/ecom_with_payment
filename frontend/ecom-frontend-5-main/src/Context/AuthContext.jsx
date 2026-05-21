@@ -9,6 +9,27 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = async () => {
+    if (!token) return;
+    try {
+      const response = await API.get("/auth/profile");
+      const profile = response.data.data;
+      setUser({
+        userId: profile.userId,
+        email: profile.email,
+        role: profile.role,
+        fullName: profile.fullName || "",
+        phoneNumber: profile.phoneNumber || "",
+        address: profile.address || "",
+        profilePictureUrl: profile.profilePictureUrl || "",
+        bio: profile.bio || "",
+      });
+    } catch (err) {
+      // If the user is not fully set up yet (e.g. just registered), tolerate 404
+      console.warn("Profile fetch failed, using JWT data only:", err.message || err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       try {
@@ -18,8 +39,14 @@ export const AuthProvider = ({ children }) => {
         setUser({
           userId: decoded.userId,
           email: decoded.sub,
-          role: role
+          role: role,
+          fullName: "",
+          phoneNumber: "",
+          address: "",
+          profilePictureUrl: "",
+          bio: "",
         });
+        fetchProfile();
       } catch (err) {
         console.error("Failed to decode token", err);
         logout();
@@ -39,7 +66,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, confirmPassword) => {
     const response = await API.post("/auth/register", { email, password, confirmPassword });
-    // Optionally auto-login or redirect to login
     return response;
   };
 
@@ -47,6 +73,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
+  };
+
+  const updateProfile = async (profileData) => {
+    const response = await API.put("/auth/profile", profileData);
+    const profile = response.data.data;
+    setUser(prev => ({ ...prev, ...profile }));
+    return response;
   };
 
   const value = {
@@ -57,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateProfile,
     loading
   };
 
