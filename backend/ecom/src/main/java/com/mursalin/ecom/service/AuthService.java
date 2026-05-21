@@ -1,7 +1,9 @@
 package com.mursalin.ecom.service;
 
 import com.mursalin.ecom.dto.AuthResponse;
+import com.mursalin.ecom.dto.UpdateProfileRequest;
 import com.mursalin.ecom.dto.UserLoginRequest;
+import com.mursalin.ecom.dto.UserProfileResponse;
 import com.mursalin.ecom.dto.UserRegisterRequest;
 import com.mursalin.ecom.dto.UserResponse;
 import com.mursalin.ecom.exception.UserAlreadyExistsException;
@@ -10,6 +12,8 @@ import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,5 +85,74 @@ public class AuthService {
         long expiresInSeconds = jwtService.getExpiration() / 1000; // expiration in ms to seconds
 
         return new AuthResponse(token, userId, request.getEmail(), role, expiresInSeconds);
+    }
+
+    public UserProfileResponse getUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserProfileResponse(
+                user.getUserId(),
+                user.getEmail(),
+                user.getRole(),
+                user.getFullName(),
+                user.getPhoneNumber(),
+                user.getAddress(),
+                user.getProfilePictureUrl(),
+                user.getBio()
+        );
+    }
+
+    public UserProfileResponse updateProfile(UpdateProfileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // If email is being changed, validate uniqueness
+        if (request.getEmail() != null && !request.getEmail().isBlank()
+                && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("Email already taken by another account");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        // Update profile fields if provided
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        User savedUser = userRepository.save(user);
+
+        return new UserProfileResponse(
+                savedUser.getUserId(),
+                savedUser.getEmail(),
+                savedUser.getRole(),
+                savedUser.getFullName(),
+                savedUser.getPhoneNumber(),
+                savedUser.getAddress(),
+                savedUser.getProfilePictureUrl(),
+                savedUser.getBio()
+        );
     }
 }
