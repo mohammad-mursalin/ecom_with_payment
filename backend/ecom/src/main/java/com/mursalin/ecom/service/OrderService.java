@@ -36,26 +36,41 @@ public class OrderService {
     @Autowired
     private WebSocketService webSocketService;
 
+    @Autowired
+    private ShippingService shippingService;
+
     // -------------------------------------------------------------------------
     // CREATE ORDER
     // -------------------------------------------------------------------------
 
     @Transactional
     public Order createOrder(CreateOrderRequest request, Long userId, String customerEmail) {
-        // 1. Calculate total amount
-        BigDecimal totalAmount = request.getItems().stream()
+        // 1. Calculate subtotal
+        BigDecimal subtotal = request.getItems().stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Build Order
+        // 2. Calculate shipping cost (country hardcoded BD for now)
+        BigDecimal shippingCost = shippingService.calculateShippingCost(
+                subtotal,
+                request.getShippingMethod() != null ? request.getShippingMethod() : "STANDARD",
+                "BD"
+        );
+
+        // 3. Total = subtotal + shipping
+        BigDecimal totalAmount = subtotal.add(shippingCost);
+
+        // 4. Build Order
         Order order = new Order();
-        order.setCustomerEmail(customerEmail); // Use authenticated user's email (not from request)
+        order.setCustomerEmail(customerEmail);
         order.setShippingAddress(request.getShippingAddress());
         order.setTotalAmount(totalAmount);
         order.setStatus(Order.OrderStatus.PENDING);
         order.setUserId(userId);
+        order.setShippingCost(shippingCost);
+        order.setShippingMethod(request.getShippingMethod());
 
-        // 3. Build OrderItems
+        // 5. Build OrderItems
         for (OrderItemDTO itemDTO : request.getItems()) {
             OrderItem item = new OrderItem();
             item.setProductId(itemDTO.getProductId());
@@ -77,7 +92,8 @@ public class OrderService {
 
         // 5. Save (cascades to items and payment)
         Order savedOrder = orderRepository.save(order);
-        logger.info("Created order id={} with status=PENDING, total={}", savedOrder.getId(), totalAmount);
+        logger.info("Created order id={} status=PENDING total={} shipping={} method={}",
+                savedOrder.getId(), totalAmount, shippingCost, request.getShippingMethod());
 
         // 6. WebSocket notification
         webSocketService.notifyOrderUpdate(savedOrder);
