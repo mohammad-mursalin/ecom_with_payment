@@ -43,6 +43,12 @@ public class Order {
     @Column(name = "shipping_address", length = 500)
     private String shippingAddress;
 
+    @Column(name = "shipping_cost", precision = 10, scale = 2)
+    private BigDecimal shippingCost;
+
+    @Column(name = "shipping_method", length = 20)
+    private String shippingMethod;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -91,7 +97,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(Long id, Long userId, LocalDateTime orderDate, BigDecimal totalAmount, OrderStatus status, String stripeSessionId, String stripePaymentIntentId, String customerEmail, String shippingAddress, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems, Payment payment) {
+    public Order(Long id, Long userId, LocalDateTime orderDate, BigDecimal totalAmount, OrderStatus status, String stripeSessionId, String stripePaymentIntentId, String customerEmail, String shippingAddress, BigDecimal shippingCost, String shippingMethod, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems, Payment payment) {
         this.id = id;
         this.userId = userId;
         this.orderDate = orderDate;
@@ -101,6 +107,8 @@ public class Order {
         this.stripePaymentIntentId = stripePaymentIntentId;
         this.customerEmail = customerEmail;
         this.shippingAddress = shippingAddress;
+        this.shippingCost = shippingCost;
+        this.shippingMethod = shippingMethod;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.orderItems = orderItems;
@@ -177,6 +185,22 @@ public class Order {
 
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public BigDecimal getShippingCost() {
+        return shippingCost;
+    }
+
+    public void setShippingCost(BigDecimal shippingCost) {
+        this.shippingCost = shippingCost;
+    }
+
+    public String getShippingMethod() {
+        return shippingMethod;
+    }
+
+    public void setShippingMethod(String shippingMethod) {
+        this.shippingMethod = shippingMethod;
     }
 
     public LocalDateTime getCreatedAt() {
