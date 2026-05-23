@@ -5,7 +5,16 @@
 
 ---
 
-## Recent Changes (2026-05-08)
+### Recent Changes (2026-05-21)
+
+### User Profile Page — Implemented
+- ✅ Extended `User` entity: `fullName`, `phoneNumber`, `address`, `profilePictureUrl`, `bio`
+- ✅ New DTOs: `UserProfileResponse` (read), `UpdateProfileRequest` (write)
+- ✅ `GET /api/auth/profile` — returns full profile for authenticated user
+- ✅ `PUT /api/auth/profile` — partial update (only provided fields are saved)
+- ✅ Frontend: `Profile.jsx` at `/profile` route (PrivateRoute-protected), view/edit modes
+- ✅ `AuthContext` extended: calls profile endpoint on login and mount; exposes `user.fullName`, `user.phoneNumber`, etc.
+- ✅ `/unauthorized` route added for role-mismatch redirects
 
 ### Payment & Authentication Fixes
 - ✅ Fixed `customerEmail` null issue: frontend sends authenticated user email; backend overrides with JWT email for security
@@ -187,6 +196,38 @@ http://localhost:8080/api
 | POST | `/api/auth/register` | Register new user |
 | POST | `/api/auth/login` | Authenticate user (JWT) |
 | POST | `/api/auth/logout` | Invalidate session (client-side token clear) |
+| GET | `/api/auth/profile` | Get authenticated user's profile (fullName, phone, address, bio, avatar) |
+| PUT | `/api/auth/profile` | Update authenticated user's profile (partial update supported) |
+
+#### Profile Endpoints
+
+**GET `/api/auth/profile`** — Requires authentication (JWT Bearer token).
+Returns `UserProfileResponse`:
+```json
+{
+  "userId": 1,
+  "email": "user@example.com",
+  "role": "USER",
+  "fullName": "John Doe",
+  "phoneNumber": "+123456789",
+  "address": "123 Main St",
+  "profilePictureUrl": null,
+  "bio": "Software developer"
+}
+```
+
+**PUT `/api/auth/profile`** — Requires authentication (JWT Bearer token).
+Accepts `UpdateProfileRequest` (all fields optional):
+```json
+{
+  "email": "newemail@example.com",    // optional, must be unique if changed
+  "fullName": "John Doe",             // optional
+  "phoneNumber": "+123456789",        // optional
+  "address": "123 Main St",           // optional
+  "bio": "Software developer"         // optional
+}
+```
+Returns updated `UserProfileResponse`. Password cannot be changed via this endpoint (separate password-reset flow would be needed).
 
 ### Product Endpoints
 | Method | Endpoint | Description | Auth |
@@ -216,9 +257,36 @@ http://localhost:8080/api
 ### Payment Endpoints
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/payment/create-checkout-session` | Create Stripe checkout session | User |
+| POST | `/payment/create-checkout-session` | Create Stripe checkout session (with shipping cost + address) | User |
 | GET | `/payment/session/{sessionId}` | Poll session status (fallback) | User |
 | POST | `/payment/webhook` | Stripe webhook endpoint (secret) | Stripe Only |
+
+### Shipping Rules (`ShippingService`)
+| Condition | Standard | Express |
+|---|---|---|
+| Subtotal ≥ $200 (any country) | FREE | FREE |
+| Subtotal < $200, Bangladesh (BD) | $3.00 | $6.00 |
+| Subtotal < $200, International | $10.00 | $20.00 |
+
+Country is currently **hardcoded to `BD`** — will be extended when the country field becomes a select input.
+
+### Shipping Estimate API
+`GET /api/shipping/estimate?subtotal=99.99&method=STANDARD`
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `subtotal` | yes | Cart subtotal as string, minimum 0.0 |
+| `method` | no | `STANDARD` (default) or `EXPRESS` |
+
+Returns `ApiResponse<BigDecimal>` — e.g. `{ "success": true, "data": 3.00, … }`.
+
+This replaces the frontend hardcoded constants. The frontend calls this endpoint whenever the cart total or shipping method changes.
+
+### Shipping Flow
+1. **Frontend** (`CheckoutPopup.jsx`): User fills Address + Area + City and selects Standard/Express. Subtotal, shipping cost, and grand total are shown in real time.
+2. **Frontend** (`Cart.jsx`): Calls `POST /payment/create-checkout-session` with `shippingAddress`, `shippingCost`, `shippingMethod`.
+3. **Backend** (`OrderService.createOrder()`): Recalculates `shippingCost` server-side (prevents tampering), adds it to the subtotal, sets `shippingCost` + `shippingMethod` on the `Order` entity.
+4. **Backend** (`StripeService.createCheckoutSession()`): The Stripe line items still reflect only product amounts; shipping is embedded in the `totalAmount` persisted on the Order.
 
 ### WebSocket Endpoints
 | Endpoint | Description |
@@ -250,8 +318,10 @@ App
 │   │   ├── UpdateProduct (admin)
 │   │   ├── Product (single product view)
 │   │   ├── OrderHistory (list orders – filtered by user)
+│   │   ├── Profile (view/edit user profile — authenticated)
 │   │   ├── PaymentSuccess
 │   │   ├── PaymentCancel
+│   │   ├── Unauthorized (role-mismatch page)
 │   │   └── Admin pages: /admin, /admin/users, /admin/orders (role-protected)
 │   └── ToastProvider (global notifications)
 └── WebSocketProvider (real-time order/payment updates)
@@ -264,6 +334,7 @@ App
 - **Toast**: Centralized notifications via `showToast(msg)` from any component
 - **Authentication**: JWT stored in localStorage; `PrivateRoute` component protects admin/user routes; role-based navigation visibility
 - **Order Ownership**: Backend filters orders by authenticated user ID; admins bypass filter
+- **Shipping Cost**: Calculated client-side in `Cart.jsx` constants ($3 standard / $6 express for BD; free ≥ $200); confirmed server-side in `ShippingService` before order is saved
 
 ---
 
@@ -505,6 +576,31 @@ http://localhost:8080/ws?token=<JWT_TOKEN>
 
 **Reconnection on auth change:**
 - `WebSocketContext` watches `[token]` dependency → reconnects automatically on login/logout/token refresh
+
+---
+
+## Appendix: Shipping Constants & Rules
+
+Both `ShippingService.java` (backend, **authoritative**) and `Cart.jsx` / `CheckoutPopup.jsx` (frontend, **UX preview**) use the same values:
+
+```java
+FREE_SHIPPING_THRESHOLD : 200.00 USD
+BD_STANDARD             : 3.00 USD
+BD_EXPRESS              : 6.00 USD
+INTL_STANDARD           : 10.00 USD
+INTL_EXPRESS            : 20.00 USD
+COUNTRY_BD              : "BD"
+```
+
+**Rate table:**
+
+| Subtotal | Country | Standard | Express |
+|---|---|---|---|
+| ≥ $200 | Any | FREE | FREE |
+| < $200 | Bangladesh (BD) | $3.00 | $6.00 |
+| < $200 | International | $10.00 | $20.00 |
+
+The backend **always recalculates** shipping cost from `shippingMethod` + hardcoded `"BD"` before persisting the `Order`. Frontend values are server-authoritative — they determine what the customer pays.
 
 ---
 

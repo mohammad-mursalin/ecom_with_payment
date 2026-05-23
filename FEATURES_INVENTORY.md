@@ -59,8 +59,8 @@
 | Cart Persistence (localStorage) | ✅ | Cart survives page reload |
 | Clear Cart After Checkout | ✅ | Fixed – clears on payment success |
 | Checkout Session Creation | ✅ | Stripe Checkout redirect |
-| Shipping Address Form | ⏳ | Currently empty string in `CreateOrderRequest` |
-| Shipping Cost Calculation | ⏳ | No shipping logic |
+| Shipping Address Form | ✅ | Address + Area + City fields; country hardcoded BD; saved to order |
+| Shipping Cost Calculation | ✅ | Standard/Express with rates fetched from GET /api/shipping/estimate (server-authoritative) |
 | Coupon/Discount Codes | ⏳ | No promo system |
 | Multiple Payment Methods | ⏳ | Stripe only |
 
@@ -74,7 +74,7 @@
 | User Login / JWT | ✅ | POST `/api/auth/login`, JWT token generation, secret in config |
 | Logout / Session Management | ✅ | Client-side token clear (JWT stateless) |
 | Protected Routes (merchandise) | ✅ | Frontend: PrivateRoute; Backend: @PreAuthorize on endpoints |
-| User Profile Page | ⏳ | No profile management |
+| User Profile Page | ✅ | GET/PUT `/api/auth/profile`; fullName, phone, address, bio, profile picture |
 | Order History (user-specific) | ✅ | Backend filters by authenticated user; ownership validated |
 | Password Reset | ⏳ | No auth flow |
 | Email Notifications | ⏳ | No email service (order confirmation, etc.) |
