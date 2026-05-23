@@ -56,6 +56,10 @@ function App() {
             <Route path="/" element={<Home addToCart={addToCart} selectedCategory={selectedCategory} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/product" element={<Product />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route
               path="/cart"
               element={
@@ -69,6 +73,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <OrderHistory />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
                 </PrivateRoute>
               }
             />
@@ -109,18 +121,6 @@ function App() {
               element={
                 <PrivateRoute requiredRole="ADMIN">
                   <UpdateProduct />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/product" element={<Product />} />
-            <Route path="product/:id" element={<Product />} />
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/cancel" element={<PaymentCancel />} />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Profile />
                 </PrivateRoute>
               }
             />
