@@ -49,10 +49,16 @@ public class PaymentController {
                     request.getCustomerEmail()
             );
 
-            // 3. Persist session ID on order and payment
+            // 3. Attach shipping info to response
+            response.setShippingCost(request.getShippingCost());
+            response.setShippingMethod(request.getShippingMethod());
+
+            // 4. Persist session ID on order and payment
             orderService.updateOrderSessionId(order.getId(), response.getSessionId());
 
-            logger.info("Checkout session created: sessionId={}, orderId={}", response.getSessionId(), order.getId());
+            logger.info("Checkout session created: sessionId={}, orderId={}, shipping={} method={}",
+                    response.getSessionId(), order.getId(), request.getShippingCost(), request.getShippingMethod());
+
             return ResponseEntity.ok(response);
 
         } catch (StripeException e) {
