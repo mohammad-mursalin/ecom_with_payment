@@ -114,19 +114,19 @@ const Navbar = ({ onSelectCategory }) => {
               className="collapse navbar-collapse"
               id="navbarSupportedContent"
             >
-               <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-                 <li className="nav-item">
-                   <a className="nav-link active" aria-current="page" href="/">
-                     Home
-                   </a>
-                 </li>
-                 {isAuthenticated && (
-                   <li className="nav-item">
-                     <a className="nav-link" href="/orders">
-                       Orders
-                     </a>
-                   </li>
-                 )}
+                <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li className="nav-item">
+                    <a className="nav-link active" aria-current="page" href="/">
+                      Home
+                    </a>
+                  </li>
+                  {isAuthenticated && (
+                    <li className="nav-item">
+                      <a className="nav-link" href="/orders">
+                        My Orders
+                      </a>
+                    </li>
+                  )}
                   {isAdmin && (
                     <>
                       <li className="nav-item">
@@ -141,65 +141,68 @@ const Navbar = ({ onSelectCategory }) => {
                       </li>
                     </>
                   )}
-                 <li className="nav-item dropdown">
-                   <a
-                     className="nav-link dropdown-toggle"
-                     href="/"
-                     role="button"
-                     data-bs-toggle="dropdown"
-                     aria-expanded="false"
-                   >
-                     Categories
-                   </a>
+                  <li className="nav-item dropdown">
+                    <a
+                      className="nav-link dropdown-toggle"
+                      href="/"
+                      role="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      Categories
+                    </a>
 
-                   <ul className="dropdown-menu">
-                     {categories.map((category) => (
-                       <li key={category}>
-                         <button
-                           className="dropdown-item"
-                           onClick={() => handleCategorySelect(category)}
-                         >
-                           {category}
-                         </button>
-                       </li>
-                     ))}
-                   </ul>
-                 </li>
-                  {isAuthenticated && (
+                    <ul className="dropdown-menu">
+                      {categories.map((category) => (
+                        <li key={category}>
+                          <button
+                            className="dropdown-item"
+                            onClick={() => handleCategorySelect(category)}
+                          >
+                            {category}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                </ul>
+                {isAuthenticated && (
+                  <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li className="nav-item">
                       <span className="nav-link">
                         Welcome, {user?.fullName || user?.email}
                       </span>
                     </li>
-                  )}
-                  {isAuthenticated && (
                     <li className="nav-item">
                       <a className="nav-link" href="/profile">
                         Profile
                       </a>
                     </li>
-                  )}
-                  <li className="nav-item">
-                    {isAuthenticated ? (
-                     <button
-                       className="btn btn-link nav-link"
-                       onClick={logout}
-                       style={{ cursor: "pointer" }}
-                     >
-                       Logout
-                     </button>
-                   ) : (
-                     <>
-                       <a className="nav-link" href="/login">
-                         Login
-                       </a>
-                       <a className="nav-link" href="/register">
-                         Register
-                       </a>
-                     </>
-                   )}
-                 </li>
-               </ul>
+                    <li className="nav-item">
+                      <button
+                        className="btn btn-link nav-link"
+                        onClick={logout}
+                        style={{ cursor: "pointer" }}
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                )}
+                {!isAuthenticated && (
+                  <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li className="nav-item">
+                      <a className="nav-link" href="/login">
+                        Login
+                      </a>
+                    </li>
+                    <li className="nav-item">
+                      <a className="nav-link" href="/register">
+                        Register
+                      </a>
+                    </li>
+                  </ul>
+                )}
               <button className="theme-btn" onClick={() => toggleTheme()}>
                 {theme === "dark-theme" ? (
                   <i className="bi bi-moon-fill"></i>
@@ -207,54 +210,42 @@ const Navbar = ({ onSelectCategory }) => {
                   <i className="bi bi-sun-fill"></i>
                 )}
               </button>
-              <div className="d-flex align-items-center cart">
-                <a href="/cart" className="nav-link text-dark">
-                  <i
-                    className="bi bi-cart me-2"
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    Cart
-                  </i>
-                </a>
-                {/* <form className="d-flex" role="search" onSubmit={handleSearch} id="searchForm"> */}
-                <input
-                  className="form-control me-2"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                  value={input}
-                  onChange={(e) => handleChange(e.target.value)}
-                  onFocus={() => setSearchFocused(true)} // Set searchFocused to true when search bar is focused
-                  onBlur={() => setSearchFocused(false)} // Set searchFocused to false when search bar loses focus
-                />
-                {showSearchResults && (
-                  <ul className="list-group">
-                    {searchResults.length > 0 ? (  
-                        searchResults.map((result) => (
-                          <li key={result.id} className="list-group-item">
-                            <a href={`/product/${result.id}`} className="search-result-link">
-                            <span>{result.name}</span>
-                            </a>
-                          </li>
-                        ))
-                    ) : (
-                      noResults && (
-                        <p className="no-results-message">
-                          No Prouduct with such Name
-                        </p>
-                      )
-                    )}
-                  </ul>
-                )}
-                {/* <button
-                  className="btn btn-outline-success"
-                  onClick={handleSearch}
-                >
-                  Search Products
-                </button> */}
-                {/* </form> */}
-                <div />
-              </div>
+               <div className="d-flex align-items-center">
+                 <a href="/cart" className="nav-link text-dark">
+                   <i className="bi bi-cart me-2"></i>
+                   Cart
+                 </a>
+                 <input
+                   className="form-control me-2"
+                   type="search"
+                   placeholder="Search products..."
+                   aria-label="Search"
+                   value={input}
+                   onChange={(e) => handleChange(e.target.value)}
+                   onFocus={() => setSearchFocused(true)}
+                   onBlur={() => setSearchFocused(false)}
+                   style={{ maxWidth: '250px' }}
+                 />
+                 {showSearchResults && (
+                   <ul className="list-group" style={{ position: 'absolute', top: '100%', right: 0, minWidth: '200px', zIndex: 1000 }}>
+                     {searchResults.length > 0 ? (
+                       searchResults.map((result) => (
+                         <li key={result.id} className="list-group-item">
+                           <a href={`/product/${result.id}`} className="search-result-link">
+                             <span>{result.name}</span>
+                           </a>
+                         </li>
+                       ))
+                     ) : (
+                       noResults && (
+                         <p className="no-results-message">
+                           No product found
+                         </p>
+                       )
+                     )}
+                   </ul>
+                 )}
+               </div>
             </div>
           </div>
         </nav>

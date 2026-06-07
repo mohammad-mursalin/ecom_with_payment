@@ -10,6 +10,7 @@ import { ToastProvider } from "./components/Toast";
 import { WebSocketProvider } from "./Context/WebSocketContext";
 import UpdateProduct from "./components/UpdateProduct";
 import OrderHistory from "./components/OrderHistory";
+import OrderDetails from "./components/OrderDetails";
 import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentCancel from "./components/PaymentCancel";
 import Login from "./pages/Login";
@@ -73,6 +74,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <OrderHistory />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <PrivateRoute>
+                  <OrderDetails />
                 </PrivateRoute>
               }
             />

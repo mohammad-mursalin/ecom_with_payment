@@ -159,76 +159,134 @@ const Cart = () => {
   };
 
   return (
-    <div className="cart-container">
-      <div className="shopping-cart">
-        <div className="title">Shopping Bag</div>
+    <div className="container" style={{ marginTop: "80px", marginBottom: "40px" }}>
+      <div className="row">
         {(!cartItems || cartItems.length === 0) && (!cart || cart.length === 0) ? (
-          <div className="empty" style={{ textAlign: "left", padding: "2rem" }}>
+          <div className="col-md-12 text-center py-5">
+            <div className="mb-3">
+              <i className="bi bi-basket" style={{ fontSize: "3rem", color: "#6c757d" }}></i>
+            </div>
             <h4>Your cart is empty</h4>
+            <p className="text-muted">Add some products to get started</p>
+            <Link to="/" className="btn btn-primary">
+              Continue Shopping
+            </Link>
           </div>
         ) : (
           <>
-            {(cartItems.length > 0 ? cartItems : cart).map((item) => (
-              <li key={item.id} className="cart-item">
-                <div className="item" style={{ display: "flex", alignContent: "center" }} key={item.id}>
-                  <div>
-                    {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.name} className="cart-item-image" />
-                    )}
-                  </div>
-                  <div className="description">
-                    <span>{item.brand}</span>
-                    <span>{item.name}</span>
-                  </div>
-
-                  <div className="quantity">
-                    <button type="button" name="button" onClick={() => handleIncreaseQuantity(item.id)}>
-                      <i className="bi bi-plus-square-fill"></i>
+            <div className="col-lg-8">
+              <h2 className="mb-4">Shopping Cart</h2>
+              <div className="border rounded p-3" style={{ backgroundColor: "var(--card-bg-clr)", borderRadius: "12px" }}>
+                {(cartItems.length > 0 ? cartItems : cart).map((item) => (
+                  <div
+                    key={item.id}
+                    className="d-flex align-items-center border-bottom py-3 mb-3"
+                    style={{ borderBottom: "1px solid #e9ecef", paddingBottom: "12px", marginBottom: "12px" }}
+                  >
+                    <div className="me-3" style={{ width: "80px", height: "80px", flexShrink: "0" }}>
+                      {item.imageUrl && (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: "8px"
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-grow-1 me-3">
+                      <h6 className="mb-1 fw-semibold">{item.name}</h6>
+                      <small className="text-muted">{item.brand}</small>
+                    </div>
+                    <div className="d-flex align-items-center">
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => handleDecreaseQuantity(item.id)}
+                        style={{ width: "30px", height: "30px" }}
+                      >
+                        <i className="bi bi-dash"></i>
+                      </button>
+                      <span className="mx-3" style={{ minWidth: "40px", textAlign: "center" }}>
+                        {item.quantity}
+                      </span>
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => handleIncreaseQuantity(item.id)}
+                        style={{ width: "30px", height: "30px" }}
+                      >
+                        <i className="bi bi-plus"></i>
+                      </button>
+                    </div>
+                    <div className="text-end ms-3" style={{ minWidth: "100px" }}>
+                      <h6 className="mb-0 fw-bold">
+                        <i className="bi bi-currency-rupee"></i>
+                        {(item.price * item.quantity).toFixed(2)}
+                      </h6>
+                    </div>
+                    <button
+                      className="btn btn-sm btn-outline-danger ms-3"
+                      onClick={() => handleRemoveFromCart(item.id)}
+                      title="Remove item"
+                    >
+                      <i className="bi bi-trash"></i>
                     </button>
-                    <input type="button" name="name" value={item.quantity} readOnly />
-                    <button type="button" name="button" onClick={() => handleDecreaseQuantity(item.id)}>
-                      <i className="bi bi-dash-square-fill"></i>
-                    </button>
                   </div>
+                ))}
+              </div>
+            </div>
 
-                  <div className="total-price " style={{ textAlign: "center" }}>
-                    ${item.price * item.quantity}
+            <div className="col-lg-4 mt-4 mt-lg-0">
+              <div className="card p-4" style={{ backgroundColor: "var(--card-bg-clr)", borderRadius: "12px" }}>
+                <h4 className="mb-4">Order Summary</h4>
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Subtotal</span>
+                    <span className="fw-semibold">
+                      <i className="bi bi-currency-rupee"></i>
+                      {totalPrice.toFixed(2)}
+                    </span>
                   </div>
-                  <button className="remove-btn" onClick={() => handleRemoveFromCart(item.id)}>
-                    <i className="bi bi-trash3-fill"></i>
-                  </button>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Shipping ({shippingMethod.toLowerCase()})</span>
+                    <span className="fw-semibold">
+                      <i className="bi bi-currency-rupee"></i>
+                      {shippingCost.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="border-top pt-3 mt-2">
+                    <div className="d-flex justify-content-between mb-3">
+                      <span className="fw-bold">Grand Total</span>
+                      <span className="fw-bold" style={{ fontSize: "1.2rem" }}>
+                        <i className="bi bi-currency-rupee"></i>
+                        {grandTotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <Button
+                      className="btn btn-primary w-100"
+                      onClick={() => setShowModal(true)}
+                      disabled={isProcessing}
+                      style={{ padding: "12px" }}
+                    >
+                      {isProcessing ? (
+                        <span>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Processing...
+                        </span>
+                      ) : (
+                        "Proceed to Checkout"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </li>
-            ))}
-            <p style={{ fontSize: "0.95rem", textAlign: "right", padding: "0 10px" }}>
-              Subtotal: <strong>${totalPrice.toFixed(2)}</strong>
-            </p>
-            <p style={{ fontSize: "0.95rem", textAlign: "right", padding: "0 10px" }}>
-              Shipping (
-              <span style={{ textTransform: "capitalize" }}>{shippingMethod.toLowerCase()}</span>
-              ): <strong>${shippingCost.toFixed(2)}</strong>
-            </p>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                fontWeight: "700",
-                textAlign: "right",
-                padding: "0 10px",
-              }}
-            >
-              Grand Total: <strong>${grandTotal.toFixed(2)}</strong>
-            </p>
-            <Button
-              className="btn btn-primary"
-              style={{ width: "100%" }}
-              onClick={() => setShowModal(true)}
-              disabled={isProcessing}
-            >
-              {isProcessing ? "Processing..." : "Checkout"}
-            </Button>
+              </div>
+            </div>
           </>
         )}
       </div>
+
       <CheckoutPopup
         show={showModal}
         handleClose={() => setShowModal(false)}
