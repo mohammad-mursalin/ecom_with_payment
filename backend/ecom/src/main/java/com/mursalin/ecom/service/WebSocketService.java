@@ -25,6 +25,9 @@ public class WebSocketService {
         message.put("totalAmount", order.getTotalAmount());
         message.put("customerEmail", order.getCustomerEmail());
         message.put("orderDate", order.getOrderDate().toString());
+        message.put("trackingNumber", order.getTrackingNumber());
+        message.put("trackingUrl", order.getTrackingUrl());
+        message.put("shippingCarrier", order.getShippingCarrier());
 
         logger.info("Sending order update via WebSocket: orderId={}, status={}", order.getId(), order.getStatus());
         messagingTemplate.convertAndSend("/topic/orders", (Object) message);

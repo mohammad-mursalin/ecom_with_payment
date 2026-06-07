@@ -274,6 +274,24 @@ public class OrderService {
         return savedOrder;
     }
 
+    @Transactional
+    public Order updateOrderTracking(Long orderId, String trackingNumber, String trackingUrl, String shippingCarrier) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+
+        order.setTrackingNumber(trackingNumber);
+        order.setTrackingUrl(trackingUrl);
+        order.setShippingCarrier(shippingCarrier);
+
+        Order savedOrder = orderRepository.save(order);
+        logger.info("Updated tracking for orderId={}, trackingNumber={}, carrier={}",
+                savedOrder.getId(), trackingNumber, shippingCarrier);
+
+        webSocketService.notifyOrderUpdate(savedOrder);
+
+        return savedOrder;
+    }
+
     // -------------------------------------------------------------------------
     // PRIVATE HELPERS
     // -------------------------------------------------------------------------
