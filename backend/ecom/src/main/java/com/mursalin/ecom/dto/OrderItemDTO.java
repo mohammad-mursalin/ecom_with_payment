@@ -76,4 +76,15 @@ public class OrderItemDTO {
     public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
+
+    public static OrderItemDTO fromOrderItem(com.mursalin.ecom.model.OrderItem orderItem) {
+        return new OrderItemDTO(
+                orderItem.getProductId(),
+                orderItem.getProductName(),
+                orderItem.getProductBrand(),
+                orderItem.getProductImageUrl(),
+                orderItem.getQuantity(),
+                orderItem.getUnitPrice()
+        );
+    }
 }
