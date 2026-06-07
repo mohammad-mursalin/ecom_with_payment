@@ -13,15 +13,18 @@ const PaymentCancel = () => {
   }, []);
 
   return (
-    <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-      <div className="alert alert-warning" role="alert">
-        <h4 className="alert-heading">Payment Cancelled</h4>
+    <div className="container mt-5 text-center" style={{ maxWidth: "600px" }}>
+      <div className="alert alert-warning border-0" style={{ backgroundColor: "#fff3cd", borderRadius: "12px" }}>
+        <div className="text-center mb-3">
+          <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: "3rem", color: "#ffc107" }}></i>
+        </div>
+        <h4 className="alert-heading mb-3">Payment Cancelled</h4>
         <p>Your payment was cancelled and your order has not been placed.</p>
-        <hr />
+        <hr className="mb-3" />
         <p className="mb-0">Your cart items are still saved. You can try again when you're ready.</p>
       </div>
-      <div className="mt-4">
-        <button className="btn btn-primary me-2" onClick={() => navigate("/cart")}>
+      <div className="d-flex justify-content-center gap-3 mt-4">
+        <button className="btn btn-primary" onClick={() => navigate("/cart")}>
           Try Again
         </button>
         <button className="btn btn-secondary" onClick={() => navigate("/")}>

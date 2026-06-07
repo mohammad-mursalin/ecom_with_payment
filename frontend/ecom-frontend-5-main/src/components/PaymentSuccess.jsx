@@ -53,20 +53,23 @@ const PaymentSuccess = () => {
 
   if (status === "verifying") {
     return (
-      <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-        <div className="spinner-border text-primary" role="status">
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
           <span className="visually-hidden">Loading...</span>
         </div>
-        <h3 className="mt-3">Verifying your payment...</h3>
+        <h3 className="mt-4 text-muted">Verifying your payment...</h3>
       </div>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-        <h3 className="text-danger">Payment verification failed</h3>
-        <p>Please contact support or try again.</p>
+      <div className="container mt-5 text-center">
+        <div className="mb-4">
+          <i className="bi bi-x-circle-fill" style={{ fontSize: "4rem", color: "#dc3545" }}></i>
+        </div>
+        <h3 className="text-danger mb-3">Payment verification failed</h3>
+        <p className="text-muted mb-4">Please try again or contact support if the issue persists.</p>
         <button className="btn btn-primary" onClick={() => navigate("/")}>
           Go to Home
         </button>
@@ -75,25 +78,18 @@ const PaymentSuccess = () => {
   }
 
   return (
-    <div className="container" style={{ marginTop: "100px", textAlign: "center" }}>
-      <div 
-        className="alert alert-success" 
-        role="alert"
-        style={{
-          color: '#0f5132',
-          backgroundColor: '#d1e7dd',
-          borderColor: '#badbcc',
-          maxWidth: '600px',
-          margin: '0 auto 20px auto'
-        }}
-      >
-        <h4 className="alert-heading">Payment Successful!</h4>
+    <div className="container mt-5 text-center" style={{ maxWidth: "600px" }}>
+      <div className="alert alert-success border-0" style={{ backgroundColor: "#d1e7dd", borderRadius: "12px" }}>
+        <div className="text-center mb-3">
+          <i className="bi bi-check-circle-fill" style={{ fontSize: "3rem", color: "#198754" }}></i>
+        </div>
+        <h4 className="alert-heading mb-3">Payment Successful!</h4>
         <p>Thank you for your purchase. Your order has been placed successfully.</p>
-        <hr />
+        <hr className="mb-3" />
         <p className="mb-0">You will receive a confirmation email shortly.</p>
       </div>
-      <div className="mt-4">
-        <button className="btn btn-primary me-2" onClick={() => navigate("/orders")}>
+      <div className="d-flex justify-content-center gap-3 mt-4">
+        <button className="btn btn-primary" onClick={() => navigate("/orders")}>
           View Orders
         </button>
         <button className="btn btn-secondary" onClick={() => navigate("/")}>
