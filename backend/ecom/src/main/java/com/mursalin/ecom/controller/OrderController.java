@@ -1,5 +1,6 @@
 package com.mursalin.ecom.controller;
 
+import com.mursalin.ecom.dto.OrderDetailsResponse;
 import com.mursalin.ecom.model.Order;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.OrderService;
@@ -40,18 +41,21 @@ public class OrderController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id, @AuthenticationPrincipal UserPrinciples userPrinciple) {
+    public ResponseEntity<OrderDetailsResponse> getOrderDetails(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrinciples userPrinciple
+    ) {
         Order order;
         if (userPrinciple.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            // Admin can access any order
             order = orderService.getOrderById(id);
         } else {
-            // Regular user: only their own orders
             order = orderService.getOrderByIdForUser(id, userPrinciple.getUserId());
         }
-        return order != null
-                ? ResponseEntity.ok(order)
-                : ResponseEntity.notFound().build();
+
+        if (order != null) {
+            return ResponseEntity.ok(OrderDetailsResponse.fromOrder(order));
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PatchMapping("/{id}/status")
@@ -69,6 +73,26 @@ public class OrderController {
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             logger.error("Error updating order status for id={}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PatchMapping("/{id}/tracking")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Order> updateOrderTracking(
+            @PathVariable Long id,
+            @RequestBody com.mursalin.ecom.dto.TrackingUpdateRequest request
+    ) {
+        try {
+            Order order = orderService.updateOrderTracking(
+                    id,
+                    request.getTrackingNumber(),
+                    request.getTrackingUrl(),
+                    request.getShippingCarrier()
+            );
+            return ResponseEntity.ok(order);
+        } catch (RuntimeException e) {
+            logger.error("Error updating tracking for id={}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
