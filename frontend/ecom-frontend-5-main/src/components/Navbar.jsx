@@ -26,7 +26,7 @@ const Navbar = ({ onSelectCategory }) => {
       setShowSearchResults(true);
       try {
         const response = await API.get(
-          `/api/products/search?keyword=${value}`
+          `/products/search?keyword=${value}`
         );
         setSearchResults(response.data);
         setNoResults(response.data.length === 0);
