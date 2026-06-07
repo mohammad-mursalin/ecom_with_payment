@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 .dark-theme{
     --root_background: #1f1f1f;}
     .light-theme{
@@ -5,4 +7,51 @@
     }
 :root{
     background-color: #1f1f1f;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -30px;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #6c757d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.timeline-marker.completed {
+  background-color: #0d6efd;
+}
+
+.timeline-marker.active {
+  background-color: #0d6efd;
+  border: 3px solid #e9ecef;
+}
+
+.timeline-number {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.timeline-content {
+  font-size: 14px;
 }
