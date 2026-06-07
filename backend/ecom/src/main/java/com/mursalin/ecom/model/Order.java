@@ -49,6 +49,15 @@ public class Order {
     @Column(name = "shipping_method", length = 20)
     private String shippingMethod;
 
+    @Column(name = "tracking_number", length = 100)
+    private String trackingNumber;
+
+    @Column(name = "tracking_url", length = 500)
+    private String trackingUrl;
+
+    @Column(name = "shipping_carrier", length = 50)
+    private String shippingCarrier;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -64,7 +73,7 @@ public class Order {
     private Payment payment;
 
     public enum OrderStatus {
-        PENDING, PAID, FAILED, CANCELLED, REFUNDED
+        PENDING, PAID, SHIPPED, DELIVERED, FAILED, CANCELLED, REFUNDED
     }
 
     @PrePersist
@@ -201,6 +210,30 @@ public class Order {
 
     public void setShippingMethod(String shippingMethod) {
         this.shippingMethod = shippingMethod;
+    }
+
+    public String getTrackingNumber() {
+        return trackingNumber;
+    }
+
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
+    }
+
+    public String getTrackingUrl() {
+        return trackingUrl;
+    }
+
+    public void setTrackingUrl(String trackingUrl) {
+        this.trackingUrl = trackingUrl;
+    }
+
+    public String getShippingCarrier() {
+        return shippingCarrier;
+    }
+
+    public void setShippingCarrier(String shippingCarrier) {
+        this.shippingCarrier = shippingCarrier;
     }
 
     public LocalDateTime getCreatedAt() {
