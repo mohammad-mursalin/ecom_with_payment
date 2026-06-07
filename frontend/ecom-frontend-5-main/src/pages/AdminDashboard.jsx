@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../axios";
 import { useAuth } from "../Context/AuthContext";
+import AdminUsers from "./AdminUsers";
+import AdminOrders from "./AdminOrders";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();
