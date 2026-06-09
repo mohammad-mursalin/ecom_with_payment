@@ -2,9 +2,10 @@ import React, { useContext, useState, useEffect } from "react";
 import AppContext from "../Context/Context";
 import axios from "../axios";
 import CheckoutPopup from "./CheckoutPopup";
-import { Button } from "react-bootstrap";
 import { useToast } from "./Toast";
 import { useAuth } from "../Context/AuthContext";
+import { ShoppingBasket, Trash2, Plus, Minus, CreditCard, MapPin, Truck, CheckCircle2, Package, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart, data: allProducts } = useContext(AppContext);
@@ -15,7 +16,6 @@ const Cart = () => {
   const [showModal, setShowModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Shipping state (all in one place)
   const [shippingForm, setShippingForm] = useState({
     address: "",
     area: "",
@@ -25,7 +25,6 @@ const Cart = () => {
   const [shippingCost, setShippingCost] = useState(0);
   const grandTotal = totalPrice + shippingCost;
 
-  // Recalculate shipping cost from backend whenever total or method changes
   useEffect(() => {
     if (totalPrice === 0) {
       setShippingCost(0);
@@ -124,7 +123,6 @@ const Cart = () => {
 
     setIsProcessing(true);
     try {
-      // Build the combined shipping address string: "address, area, city"
       const shippingAddress = `${shippingForm.address}, ${shippingForm.area}, ${shippingForm.city}`;
 
       const orderItems = itemsToCheck.map((item) => ({
@@ -159,133 +157,198 @@ const Cart = () => {
   };
 
   return (
-    <div className="container" style={{ marginTop: "80px", marginBottom: "40px" }}>
-      <div className="row">
-        {(!cartItems || cartItems.length === 0) && (!cart || cart.length === 0) ? (
-          <div className="col-md-12 text-center py-5">
-            <div className="mb-3">
-              <i className="bi bi-basket" style={{ fontSize: "3rem", color: "#6c757d" }}></i>
-            </div>
-            <h4>Your cart is empty</h4>
-            <p className="text-muted">Add some products to get started</p>
-            <Link to="/" className="btn btn-primary">
-              Continue Shopping
-            </Link>
+    <div className="page-container">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Shopping Cart</h1>
+            <p className="page-subtitle">Review your items before checkout</p>
+          </div>
+          {cartItems.length > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowModal(true)}
+              className="btn btn-modern btn-modern-primary"
+            >
+              <Sparkles className="w-5 h-5" />
+              Checkout Now
+            </motion.button>
+          )}
+        </div>
+
+        {(cartItems.length === 0 && (!cart || cart.length === 0)) ? (
+          <div className="empty-state">
+            <ShoppingBasket className="empty-state-icon text-blue-600" />
+            <h2 className="empty-state-title">Your cart is empty</h2>
+            <p className="empty-state-description">Add some products to get started. Browse our collection and find something you love.</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              as={Link}
+              to="/"
+              className="btn btn-modern btn-modern-primary"
+            >
+              Start Shopping
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </motion.button>
           </div>
         ) : (
           <>
-            <div className="col-lg-8">
-              <h2 className="mb-4">Shopping Cart</h2>
-              <div className="border rounded p-3" style={{ backgroundColor: "var(--card-bg-clr)", borderRadius: "12px" }}>
-                {(cartItems.length > 0 ? cartItems : cart).map((item) => (
-                  <div
-                    key={item.id}
-                    className="d-flex align-items-center border-bottom py-3 mb-3"
-                    style={{ borderBottom: "1px solid #e9ecef", paddingBottom: "12px", marginBottom: "12px" }}
-                  >
-                    <div className="me-3" style={{ width: "80px", height: "80px", flexShrink: "0" }}>
-                      {item.imageUrl && (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: "8px"
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex-grow-1 me-3">
-                      <h6 className="mb-1 fw-semibold">{item.name}</h6>
-                      <small className="text-muted">{item.brand}</small>
-                    </div>
-                    <div className="d-flex align-items-center">
-                      <button
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => handleDecreaseQuantity(item.id)}
-                        style={{ width: "30px", height: "30px" }}
-                      >
-                        <i className="bi bi-dash"></i>
-                      </button>
-                      <span className="mx-3" style={{ minWidth: "40px", textAlign: "center" }}>
-                        {item.quantity}
-                      </span>
-                      <button
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => handleIncreaseQuantity(item.id)}
-                        style={{ width: "30px", height: "30px" }}
-                      >
-                        <i className="bi bi-plus"></i>
-                      </button>
-                    </div>
-                    <div className="text-end ms-3" style={{ minWidth: "100px" }}>
-                      <h6 className="mb-0 fw-bold">
-                        <i className="bi bi-currency-rupee"></i>
-                        {(item.price * item.quantity).toFixed(2)}
-                      </h6>
-                    </div>
-                    <button
-                      className="btn btn-sm btn-outline-danger ms-3"
-                      onClick={() => handleRemoveFromCart(item.id)}
-                      title="Remove item"
-                    >
-                      <i className="bi bi-trash"></i>
-                    </button>
+            <div className="grid-container">
+              <div>
+                <div className="shopping-cart">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Package className="w-6 h-6 text-blue-600" />
+                    <h2 className="text-xl font-bold">{cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'} in your cart</h2>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            <div className="col-lg-4 mt-4 mt-lg-0">
-              <div className="card p-4" style={{ backgroundColor: "var(--card-bg-clr)", borderRadius: "12px" }}>
-                <h4 className="mb-4">Order Summary</h4>
-                <div className="mb-3">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Subtotal</span>
-                    <span className="fw-semibold">
-                      <i className="bi bi-currency-rupee"></i>
-                      {totalPrice.toFixed(2)}
-                    </span>
+                  <div className="cart-items">
+                    {cartItems.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="cart-item"
+                      >
+                        <div className="cart-item-image">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                          />
+                        </div>
+                        <div className="cart-item-info">
+                          <h3 className="cart-item-title">{item.name}</h3>
+                          <p className="cart-item-brand">{item.brand}</p>
+                        </div>
+                        <div className="cart-item-actions">
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="counter-btn"
+                              onClick={() => handleDecreaseQuantity(item.id)}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="w-10 text-center font-bold">{item.quantity}</span>
+                            <button
+                              className="counter-btn"
+                              onClick={() => handleIncreaseQuantity(item.id)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-blue-600">
+                              ₹{(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+                          <button
+                            className="icon-button bg-red-100 text-red-600 hover:bg-red-200"
+                            onClick={() => handleRemoveFromCart(item.id)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Shipping ({shippingMethod.toLowerCase()})</span>
-                    <span className="fw-semibold">
-                      <i className="bi bi-currency-rupee"></i>
-                      {shippingCost.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="border-top pt-3 mt-2">
-                    <div className="d-flex justify-content-between mb-3">
-                      <span className="fw-bold">Grand Total</span>
-                      <span className="fw-bold" style={{ fontSize: "1.2rem" }}>
-                        <i className="bi bi-currency-rupee"></i>
-                        {grandTotal.toFixed(2)}
-                      </span>
-                    </div>
-                    <Button
-                      className="btn btn-primary w-100"
+
+                  {cartItems.length > 0 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setShowModal(true)}
-                      disabled={isProcessing}
-                      style={{ padding: "12px" }}
+                      className="btn btn-modern btn-modern-primary w-full mt-6"
                     >
-                      {isProcessing ? (
-                        <span>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Processing...
-                        </span>
-                      ) : (
-                        "Proceed to Checkout"
-                      )}
-                    </Button>
+                      <Sparkles className="w-5 h-5" />
+                      Proceed to Checkout
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="order-summary">
+                  <div className="flex items-center gap-3 mb-6">
+                    <CreditCard className="w-6 h-6 text-blue-600" />
+                    <h2 className="text-xl font-bold">Order Summary</h2>
                   </div>
+
+                  <div className="order-summary-item">
+                    <span>Subtotal</span>
+                    <span className="font-bold text-blue-600">₹{totalPrice.toFixed(2)}</span>
+                  </div>
+
+                  <div className="order-summary-item">
+                    <span>Shipping ({shippingMethod.toLowerCase()})</span>
+                    <span className="font-bold text-blue-600">
+                      {shippingCost === 0 ? 'Free' : '₹' + shippingCost.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="order-summary-item">
+                    <span>Tax (18%)</span>
+                    <span className="font-bold">
+                      ₹{(totalPrice * 0.18).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="order-summary-total">
+                    <span className="text-gray-500 dark:text-gray-400">Grand Total</span>
+                    <span className="font-bold text-blue-600 text-2xl">
+                      ₹{(grandTotal * 1.18).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="mt-6 p-4 rounded-2xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Free Delivery</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">On orders above ₹500</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-4 rounded-2xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Secure Payment</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">100% secure checkout</p>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowModal(true)}
+                    disabled={isProcessing}
+                    className="btn btn-modern btn-modern-primary w-full mt-6"
+                  >
+                    {isProcessing ? (
+                      <span className="flex items-center gap-2">
+                        <div className="spinner spinner-sm"></div>
+                        Processing...
+                      </span>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Proceed to Checkout
+                      </>
+                    )}
+                  </motion.button>
                 </div>
               </div>
             </div>
           </>
         )}
-      </div>
+      </motion.div>
 
       <CheckoutPopup
         show={showModal}

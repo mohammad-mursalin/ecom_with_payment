@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "../axios";
 import { useWebSocket } from "../Context/WebSocketContext";
 import { useToast } from "./Toast";
-import { Link } from "react-router-dom";
+import { Link, ArrowLeft, Package, Calendar, CreditCard, MapPin, Truck, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
@@ -15,10 +16,9 @@ const OrderHistory = () => {
   }, []);
 
   useEffect(() => {
-    // Subscribe to real-time order updates
     orders.forEach(order => {
       subscribeToOrder(order.id, (updatedOrder) => {
-        setOrders(prev => prev.map(o => 
+        setOrders(prev => prev.map(o =>
           o.id === updatedOrder.orderId ? { ...o, status: updatedOrder.status } : o
         ));
         showToast(`Order #${updatedOrder.orderId} status: ${updatedOrder.status}`);
@@ -26,11 +26,10 @@ const OrderHistory = () => {
     });
   }, [orders.length, subscribeToOrder]);
 
-  // Also listen to general order updates
   useEffect(() => {
     if (orderUpdates.length > 0) {
       const latestUpdate = orderUpdates[orderUpdates.length - 1];
-      setOrders(prev => prev.map(o => 
+      setOrders(prev => prev.map(o =>
         o.id === latestUpdate.orderId ? { ...o, status: latestUpdate.status } : o
       ));
     }
@@ -51,113 +50,156 @@ const OrderHistory = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "PAID": return "success";
-      case "PENDING": return "warning";
-      case "FAILED": return "danger";
-      case "CANCELLED": return "secondary";
-      case "REFUNDED": return "info";
-      default: return "secondary";
+      case "PAID": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-500", icon: CheckCircle };
+      case "PENDING": return { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-500", icon: Clock };
+      case "SHIPPED": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-500", icon: Truck };
+      case "DELIVERED": return { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-500", icon: CheckCircle };
+      case "CANCELLED": return { bg: "bg-red-100", text: "text-red-700", border: "border-red-500", icon: XCircle };
+      default: return { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-500", icon: AlertCircle };
     }
   };
 
   if (loading) {
     return (
-      <div className="container mt-5 text-center">
-        <h3 className="text-muted">Loading orders...</h3>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="empty-state">
+          <Package className="empty-state-icon text-blue-600" />
+          <h2 className="empty-state-title">Loading orders...</h2>
+          <p className="empty-state-description">Please wait while we fetch your order history.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container" style={{ marginTop: "80px" }}>
-      <h2 className="mb-4 text-center">Order History</h2>
-
-      {orders.length === 0 ? (
-        <div className="text-center py-5">
-          <div className="mb-3">
-            <i className="bi bi-box-seam" style={{ fontSize: "3rem", color: "#6c757d" }}></i>
+    <div className="page-container">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Order History</h1>
+            <p className="page-subtitle">Track and manage your recent orders</p>
           </div>
-          <h4>No orders yet</h4>
-          <p className="text-muted">Your orders will appear here after purchase.</p>
-          <Link to="/" className="btn btn-primary mt-3">
-            Continue Shopping
-          </Link>
         </div>
-      ) : (
-        <div className="row">
-          {orders.map((order, index) => (
-            <div key={order.id} className="col-md-12 mb-4">
-              <div className="card">
-                <div className="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-receipt"></i>
-                    <h5 className="mb-0">Order #{order.id}</h5>
-                  </div>
-                  <span className={`badge bg-light text-primary`}>
-                    {order.status}
-                  </span>
-                </div>
-                <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <h6 className="text-muted mb-1">Order Date</h6>
-                        <p className="mb-1">
-                          <i className="bi bi-calendar3"></i>
-                          {order.orderDate ? new Date(order.orderDate).toLocaleString() : 'N/A'}
+
+        {orders.length === 0 ? (
+          <div className="empty-state">
+            <Package className="empty-state-icon text-blue-600" />
+            <h2 className="empty-state-title">No orders yet</h2>
+            <p className="empty-state-description">
+              Your orders will appear here after purchase. Start shopping to see your orders!
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              as={Link}
+              to="/"
+              className="btn btn-modern btn-modern-primary"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Start Shopping
+            </motion.button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order, index) => {
+              const statusConfig = getStatusColor(order.status);
+              const StatusIcon = statusConfig.icon;
+
+              return (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="order-card"
+                >
+                  <div className="order-card-header">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                        <Package className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Order #{order.id}</h3>
+                        <p className="text-blue-100 text-sm">
+                          {order.orderDate ? new Date(order.orderDate).toLocaleString() : 'Unknown date'}
                         </p>
                       </div>
-                      <div className="mb-3">
-                        <h6 className="text-muted mb-1">Total Amount</h6>
-                        <p className="mb-1 fw-bold" style={{ fontSize: "1.2rem", color: "#0d6efd" }}>
-                          <i className="bi bi-currency-rupee"></i>
-                          {order.totalAmount?.toFixed(2) || '0.00'}
-                        </p>
-                      </div>
-                      <div className="mb-3">
-                        <h6 className="text-muted mb-1">Customer Email</h6>
-                        <p className="mb-0">
-                          <i className="bi bi-envelope"></i>
-                          {order.customerEmail || "Not provided"}
-                        </p>
-                      </div>
-                      {order.shippingCarrier && (
-                        <div className="mb-3">
-                          <h6 className="text-muted mb-1">Carrier</h6>
-                          <p className="mb-0">
-                            <i className="bi bi-truck"></i>
-                            {order.shippingCarrier}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                    <div className="col-md-6">
-                      <h6 className="mb-3">Order Items</h6>
-                      <div className="border rounded p-3" style={{ maxHeight: "300px", overflowY: "auto" }}>
-                        {order.orderItems && order.orderItems.map((item, index) => (
-                          <div key={index} className="d-flex justify-content-between align-items-center mb-2 pb-2" style={{ borderBottom: index < order.orderItems.length - 1 ? '1px solid #e9ecef' : 'none' }}>
+                    <div className={`px-4 py-2 rounded-full ${statusConfig.bg} ${statusConfig.text} font-semibold flex items-center gap-2`}>
+                      <StatusIcon className="w-4 h-4" />
+                      {order.status}
+                    </div>
+                  </div>
+
+                  <div className="order-card-body">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
+                          <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+                            <p className="font-bold text-xl text-blue-600">
+                              ₹{order.totalAmount?.toFixed(2) || '0.00'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
+                          <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Shipping Address</p>
+                            <p className="font-semibold text-sm">
+                              {order.shippingAddress || 'Address not provided'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {order.shippingCarrier && (
+                          <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
+                            <Truck className="w-5 h-5 text-blue-600 flex-shrink-0" />
                             <div>
-                              <p className="mb-0 fw-semibold">{item.productName}</p>
-                              <small className="text-muted">{item.productBrand || ''}</small>
-                            </div>
-                            <div className="text-end">
-                              <p className="mb-0">{item.quantity} x</p>
-                              <p className="mb-0 fw-semibold">
-                                <i className="bi bi-currency-rupee"></i>
-                                {item.subtotal?.toFixed(2) || '0.00'}
-                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Carrier</p>
+                              <p className="font-semibold text-sm">{order.shippingCarrier}</p>
                             </div>
                           </div>
-                        ))}
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                          <Package className="w-5 h-5 text-blue-600" />
+                          Order Items
+                        </h4>
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                          {order.orderItems && order.orderItems.map((item, idx) => (
+                            <div key={idx} className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-all">
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">{item.productBrand || ''}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-semibold text-blue-600">
+                                    {item.quantity} x ₹{item.subtotal?.toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 };

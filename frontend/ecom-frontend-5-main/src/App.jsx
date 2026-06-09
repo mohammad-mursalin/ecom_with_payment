@@ -1,4 +1,5 @@
 import "./App.css";
+import "./styles.css";
 import React, { useState } from "react";
 import Home from "./components/Home";
 import Navbar from "./components/Navbar";
@@ -21,8 +22,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 function App() {
