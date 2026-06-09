@@ -1,5 +1,6 @@
 package com.mursalin.ecom.controller;
 
+import com.mursalin.ecom.dto.PaginatedResponse;
 import com.mursalin.ecom.model.Product;
 import com.mursalin.ecom.service.ProductService;
 import org.springframework.http.HttpStatus;
@@ -27,8 +28,13 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getProducts() {
-        return new ResponseEntity<>(service.getProducts(), HttpStatus.OK);
+    public ResponseEntity<PaginatedResponse<Product>> getProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "") String category
+    ) {
+        return new ResponseEntity<>(service.getProducts(page, size, keyword, category), HttpStatus.OK);
     }
 
     @GetMapping("/product/{prodId}")
@@ -85,8 +91,11 @@ public class ProductController {
     }
 
     @GetMapping("/products/search")
-    public ResponseEntity<List<Product>> searchProduct(@RequestParam String keyword) {
-        List<Product> products = service.searchProduct(keyword);
-        return new ResponseEntity<>(products, HttpStatus.OK);
+    public ResponseEntity<PaginatedResponse<Product>> searchProduct(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        return new ResponseEntity<>(service.searchProduct(keyword, page, size), HttpStatus.OK);
     }
 }

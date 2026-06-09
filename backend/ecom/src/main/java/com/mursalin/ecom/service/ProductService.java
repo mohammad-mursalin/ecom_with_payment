@@ -1,15 +1,19 @@
 package com.mursalin.ecom.service;
 
 import com.mursalin.ecom.dto.ImageResponse;
+import com.mursalin.ecom.dto.PaginatedResponse;
 import com.mursalin.ecom.model.Product;
 import com.mursalin.ecom.repository.ProductRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -20,9 +24,10 @@ public class ProductService {
     @Autowired
     ImageService imageService;
 
-    public List<Product> getProducts() {
-        System.out.println(repo.findAll());
-        return repo.findAll();
+    public PaginatedResponse<Product> getProducts(int page, int size, String keyword, String category) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Product> productPage = repo.findWithFilters(normalize(keyword), category, pageable);
+        return buildPaginatedResponse(productPage, page, size);
     }
 
     public Product getProductById(int prodId) {
@@ -30,21 +35,11 @@ public class ProductService {
     }
 
     public Product addProduct(Product product, MultipartFile imageFile) throws IOException {
-
-        try {
-
-            if (imageFile != null && !imageFile.isEmpty()) {
-                ImageResponse image = imageService.uploadImage(imageFile);
-                product.setImageUrl(image.getImageUrl());
-                product.setDeleteHash(image.getDeleteHash());
-                System.out.println(image);
-                System.out.println("delete hash : " +image.getDeleteHash());
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error while processing the product image");
+        if (imageFile != null && !imageFile.isEmpty()) {
+            ImageResponse image = imageService.uploadImage(imageFile);
+            product.setImageUrl(image.getImageUrl());
+            product.setDeleteHash(image.getDeleteHash());
         }
-
         return repo.save(product);
     }
 
@@ -58,18 +53,12 @@ public class ProductService {
         productDB.setDescription(product.getDescription());
         productDB.setReleaseDate(product.getReleaseDate());
         productDB.setStockQuantity(product.getStockQuantity());
-        try {
-            if (imageFile != null && !imageFile.isEmpty()) {
-                imageService.deleteImage(productDB.getDeleteHash());
-                ImageResponse image = imageService.uploadImage(imageFile);
-                productDB.setImageUrl(image.getImageUrl());
-                productDB.setDeleteHash(image.getDeleteHash());
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error while updating the complaint image");
+        if (imageFile != null && !imageFile.isEmpty()) {
+            imageService.deleteImage(productDB.getDeleteHash());
+            ImageResponse image = imageService.uploadImage(imageFile);
+            productDB.setImageUrl(image.getImageUrl());
+            productDB.setDeleteHash(image.getDeleteHash());
         }
-
         return repo.save(productDB);
     }
 
@@ -79,9 +68,25 @@ public class ProductService {
         repo.deleteById(id);
     }
 
-    public List<Product> searchProduct(String keyword) {
+    public PaginatedResponse<Product> searchProduct(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Product> productPage = repo.searchProductByKeywordPaged(normalize(keyword), pageable);
+        return buildPaginatedResponse(productPage, page, size);
+    }
 
-        List<Product> products = repo.searchProductByKeyword(keyword);
-        return products;
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private PaginatedResponse<Product> buildPaginatedResponse(Page<Product> productPage, int page, int size) {
+        return new PaginatedResponse<>(
+                productPage.getContent(),
+                page,
+                productPage.getTotalPages(),
+                productPage.getTotalElements(),
+                size,
+                !productPage.hasPrevious(),
+                !productPage.hasNext()
+        );
     }
 }
