@@ -18,36 +18,50 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
-
-    @Column(name = "order_date")
-    private LocalDateTime orderDate;
-
-    @Column(name = "total_amount", precision = 10, scale = 2)
-    private BigDecimal totalAmount;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private OrderStatus status;
+    @Column(nullable = false, length = 20)
+    private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(name = "stripe_session_id")
-    private String stripeSessionId;
+    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    private BigDecimal subtotal;
 
-    @Column(name = "stripe_payment_intent_id")
-    private String stripePaymentIntentId;
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
 
-    @Column(name = "customer_email")
+    @Column(name = "tax_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal taxAmount;
+
+    @Column(name = "shipping_fee", precision = 10, scale = 2, nullable = false)
+    private BigDecimal shippingFee;
+
+    @Column(name = "shipping_method", length = 50)
+    private String shippingMethod;
+
+    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal totalAmount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
+
+    @Column(name = "payment_reference", length = 100)
+    private String paymentReference;
+
+    @Column(name = "payment_method", length = 50)
+    private String paymentMethod;
+
+    @Column(name = "customer_email", length = 100)
     private String customerEmail;
 
-    @Column(name = "shipping_address", length = 500)
-    private String shippingAddress;
+    @Column(name = "stripe_session_id", length = 255)
+    private String stripeSessionId;
 
-    @Column(name = "shipping_cost", precision = 10, scale = 2)
-    private BigDecimal shippingCost;
-
-    @Column(name = "shipping_method", length = 20)
-    private String shippingMethod;
+    @Column(name = "stripe_payment_intent_id", length = 255)
+    private String stripePaymentIntentId;
 
     @Column(name = "tracking_number", length = 100)
     private String trackingNumber;
@@ -55,8 +69,14 @@ public class Order {
     @Column(name = "tracking_url", length = 500)
     private String trackingUrl;
 
-    @Column(name = "shipping_carrier", length = 50)
+    @Column(name = "shipping_carrier", length = 100)
     private String shippingCarrier;
+
+    @Embedded
+    private AddressSnapshot deliveryAddress;
+
+    @Column(name = "order_date")
+    private LocalDateTime orderDate;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -72,8 +92,22 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("order-history")
+    @OrderBy("changedAt ASC")
+    private List<OrderStatusHistory> statusHistory = new ArrayList<>();
+
     public enum OrderStatus {
-        PENDING, PAID, SHIPPED, DELIVERED, FAILED, CANCELLED, REFUNDED
+        PENDING,
+        PAID,
+        CONFIRMED,
+        SHIPPED,
+        DELIVERED,
+        CANCELLED,
+        REFUND_REQUESTED,
+        REFUND_PROCESSING,
+        REFUNDED,
+        FAILED
     }
 
     @PrePersist
@@ -83,14 +117,14 @@ public class Order {
         if (orderDate == null) {
             orderDate = LocalDateTime.now();
         }
-        if (status == null) {
-            status = OrderStatus.PENDING;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public Order() {
     }
 
     public void addOrderItem(OrderItem item) {
@@ -103,168 +137,8 @@ public class Order {
         item.setOrder(null);
     }
 
-    public Order() {
-    }
-
-    public Order(Long id, Long userId, LocalDateTime orderDate, BigDecimal totalAmount, OrderStatus status, String stripeSessionId, String stripePaymentIntentId, String customerEmail, String shippingAddress, BigDecimal shippingCost, String shippingMethod, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems, Payment payment) {
-        this.id = id;
-        this.userId = userId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.status = status;
-        this.stripeSessionId = stripeSessionId;
-        this.stripePaymentIntentId = stripePaymentIntentId;
-        this.customerEmail = customerEmail;
-        this.shippingAddress = shippingAddress;
-        this.shippingCost = shippingCost;
-        this.shippingMethod = shippingMethod;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.orderItems = orderItems;
-        this.payment = payment;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(LocalDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public String getStripeSessionId() {
-        return stripeSessionId;
-    }
-
-    public void setStripeSessionId(String stripeSessionId) {
-        this.stripeSessionId = stripeSessionId;
-    }
-
-    public String getStripePaymentIntentId() {
-        return stripePaymentIntentId;
-    }
-
-    public void setStripePaymentIntentId(String stripePaymentIntentId) {
-        this.stripePaymentIntentId = stripePaymentIntentId;
-    }
-
-    public String getCustomerEmail() {
-        return customerEmail;
-    }
-
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
-    }
-
-    public String getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(String shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-
-    public BigDecimal getShippingCost() {
-        return shippingCost;
-    }
-
-    public void setShippingCost(BigDecimal shippingCost) {
-        this.shippingCost = shippingCost;
-    }
-
-    public String getShippingMethod() {
-        return shippingMethod;
-    }
-
-    public void setShippingMethod(String shippingMethod) {
-        this.shippingMethod = shippingMethod;
-    }
-
-    public String getTrackingNumber() {
-        return trackingNumber;
-    }
-
-    public void setTrackingNumber(String trackingNumber) {
-        this.trackingNumber = trackingNumber;
-    }
-
-    public String getTrackingUrl() {
-        return trackingUrl;
-    }
-
-    public void setTrackingUrl(String trackingUrl) {
-        this.trackingUrl = trackingUrl;
-    }
-
-    public String getShippingCarrier() {
-        return shippingCarrier;
-    }
-
-    public void setShippingCarrier(String shippingCarrier) {
-        this.shippingCarrier = shippingCarrier;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
-
-    public Payment getPayment() {
-        return payment;
-    }
-
-    public void setPayment(Payment payment) {
-        this.payment = payment;
+    public void addStatusHistory(OrderStatusHistory history) {
+        statusHistory.add(history);
+        history.setOrder(this);
     }
 }
