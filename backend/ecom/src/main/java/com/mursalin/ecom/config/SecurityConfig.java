@@ -46,8 +46,19 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/product/**").permitAll()
+                .requestMatchers("/api/").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/brands").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/check-username").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/check-email").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/shipping/estimate").permitAll()
+                // Public endpoints for coupons and reviews
+                .requestMatchers(HttpMethod.POST, "/api/coupons/validate").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 // Stripe webhook must be publicly accessible (signature verified separately)
                 .requestMatchers(HttpMethod.POST, "/api/payment/webhook").permitAll()
                 // WebSocket endpoints (SockJS handshake) – authentication via query token in handshake handler
