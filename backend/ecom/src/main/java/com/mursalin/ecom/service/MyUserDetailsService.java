@@ -3,7 +3,7 @@ package com.mursalin.ecom.service;
 import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.repository.UserRepository;
-import org.jspecify.annotations.NonNull;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,7 +21,7 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(@NonNull String email) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(@NotNull String email) throws UsernameNotFoundException {
         Optional<User> userOpt = repo.findByEmail(email);
 
         if (userOpt.isPresent()) {

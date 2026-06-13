@@ -4,7 +4,9 @@ import com.mursalin.ecom.dto.CheckoutSessionResponse;
 import com.mursalin.ecom.dto.OrderItemDTO;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -30,10 +32,13 @@ public class StripeService {
     @Value("${stripe.cancel.url}")
     private String cancelUrl;
 
+    @Value("${stripe.publishable.key:}")
+    private String stripePublishableKey;
+
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
-        logger.info("Stripe API key initialised");
+        logger.info("Stripe API key initialised (currency=INR)");
     }
 
     public CheckoutSessionResponse createCheckoutSession(
@@ -51,7 +56,7 @@ public class StripeService {
 
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                            .setCurrency("usd")
+                            .setCurrency("inr")
                             .setUnitAmount(amountInCents)
                             .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                     .setName(item.getProductName())
@@ -69,12 +74,11 @@ public class StripeService {
                 .setSuccessUrl(successUrl + "?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(cancelUrl + "?order_id=" + orderId)
                 .addAllLineItem(lineItems)
-                .putMetadata("order_id", orderId.toString())
-                .setCustomerEmail(customerEmail);
+                .putMetadata("order_id", orderId.toString());
 
-//        if (customerEmail != null && !customerEmail.isBlank()) {
-//            paramsBuilder.setCustomerEmail(customerEmail);
-//        }
+        if (customerEmail != null && !customerEmail.isBlank()) {
+            paramsBuilder.setCustomerEmail(customerEmail);
+        }
 
         Session session = Session.create(paramsBuilder.build());
 
@@ -88,7 +92,38 @@ public class StripeService {
         return response;
     }
 
+    public PaymentIntent createPaymentIntent(BigDecimal amountInRupees, String metadataKey, String metadataValue)
+            throws StripeException {
+        Stripe.apiKey = stripeSecretKey;
+        long amountInPaise = amountInRupees.multiply(BigDecimal.valueOf(100)).longValue();
+
+        PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
+                .setAmount(amountInPaise)
+                .setCurrency("inr")
+                .setAutomaticPaymentMethods(
+                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                .setEnabled(true)
+                                .build()
+                );
+
+        if (metadataKey != null && metadataValue != null) {
+            paramsBuilder.putMetadata(metadataKey, metadataValue);
+        }
+
+        PaymentIntent intent = PaymentIntent.create(paramsBuilder.build());
+        logger.info("Created PaymentIntent id={} amount={} INR", intent.getId(), amountInRupees);
+        return intent;
+    }
+
+    public PaymentIntent retrievePaymentIntent(String paymentIntentId) throws StripeException {
+        return PaymentIntent.retrieve(paymentIntentId);
+    }
+
     public Session retrieveSession(String sessionId) throws StripeException {
         return Session.retrieve(sessionId);
+    }
+
+    public String getPublishableKey() {
+        return stripePublishableKey;
     }
 }

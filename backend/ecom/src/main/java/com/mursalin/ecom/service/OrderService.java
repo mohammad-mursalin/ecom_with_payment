@@ -1,309 +1,596 @@
 package com.mursalin.ecom.service;
 
-import com.mursalin.ecom.dto.CreateOrderRequest;
-import com.mursalin.ecom.dto.OrderItemDTO;
-import com.mursalin.ecom.model.Order;
-import com.mursalin.ecom.model.OrderItem;
-import com.mursalin.ecom.model.Payment;
-import com.mursalin.ecom.model.Product;
-import com.mursalin.ecom.repository.OrderRepository;
-import com.mursalin.ecom.repository.PaymentRepository;
-import com.mursalin.ecom.repository.ProductRepo;
+import com.mursalin.ecom.dto.*;
+import com.mursalin.ecom.model.*;
+import com.mursalin.ecom.repository.*;
+import com.mursalin.ecom.exception.ResourceNotFoundException;
+import com.stripe.Stripe;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.18");
+    private static final BigDecimal SHIPPING_FREE_THRESHOLD = new BigDecimal("500");
+    private static final BigDecimal SHIPPING_FLAT_FEE = new BigDecimal("50");
 
-    @Autowired
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final ProductRepo productRepository;
+    private final CartItemRepository cartItemRepository;
+    private final CouponRepository couponRepository;
+    private final UserRepository userRepository;
+    private final WebSocketService webSocketService;
 
-    @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
-    private ProductRepo productRepository;
-
-    @Autowired
-    private WebSocketService webSocketService;
-
-    @Autowired
-    private ShippingService shippingService;
+    @Value("${stripe.secret.key}")
+    private String stripeSecretKey;
 
     // -------------------------------------------------------------------------
-    // CREATE ORDER
+    // LEGACY: createOrder (existing PaymentController flow)
     // -------------------------------------------------------------------------
 
     @Transactional
     public Order createOrder(CreateOrderRequest request, Long userId, String customerEmail) {
-        // 1. Calculate subtotal
-        BigDecimal subtotal = request.getItems().stream()
-                .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal subtotal = calcSubtotal(request.getItems());
+        BigDecimal shippingCost = request.getShippingCost() != null ? request.getShippingCost() :
+                (subtotal.compareTo(SHIPPING_FREE_THRESHOLD) >= 0 ? BigDecimal.ZERO : SHIPPING_FLAT_FEE);
+        BigDecimal discountAmount = request.getDiscountAmount() != null ? request.getDiscountAmount() : BigDecimal.ZERO;
+        BigDecimal taxAmount = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = subAddAll(subtotal, shippingCost, taxAmount, discountAmount.negate());
 
-        // 2. Calculate shipping cost (country hardcoded BD for now)
-        BigDecimal shippingCost = shippingService.calculateShippingCost(
-                subtotal,
-                request.getShippingMethod() != null ? request.getShippingMethod() : "STANDARD",
-                "BD"
-        );
-
-        // 3. Total = subtotal + shipping
-        BigDecimal totalAmount = subtotal.add(shippingCost);
-
-        // 4. Build Order
         Order order = new Order();
+        setOrderUser(order, userId);
         order.setCustomerEmail(customerEmail);
-        order.setShippingAddress(request.getShippingAddress());
+        order.setSubtotal(subtotal);
+        order.setDiscountAmount(discountAmount);
+        order.setTaxAmount(taxAmount);
+        order.setShippingFee(shippingCost);
+        order.setShippingMethod(request.getShippingMethod());
         order.setTotalAmount(totalAmount);
         order.setStatus(Order.OrderStatus.PENDING);
-        order.setUserId(userId);
-        order.setShippingCost(shippingCost);
-        order.setShippingMethod(request.getShippingMethod());
 
-        // 5. Build OrderItems
-        for (OrderItemDTO itemDTO : request.getItems()) {
-            OrderItem item = new OrderItem();
-            item.setProductId(itemDTO.getProductId());
-            item.setProductName(itemDTO.getProductName());
-            item.setProductBrand(itemDTO.getProductBrand());
-            item.setProductImageUrl(itemDTO.getProductImageUrl());
-            item.setQuantity(itemDTO.getQuantity());
-            item.setUnitPrice(itemDTO.getUnitPrice());
-            item.setSubtotal(itemDTO.getUnitPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
-            order.addOrderItem(item);
-        }
+        attachCoupon(order, request.getCouponCode());
+        buildOrderItems(order, request.getItems());
+        buildPayment(order, totalAmount);
 
-        // 4. Build Payment (PENDING)
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(totalAmount);
-        payment.setStatus(Payment.PaymentStatus.PENDING);
-        order.setPayment(payment);
-
-        // 5. Save (cascades to items and payment)
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Created order id={} status=PENDING total={} shipping={} method={}",
-                savedOrder.getId(), totalAmount, shippingCost, request.getShippingMethod());
-
-        // 6. WebSocket notification
-        webSocketService.notifyOrderUpdate(savedOrder);
-
-        return savedOrder;
+        order = orderRepository.save(order);
+        logger.info("Legacy order created id={} total={}", order.getId(), totalAmount);
+        webSocketService.notifyOrderUpdate(order);
+        return order;
     }
 
     // -------------------------------------------------------------------------
-    // PROCESS SUCCESSFUL PAYMENT (primary: by session ID)
+    // PROMPT 19: initiateOrder — creates PENDING order + PaymentIntent
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public InitiateOrderResponse initiateOrder(InitiateOrderRequest request, Long userId, String customerEmail) {
+        AddressSnapshot snapshot = buildSnapshot(request);
+
+        BigDecimal subtotal = cartSubtotal(userId);
+        if (subtotal.compareTo(BigDecimal.ZERO) == 0) throw new RuntimeException("Your cart is empty");
+
+        Coupon appliedCoupon = null;
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        String couponCode = blankToNull(request.getCouponCode());
+
+        if (couponCode != null) {
+            appliedCoupon = couponRepository.findByCodeAndIsActiveTrue(couponCode).orElse(null);
+            if (appliedCoupon == null) throw new RuntimeException("Invalid or expired coupon code");
+            if (appliedCoupon.getExpiresAt() != null && appliedCoupon.getExpiresAt().isBefore(java.time.LocalDateTime.now()))
+                throw new RuntimeException("Invalid or expired coupon code");
+            if (appliedCoupon.getMaxUses() != null && appliedCoupon.getUsesCount() >= appliedCoupon.getMaxUses())
+                throw new RuntimeException("Invalid or expired coupon code");
+            if (appliedCoupon.getMinOrderValue() != null && subtotal.compareTo(appliedCoupon.getMinOrderValue()) < 0)
+                throw new RuntimeException("Minimum order value of ₹" + appliedCoupon.getMinOrderValue() + " required");
+            if (appliedCoupon.getDiscountType() == DiscountType.PERCENT) {
+                discountAmount = subtotal.multiply(appliedCoupon.getDiscountValue())
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            } else {
+                discountAmount = appliedCoupon.getDiscountValue();
+                if (discountAmount.compareTo(subtotal) > 0) discountAmount = subtotal;
+            }
+        }
+
+        BigDecimal shippingFee = subtotal.compareTo(SHIPPING_FREE_THRESHOLD) >= 0 ? BigDecimal.ZERO : SHIPPING_FLAT_FEE;
+        BigDecimal taxAmount = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = subAddAll(subtotal, shippingFee, taxAmount, discountAmount.negate());
+        String shippingMethod = blankToNull(request.getShippingMethod()) != null ? request.getShippingMethod() : "STANDARD";
+
+        // Idempotency: reuse existing PENDING order with same total
+        Optional<Order> existingOpt = orderRepository.findByUserId(userId).stream()
+                .filter(o -> o.getStatus() == Order.OrderStatus.PENDING)
+                .filter(o -> o.getTotalAmount().compareTo(totalAmount) == 0)
+                .findFirst();
+
+        PaymentIntent intent;
+        String clientSecret;
+        try {
+            Stripe.apiKey = stripeSecretKey;
+            PaymentIntentCreateParams p = PaymentIntentCreateParams.builder()
+                    .setAmount(totalAmount.multiply(BigDecimal.valueOf(100)).longValue())
+                    .setCurrency("inr")
+                    .setAutomaticPaymentMethods(PaymentIntentCreateParams.AutomaticPaymentMethods.builder().setEnabled(true).build())
+                    .putMetadata("user_id", userId.toString())
+                    .build();
+            intent = PaymentIntent.create(p);
+            clientSecret = intent.getClientSecret();
+        } catch (StripeException e) {
+            logger.error("Stripe PaymentIntent failed: {}", e.getMessage());
+            throw new RuntimeException("Payment initialization failed: " + e.getMessage());
+        }
+
+        Order order;
+        if (existingOpt.isPresent()) {
+            order = existingOpt.get();
+            order.setStripePaymentIntentId(intent.getId());
+            orderRepository.save(order);
+            logger.info("Idempotent: reusing orderId={} userId={}", order.getId(), userId);
+        } else {
+            order = new Order();
+            setOrderUser(order, userId);
+            order.setCustomerEmail(customerEmail);
+            order.setSubtotal(subtotal);
+            order.setDiscountAmount(discountAmount);
+            order.setTaxAmount(taxAmount);
+            order.setShippingFee(shippingFee);
+            order.setShippingMethod(shippingMethod);
+            order.setTotalAmount(totalAmount);
+            order.setStatus(Order.OrderStatus.PENDING);
+            order.setDeliveryAddress(snapshot);
+            order.setStripePaymentIntentId(intent.getId());
+
+            if (appliedCoupon != null) order.setCoupon(appliedCoupon);
+
+            attachCartItems(order, userId);
+            buildPayment(order, totalAmount);
+            order = orderRepository.save(order);
+            logger.info("Initiated order id={} userId={} total={} intent={}",
+                    order.getId(), userId, totalAmount, intent.getId());
+        }
+
+        LocalDate estDelivery = LocalDate.now().plusDays(5);
+        int itemCount = order.getOrderItems().size();
+        List<com.mursalin.ecom.dto.OrderItemDTO> itemDTOs = order.getOrderItems().stream()
+                .map(OrderItemDTO::fromOrderItem).toList();
+
+        InitiateOrderResponse.OrderSummary summary = new InitiateOrderResponse.OrderSummary(
+                order.getId(), order.getStatus().name(),
+                subtotal, discountAmount, taxAmount, shippingFee, totalAmount,
+                itemCount, estDelivery.toString(), itemDTOs
+        );
+        return new InitiateOrderResponse(order.getId(), clientSecret, summary);
+    }
+
+    // -------------------------------------------------------------------------
+    // PROMPT 19: confirmOrder
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public InitiateOrderResponse confirmOrder(Long orderId, String paymentIntentId, Long userId) {
+        Stripe.apiKey = stripeSecretKey;
+        PaymentIntent intent;
+        try { intent = PaymentIntent.retrieve(paymentIntentId); }
+        catch (com.stripe.exception.StripeException e) { throw new RuntimeException("Payment not found: " + paymentIntentId); }
+
+        if (!"succeeded".equals(intent.getStatus()))
+            throw new RuntimeException("Payment not yet succeeded. Status: " + intent.getStatus());
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        if (!order.getUser().getUserId().equals(userId))
+            throw new AccessDeniedException("Not authorized to confirm this order");
+
+        String oldStatus = order.getStatus().name();
+
+        // Idempotency
+        if (order.getStatus() == Order.OrderStatus.CONFIRMED) {
+            logger.info("Order id={} already CONFIRMED", orderId);
+            return buildSummary(order);
+        }
+        if (order.getStatus() != Order.OrderStatus.PENDING)
+            throw new RuntimeException("Order cannot be confirmed from status: " + order.getStatus());
+
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        order.setStripePaymentIntentId(paymentIntentId);
+
+        Payment payment = order.getPayment();
+        if (payment != null) {
+            payment.setStatus(Payment.PaymentStatus.SUCCEEDED);
+            payment.setStripePaymentIntentId(paymentIntentId);
+            payment.setPaymentMethod("card");
+            paymentRepository.save(payment);
+        }
+
+        if (order.getCoupon() != null) {
+            Coupon c = order.getCoupon();
+            c.setUsesCount(c.getUsesCount() + 1);
+            couponRepository.save(c);
+        }
+
+        reduceStock(order);
+        clearUserCart(userId);
+
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(Order.OrderStatus.CONFIRMED.name());
+        history.setChangedBy(order.getUser());
+        history.setNote("Payment confirmed via Stripe");
+        history.setChangedAt(java.time.LocalDateTime.now());
+        order.addStatusHistory(history);
+
+        Order saved = orderRepository.save(order);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyOrderStatusChange(saved.getId(), oldStatus, Order.OrderStatus.CONFIRMED.name());
+        logger.info("Confirmed order id={} userId={} intent={}", orderId, userId, paymentIntentId);
+        return buildSummary(saved);
+    }
+
+    // -------------------------------------------------------------------------
+    // LEGACY STRIPE WEBHOOK HELPERS (preserved)
     // -------------------------------------------------------------------------
 
     @Transactional
     public Order processSuccessfulPayment(String stripeSessionId, String paymentIntentId) {
         Order order = orderRepository.findByStripeSessionId(stripeSessionId)
-                .orElseThrow(() -> {
-                    logger.error("Order not found for stripeSessionId={}", stripeSessionId);
-                    return new RuntimeException("Order not found for session ID: " + stripeSessionId);
-                });
-
+                .orElseThrow(() -> new RuntimeException("Order not found for session: " + stripeSessionId));
         String oldStatus = order.getStatus().name();
-
-        // 2. Update order status
-        order.setStatus(Order.OrderStatus.PAID);
+        order.setStatus(Order.OrderStatus.CONFIRMED);
         order.setStripePaymentIntentId(paymentIntentId);
-
-        // 3. Update payment
         Payment payment = order.getPayment();
         payment.setStatus(Payment.PaymentStatus.SUCCEEDED);
         payment.setStripePaymentIntentId(paymentIntentId);
         payment.setPaymentMethod("card");
-
-        // 4. Reduce stock
         reduceStock(order);
-
-        // 5. Save
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Payment succeeded for orderId={}, sessionId={}", savedOrder.getId(), stripeSessionId);
-
-        // 6. WebSocket notifications
-        webSocketService.notifyOrderUpdate(savedOrder);
-        webSocketService.notifyPaymentUpdate(savedOrder.getId(), "SUCCEEDED");
-        webSocketService.notifyOrderStatusChange(savedOrder.getId(), oldStatus, Order.OrderStatus.PAID.name());
-
-        return savedOrder;
+        if (order.getCoupon() != null) {
+            Coupon c = order.getCoupon(); c.setUsesCount(c.getUsesCount() + 1); couponRepository.save(c);
+        }
+        Order saved = orderRepository.save(order);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyPaymentUpdate(saved.getId(), "SUCCEEDED");
+        webSocketService.notifyOrderStatusChange(saved.getId(), oldStatus, Order.OrderStatus.CONFIRMED.name());
+        return saved;
     }
-
-    // -------------------------------------------------------------------------
-    // PROCESS FAILED PAYMENT
-    // -------------------------------------------------------------------------
 
     @Transactional
     public Order processFailedPayment(String stripeSessionId) {
         Order order = orderRepository.findByStripeSessionId(stripeSessionId)
-                .orElseThrow(() -> {
-                    logger.error("Order not found for stripeSessionId={}", stripeSessionId);
-                    return new RuntimeException("Order not found for session ID: " + stripeSessionId);
-                });
-
+                .orElseThrow(() -> new RuntimeException("Order not found for session: " + stripeSessionId));
         String oldStatus = order.getStatus().name();
-
         order.setStatus(Order.OrderStatus.FAILED);
-
         Payment payment = order.getPayment();
         payment.setStatus(Payment.PaymentStatus.FAILED);
-
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Payment failed for orderId={}, sessionId={}", savedOrder.getId(), stripeSessionId);
-
-        webSocketService.notifyOrderUpdate(savedOrder);
-        webSocketService.notifyPaymentUpdate(savedOrder.getId(), "FAILED");
-        webSocketService.notifyOrderStatusChange(savedOrder.getId(), oldStatus, Order.OrderStatus.FAILED.name());
-
-        return savedOrder;
+        Order saved = orderRepository.save(order);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyPaymentUpdate(saved.getId(), "FAILED");
+        webSocketService.notifyOrderStatusChange(saved.getId(), oldStatus, Order.OrderStatus.FAILED.name());
+        return saved;
     }
-
-    // -------------------------------------------------------------------------
-    // PROCESS SUCCESSFUL PAYMENT (fallback: by payment intent ID)
-    // -------------------------------------------------------------------------
 
     @Transactional
     public Order processSuccessfulPaymentByIntentId(String paymentIntentId) {
         Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
-                .orElseThrow(() -> {
-                    logger.error("Payment not found for paymentIntentId={}", paymentIntentId);
-                    return new RuntimeException("Payment not found for intent ID: " + paymentIntentId);
-                });
-
+                .orElseThrow(() -> new RuntimeException("Payment not found for intent: " + paymentIntentId));
         Order order = payment.getOrder();
-
-        // Idempotency check
-        if (order.getStatus() == Order.OrderStatus.PAID) {
-            logger.info("Order id={} already PAID — skipping duplicate event for intentId={}", order.getId(), paymentIntentId);
-            return order;
+        if (order.getStatus() == Order.OrderStatus.CONFIRMED) {
+            logger.info("Order id={} already CONFIRMED", order.getId()); return order;
         }
-
         String oldStatus = order.getStatus().name();
-
-        order.setStatus(Order.OrderStatus.PAID);
+        order.setStatus(Order.OrderStatus.CONFIRMED);
         order.setStripePaymentIntentId(paymentIntentId);
-
         payment.setStatus(Payment.PaymentStatus.SUCCEEDED);
         payment.setPaymentMethod("card");
-
         reduceStock(order);
-
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Payment succeeded (fallback path) for orderId={}, intentId={}", savedOrder.getId(), paymentIntentId);
-
-        webSocketService.notifyOrderUpdate(savedOrder);
-        webSocketService.notifyPaymentUpdate(savedOrder.getId(), "SUCCEEDED");
-        webSocketService.notifyOrderStatusChange(savedOrder.getId(), oldStatus, Order.OrderStatus.PAID.name());
-
-        return savedOrder;
+        if (order.getCoupon() != null) {
+            Coupon c = order.getCoupon(); c.setUsesCount(c.getUsesCount() + 1); couponRepository.save(c);
+        }
+        clearUserCart(order.getUser().getUserId());
+        Order saved = orderRepository.save(order);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyPaymentUpdate(saved.getId(), "SUCCEEDED");
+        webSocketService.notifyOrderStatusChange(saved.getId(), oldStatus, Order.OrderStatus.CONFIRMED.name());
+        return saved;
     }
-
-    // -------------------------------------------------------------------------
-    // UPDATE ORDER WITH SESSION ID (called after Stripe session creation)
-    // -------------------------------------------------------------------------
 
     @Transactional
     public void updateOrderSessionId(Long orderId, String sessionId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
-
         order.setStripeSessionId(sessionId);
         orderRepository.save(order);
-
         Payment payment = order.getPayment();
-        if (payment != null) {
-            payment.setStripeSessionId(sessionId);
-            paymentRepository.save(payment);
-        }
-
-        logger.info("Updated orderId={} with stripeSessionId={}", orderId, sessionId);
+        if (payment != null) { payment.setStripeSessionId(sessionId); paymentRepository.save(payment); }
+        logger.info("Linked sessionId={} to orderId={}", sessionId, orderId);
     }
 
     // -------------------------------------------------------------------------
     // CRUD
     // -------------------------------------------------------------------------
 
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id).orElse(null);
-    }
+    public Order getOrderById(Long id) { return orderRepository.findById(id).orElse(null); }
 
     public Order getOrderByIdForUser(Long id, Long userId) {
         Order order = orderRepository.findById(id).orElse(null);
-        if (order == null) {
-            return null;
-        }
-        // Verify ownership
-        if (!order.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Not authorized to access this order");
-        }
+        if (order == null) return null;
+        if (!order.getUser().getUserId().equals(userId)) throw new AccessDeniedException("Not authorized");
         return order;
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<Order> getAllOrders() { return orderRepository.findAll(); }
+    public List<Order> getOrdersByUserId(Long userId) { return orderRepository.findByUserId(userId); }
+
+    public Page<Order> getOrdersByUserId(Long userId, Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable);
     }
 
-    public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
+    }
+
+    public Page<Order> getOrdersByUserIdAndStatus(Long userId, Order.OrderStatus status, Pageable pageable) {
+        return orderRepository.findByUserIdAndStatus(userId, status, pageable);
+    }
+
+    public Page<Order> getAllOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
+        return orderRepository.findByStatus(status, pageable);
+    }
+
+    @Transactional
+    public Order cancelOrder(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        if (!order.getUser().getUserId().equals(userId)) {
+            throw new AccessDeniedException("Not authorized to cancel this order");
+        }
+        Order.OrderStatus currentStatus = order.getStatus();
+        if (currentStatus != Order.OrderStatus.PENDING && currentStatus != Order.OrderStatus.CONFIRMED) {
+            throw new RuntimeException("Order cannot be cancelled from status: " + currentStatus);
+        }
+
+        String oldStatus = currentStatus.name();
+        Order.OrderStatus newStatus = currentStatus == Order.OrderStatus.PENDING
+                ? Order.OrderStatus.CANCELLED
+                : Order.OrderStatus.REFUND_REQUESTED;
+
+        order.setStatus(newStatus);
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus.name());
+        history.setChangedBy(order.getUser());
+        history.setNote("Cancelled by customer");
+        history.setChangedAt(LocalDateTime.now());
+        order.addStatusHistory(history);
+
+        Order saved = orderRepository.save(order);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyOrderStatusChange(orderId, oldStatus, newStatus.name());
+        logger.info("User cancelled order id={}, {} -> {}", orderId, oldStatus, newStatus);
+        return saved;
     }
 
     @Transactional
     public Order updateOrderStatus(Long orderId, Order.OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
-
         String oldStatus = order.getStatus().name();
         order.setStatus(status);
-        Order savedOrder = orderRepository.save(order);
-
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(status.name());
+        history.setChangedBy(null);
+        history.setChangedAt(java.time.LocalDateTime.now());
+        order.addStatusHistory(history);
+        Order saved = orderRepository.save(order);
         logger.info("Admin status update: orderId={}, {} -> {}", orderId, oldStatus, status);
-        webSocketService.notifyOrderUpdate(savedOrder);
+        webSocketService.notifyOrderUpdate(saved);
         webSocketService.notifyOrderStatusChange(orderId, oldStatus, status.name());
+        return saved;
+    }
 
-        return savedOrder;
+    @Transactional
+    public Order adminUpdateOrderStatus(Long orderId, Order.OrderStatus newStatus, String note, String trackingNumber, String courierName, Long adminUserId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        Order.OrderStatus oldStatus = order.getStatus();
+
+        if (!isValidTransition(oldStatus, newStatus)) {
+            throw new RuntimeException("Invalid status transition from " + oldStatus + " to " + newStatus);
+        }
+
+        if (newStatus == Order.OrderStatus.SHIPPED) {
+            if (trackingNumber == null || trackingNumber.isBlank() || courierName == null || courierName.isBlank()) {
+                throw new RuntimeException("Tracking number and courier name are required when marking as shipped");
+            }
+            order.setTrackingNumber(trackingNumber);
+            order.setShippingCarrier(courierName);
+        }
+
+        order.setStatus(newStatus);
+
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + adminUserId));
+
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setOldStatus(oldStatus.name());
+        history.setNewStatus(newStatus.name());
+        history.setChangedBy(admin);
+        history.setNote(note);
+        history.setChangedAt(java.time.LocalDateTime.now());
+        order.addStatusHistory(history);
+
+        Order saved = orderRepository.save(order);
+        logger.info("Admin status update: orderId={}, {} -> {}", orderId, oldStatus, newStatus);
+        webSocketService.notifyOrderUpdate(saved);
+        webSocketService.notifyOrderStatusChange(orderId, oldStatus.name(), newStatus.name());
+        return saved;
+    }
+
+    private boolean isValidTransition(Order.OrderStatus from, Order.OrderStatus to) {
+        if (from == Order.OrderStatus.PENDING && (to == Order.OrderStatus.CONFIRMED || to == Order.OrderStatus.CANCELLED)) return true;
+        if (from == Order.OrderStatus.CONFIRMED && (to == Order.OrderStatus.SHIPPED || to == Order.OrderStatus.CANCELLED)) return true;
+        if (from == Order.OrderStatus.SHIPPED && to == Order.OrderStatus.DELIVERED) return true;
+        if (from == Order.OrderStatus.DELIVERED && to == Order.OrderStatus.REFUND_PROCESSING) return true;
+        if (from == Order.OrderStatus.REFUND_PROCESSING && to == Order.OrderStatus.REFUNDED) return true;
+        return false;
     }
 
     @Transactional
     public Order updateOrderTracking(Long orderId, String trackingNumber, String trackingUrl, String shippingCarrier) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
-
         order.setTrackingNumber(trackingNumber);
         order.setTrackingUrl(trackingUrl);
         order.setShippingCarrier(shippingCarrier);
-
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Updated tracking for orderId={}, trackingNumber={}, carrier={}",
-                savedOrder.getId(), trackingNumber, shippingCarrier);
-
-        webSocketService.notifyOrderUpdate(savedOrder);
-
-        return savedOrder;
+        Order saved = orderRepository.save(order);
+        logger.info("Tracking updated orderId={} trackingNumber={}", orderId, trackingNumber);
+        webSocketService.notifyOrderUpdate(saved);
+        return saved;
     }
 
     // -------------------------------------------------------------------------
     // PRIVATE HELPERS
     // -------------------------------------------------------------------------
 
+    private void setOrderUser(Order order, Long userId) {
+        User u = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        order.setUser(u);
+    }
+
+    private BigDecimal calcSubtotal(List<OrderItemDTO> items) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (OrderItemDTO i : items) sum = sum.add(i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())));
+        return sum;
+    }
+
+    private BigDecimal cartSubtotal(Long userId) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (CartItem ci : cartItemRepository.findByUserId(userId))
+            sum = sum.add(ci.getProduct().getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+        return sum;
+    }
+
+    private BigDecimal subAddAll(BigDecimal a, BigDecimal b, BigDecimal c, BigDecimal d) {
+        BigDecimal r = a.add(b).add(c).add(d);
+        return r.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : r;
+    }
+
+    private static String blankToNull(String s) { return (s == null || s.isBlank()) ? null : s; }
+
+    private void attachCoupon(Order order, String couponCode) {
+        String code = blankToNull(couponCode);
+        if (code != null) couponRepository.findByCodeAndIsActiveTrue(code).ifPresent(order::setCoupon);
+    }
+
+    private void buildOrderItems(Order order, List<OrderItemDTO> items) {
+        for (OrderItemDTO dto : items) {
+            OrderItem oi = new OrderItem();
+            oi.setProductId(dto.getProductId());
+            oi.setProductName(dto.getProductName());
+            oi.setProductBrand(dto.getProductBrand());
+            oi.setProductImageUrl(dto.getProductImageUrl());
+            oi.setQuantity(dto.getQuantity());
+            oi.setUnitPrice(dto.getUnitPrice());
+            oi.setSubtotal(dto.getUnitPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
+            order.addOrderItem(oi);
+        }
+    }
+
+    private void attachCartItems(Order order, Long userId) {
+        for (CartItem ci : cartItemRepository.findByUserId(userId)) {
+            Product p = ci.getProduct();
+            OrderItem oi = new OrderItem();
+            oi.setProductId(p.getId());
+            oi.setProductName(p.getName());
+            oi.setProductBrand(p.getBrandEntity() != null ? p.getBrandEntity().getName() : null);
+            oi.setProductImageUrl(p.getImageUrl());
+            oi.setQuantity(ci.getQuantity());
+            oi.setUnitPrice(p.getPrice());
+            oi.setSubtotal(p.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            order.addOrderItem(oi);
+        }
+    }
+
+    private void buildPayment(Order order, BigDecimal amount) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(amount);
+        payment.setCurrency("inr");
+        payment.setStatus(Payment.PaymentStatus.PENDING);
+        payment.setPaymentMethod("stripe");
+        order.setPayment(payment);
+    }
+
+    private AddressSnapshot buildSnapshot(InitiateOrderRequest request) {
+        AddressSnapshot s = new AddressSnapshot();
+        InitiateOrderRequest.AddressSnapshotRequest r = request.getAddressSnapshot();
+        if (r != null) {
+            s.setFullName(r.getFullName()); s.setPhone(r.getPhone());
+            s.setLine1(r.getLine1()); s.setLine2(r.getLine2());
+            s.setCity(r.getCity()); s.setState(r.getState());
+            s.setPinCode(r.getPinCode());
+            s.setCountry(r.getCountry() != null ? r.getCountry() : "India");
+        }
+        return s;
+    }
+
     private void reduceStock(Order order) {
         for (OrderItem item : order.getOrderItems()) {
             productRepository.findById(item.getProductId()).ifPresent(product -> {
-                int newStock = Math.max(0, product.getStockQuantity() - item.getQuantity());
+                int itemQty = item.getQuantity() != null ? item.getQuantity() : 0;
+                Long currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0L;
+                long newStock = Math.max(0L, currentStock - itemQty);
                 product.setStockQuantity(newStock);
                 productRepository.save(product);
-                logger.info("Reduced stock for productId={}: {} -> {}", product.getId(), product.getStockQuantity() + item.getQuantity(), newStock);
+                logger.info("Reduced stock productId={}: {} -> {}", product.getId(),
+                        currentStock, newStock);
             });
         }
+    }
+
+    private void clearUserCart(Long userId) {
+        List<CartItem> items = cartItemRepository.findByUserId(userId);
+        if (!items.isEmpty()) { cartItemRepository.deleteAll(items);
+            logger.info("Cleared {} cart items for userId={}", items.size(), userId);
+        }
+    }
+
+    private InitiateOrderResponse buildSummary(Order order) {
+        LocalDate est = LocalDate.now().plusDays(5);
+        int itemCount = order.getOrderItems().size();
+        List<com.mursalin.ecom.dto.OrderItemDTO> dtos = order.getOrderItems().stream()
+                .map(OrderItemDTO::fromOrderItem).toList();
+        InitiateOrderResponse.OrderSummary summary = new InitiateOrderResponse.OrderSummary(
+                order.getId(), order.getStatus().name(),
+                order.getSubtotal(), order.getDiscountAmount(), order.getTaxAmount(),
+                order.getShippingFee(), order.getTotalAmount(),
+                itemCount, est.toString(), dtos
+        );
+        return new InitiateOrderResponse(order.getId(), order.getStripePaymentIntentId(), summary);
     }
 }
