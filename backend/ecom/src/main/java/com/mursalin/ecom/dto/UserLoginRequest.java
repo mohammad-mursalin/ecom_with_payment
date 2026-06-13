@@ -12,6 +12,8 @@ public class UserLoginRequest {
     @NotBlank
     private String password;
 
+    private boolean rememberMe = false;
+
     public UserLoginRequest() {
     }
 
@@ -34,5 +36,13 @@ public class UserLoginRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe = rememberMe;
     }
 }

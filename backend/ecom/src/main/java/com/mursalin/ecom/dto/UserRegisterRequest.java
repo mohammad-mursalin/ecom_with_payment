@@ -7,6 +7,10 @@ import jakarta.validation.constraints.Size;
 public class UserRegisterRequest {
 
     @NotBlank
+    @Size(min = 3, max = 30, message = "Username must be 3–30 characters")
+    private String username;
+
+    @NotBlank
     @Email
     private String email;
 
@@ -20,10 +24,19 @@ public class UserRegisterRequest {
     public UserRegisterRequest() {
     }
 
-    public UserRegisterRequest(String email, String password, String confirmPassword) {
+    public UserRegisterRequest(String username, String email, String password, String confirmPassword) {
+        this.username = username;
         this.email = email;
         this.password = password;
         this.confirmPassword = confirmPassword;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {

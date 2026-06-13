@@ -5,6 +5,9 @@ import jakarta.validation.constraints.Size;
 
 public class UpdateProfileRequest {
 
+    @Size(min = 3, max = 30, message = "Username must be between 3 and 30 characters")
+    private String username;
+
     @Size(max = 100, message = "Full name must be at most 100 characters")
     private String fullName;
 
@@ -21,6 +24,14 @@ public class UpdateProfileRequest {
     private String email;
 
     public UpdateProfileRequest() {
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getFullName() {

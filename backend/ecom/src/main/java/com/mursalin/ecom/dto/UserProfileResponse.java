@@ -5,6 +5,7 @@ import com.mursalin.ecom.model.Role;
 public class UserProfileResponse {
 
     private Long userId;
+    private String username;
     private String email;
     private Role role;
     private String fullName;
@@ -16,9 +17,10 @@ public class UserProfileResponse {
     public UserProfileResponse() {
     }
 
-    public UserProfileResponse(Long userId, String email, Role role, String fullName,
+    public UserProfileResponse(Long userId, String username, String email, Role role, String fullName,
                                String phoneNumber, String address, String profilePictureUrl, String bio) {
         this.userId = userId;
+        this.username = username;
         this.email = email;
         this.role = role;
         this.fullName = fullName;
@@ -36,8 +38,12 @@ public class UserProfileResponse {
         this.userId = userId;
     }
 
-    public String getEmail() {
-        return email;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setEmail(String email) {

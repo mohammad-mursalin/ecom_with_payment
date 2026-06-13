@@ -1,6 +1,6 @@
 package com.mursalin.ecom.dto;
 
-import com.mursalin.ecom.model.Order;
+import com.mursalin.ecom.model.AddressSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,50 +13,54 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderDetailsResponse {
-
     private Long id;
-    private Long userId;
-    private LocalDateTime orderDate;
-    private BigDecimal totalAmount;
-    private Order.OrderStatus status;
-    private String stripeSessionId;
-    private String stripePaymentIntentId;
-    private String customerEmail;
-    private String shippingAddress;
-    private BigDecimal shippingCost;
-    private String shippingMethod;
-    private String trackingNumber;
-    private String trackingUrl;
-    private String shippingCarrier;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private List<OrderItemDTO> orderItems;
-    private PaymentDTO payment;
+    private String paymentMethod;
+    private DeliveryAddressDTO deliveryAddress;
+    private List<OrderDetailItemDTO> items;
+    private BigDecimal subtotal;
+    private BigDecimal discountAmount;
+    private BigDecimal taxAmount;
+    private BigDecimal shippingFee;
+    private BigDecimal totalAmount;
+    private String status;
+    private String trackingNumber;
+    private String courierName;
+    private List<StatusHistoryDTO> statusHistory;
 
-    public static OrderDetailsResponse fromOrder(Order order) {
+    public static OrderDetailsResponse fromOrder(com.mursalin.ecom.model.Order order) {
         OrderDetailsResponse response = new OrderDetailsResponse();
         response.setId(order.getId());
-        response.setUserId(order.getUserId());
-        response.setOrderDate(order.getOrderDate());
-        response.setTotalAmount(order.getTotalAmount());
-        response.setStatus(order.getStatus());
-        response.setStripeSessionId(order.getStripeSessionId());
-        response.setStripePaymentIntentId(order.getStripePaymentIntentId());
-        response.setCustomerEmail(order.getCustomerEmail());
-        response.setShippingAddress(order.getShippingAddress());
-        response.setShippingCost(order.getShippingCost());
-        response.setShippingMethod(order.getShippingMethod());
-        response.setTrackingNumber(order.getTrackingNumber());
-        response.setTrackingUrl(order.getTrackingUrl());
-        response.setShippingCarrier(order.getShippingCarrier());
         response.setCreatedAt(order.getCreatedAt());
-        response.setUpdatedAt(order.getUpdatedAt());
-        response.setOrderItems(order.getOrderItems().stream()
-                .map(OrderItemDTO::fromOrderItem)
-                .toList());
-        if (order.getPayment() != null) {
-            response.setPayment(PaymentDTO.fromPayment(order.getPayment()));
+        response.setPaymentMethod(order.getPaymentMethod());
+        response.setStatus(order.getStatus().name());
+
+        if (order.getDeliveryAddress() != null) {
+            AddressSnapshot snap = order.getDeliveryAddress();
+            response.setDeliveryAddress(new DeliveryAddressDTO(
+                    snap.getFullName(), snap.getPhone(), snap.getLine1(), snap.getLine2(),
+                    snap.getCity(), snap.getState(), snap.getPinCode(), snap.getCountry()
+            ));
         }
+
+        response.setItems(order.getOrderItems().stream()
+                .map(OrderDetailItemDTO::fromOrderItem)
+                .toList());
+
+        response.setSubtotal(order.getSubtotal());
+        response.setDiscountAmount(order.getDiscountAmount());
+        response.setTaxAmount(order.getTaxAmount());
+        response.setShippingFee(order.getShippingFee());
+        response.setTotalAmount(order.getTotalAmount());
+        response.setTrackingNumber(order.getTrackingNumber());
+        response.setCourierName(order.getShippingCarrier());
+
+        if (order.getStatusHistory() != null) {
+            response.setStatusHistory(order.getStatusHistory().stream()
+                    .map(h -> new StatusHistoryDTO(h.getNewStatus(), h.getChangedAt(), h.getNote()))
+                    .toList());
+        }
+
         return response;
     }
 }

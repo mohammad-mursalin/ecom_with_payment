@@ -17,6 +17,8 @@ import java.util.List;
 public class CreateOrderRequest {
     private List<OrderItemDTO> items;
     private String customerEmail;
+    private String couponCode;
+    private BigDecimal discountAmount;
 
     @NotBlank(message = "Shipping address is required")
     @Size(max = 500, message = "Shipping address must be at most 500 characters")
@@ -78,5 +80,21 @@ public class CreateOrderRequest {
 
     public void setShippingMethod(String shippingMethod) {
         this.shippingMethod = shippingMethod;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
     }
 }

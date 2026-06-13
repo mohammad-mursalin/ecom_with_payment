@@ -8,12 +8,11 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PaginatedResponse<T> {
-    private List<T> content;
-    private int currentPage;
-    private int totalPages;
+@NoArgsConstructor
+public class ReviewListResponse {
+    private ReviewSummary summary;
+    private List<ReviewResponse> content;
     private long totalElements;
-    private int pageSize;
-    private boolean first;
-    private boolean last;
+    private int totalPages;
+    private int currentPage;
 }

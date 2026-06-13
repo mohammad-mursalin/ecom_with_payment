@@ -4,60 +4,89 @@ import com.mursalin.ecom.model.Role;
 
 public class AuthResponse {
 
-    private String token;
-    private Long userId;
-    private String email;
-    private Role role;
-    private long expiresIn; // in seconds
+    private String accessToken;
+    private String refreshToken;
+    private UserInfo user;
 
     public AuthResponse() {
     }
 
-    public AuthResponse(String token, Long userId, String email, Role role, long expiresIn) {
-        this.token = token;
-        this.userId = userId;
-        this.email = email;
-        this.role = role;
-        this.expiresIn = expiresIn;
+    public AuthResponse(String accessToken, String refreshToken, Long userId, String username, String email, Role role) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.user = new UserInfo(userId, username, email, role);
     }
 
-    public String getToken() {
-        return token;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
-    public String getEmail() {
-        return email;
+    public UserInfo getUser() {
+        return user;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUser(UserInfo user) {
+        this.user = user;
     }
 
-    public Role getRole() {
-        return role;
-    }
+    public static class UserInfo {
+        private Long id;
+        private String username;
+        private String email;
+        private Role role;
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
+        public UserInfo() {
+        }
 
-    public long getExpiresIn() {
-        return expiresIn;
-    }
+        public UserInfo(Long id, String username, String email, Role role) {
+            this.id = id;
+            this.username = username;
+            this.email = email;
+            this.role = role;
+        }
 
-    public void setExpiresIn(long expiresIn) {
-        this.expiresIn = expiresIn;
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public Role getRole() {
+            return role;
+        }
+
+        public void setRole(Role role) {
+            this.role = role;
+        }
     }
 }
