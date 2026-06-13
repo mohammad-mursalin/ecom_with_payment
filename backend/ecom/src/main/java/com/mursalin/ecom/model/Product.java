@@ -77,10 +77,13 @@ public class Product {
     }
 
     public String getPrimaryImageUrl() {
-        return images.stream()
-                .filter(ProductImage::isPrimary)
-                .map(ProductImage::getUrl)
-                .findFirst()
-                .orElse(imageUrl);
+        if (images != null && !images.isEmpty()) {
+            for (ProductImage img : images) {
+                if (img.isPrimary()) {
+                    return img.getUrl();
+                }
+            }
+        }
+        return imageUrl;
     }
 }
