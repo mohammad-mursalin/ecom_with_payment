@@ -57,7 +57,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
            "OR LOWER(c.name) LIKE LOWER(CONCAT('%',:keyword,'%')))")
     Page<Product> findAdminProducts(@Param("keyword") String keyword, Pageable pageable);
 
-    @Query("select p from Product p where p.deletedAt is null and p.isActive = true and p.stockQuantity <= p.lowStockThreshold")
+@Query("select p from Product p where p.deletedAt is null and p.isActive = true and p.stockQuantity <= p.lowStockThreshold")
     Page<Product> findLowStock(Pageable pageable);
 
     @Query("select p from Product p where p.deletedAt is null and p.isActive = true and " +
@@ -65,7 +65,7 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             "(:brandIds is null or p.brandEntity.id in :brandIds) and " +
             "(:minRating is null or :minRating <= 0 or 1 = 1)")
     Page<Product> filterByCategoryBrandRating(@Param("categoryIds") List<Long> categoryIds,
-                                              @Param("brandIds") List<Long> brandIds,
-                                              @Param("minRating") Integer minRating,
-                                              Pageable pageable);
+                                             @Param("brandIds") List<Long> brandIds,
+                                             @Param("minRating") Integer minRating,
+                                             Pageable pageable);
 }
