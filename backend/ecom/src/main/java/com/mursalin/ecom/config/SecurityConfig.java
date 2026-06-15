@@ -64,6 +64,7 @@ public class SecurityConfig {
                 // WebSocket endpoints (SockJS handshake) – authentication via query token in handshake handler
                 .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/ws/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
