@@ -23,15 +23,16 @@ public class WebSocketService {
         message.put("orderId", order.getId());
         message.put("status", order.getStatus().name());
         message.put("totalAmount", order.getTotalAmount());
-        message.put("customerEmail", order.getCustomerEmail());
-        message.put("orderDate", order.getOrderDate().toString());
         message.put("trackingNumber", order.getTrackingNumber());
         message.put("trackingUrl", order.getTrackingUrl());
         message.put("shippingCarrier", order.getShippingCarrier());
 
-        logger.info("Sending order update via WebSocket: orderId={}, status={}", order.getId(), order.getStatus());
-        messagingTemplate.convertAndSend("/topic/orders", (Object) message);
-        messagingTemplate.convertAndSend("/topic/orders/" + order.getId(), (Object) message);
+        String targetUser = order.getUser().getEmail(); // matches getUsername() / JWT subject
+
+        logger.info("Sending order update via WebSocket: orderId={}, status={}, to={}",
+                    order.getId(), order.getStatus(), targetUser);
+
+        messagingTemplate.convertAndSendToUser(targetUser, "/queue/orders", message);
     }
 
     public void notifyPaymentUpdate(Long orderId, String status) {
