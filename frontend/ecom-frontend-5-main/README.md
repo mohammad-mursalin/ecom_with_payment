@@ -1,8 +1,42 @@
-# React + Vite
+# E-Commerce Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 18 + Vite · Bootstrap 5 · React Router 6 · Axios · Context API
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create `.env` file with:
+   ```
+   VITE_API_BASE_URL=http://localhost:8080/api
+   VITE_WS_BASE_URL=http://localhost:8080
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
+   ```
+
+3. Ensure backend is running on port 8080
+
+4. Run development server:
+   ```bash
+   npm run dev
+   ```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Lint
+
+```bash
+npm run lint
+```
+
+## Environment Variables
+
+- `VITE_API_BASE_URL` - Backend API base URL
+- `VITE_WS_BASE_URL` - WebSocket base URL (without /api prefix)
+- `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key for payments
