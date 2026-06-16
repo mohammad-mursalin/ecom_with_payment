@@ -1,102 +1,136 @@
-import { createContext, useState, useEffect, useContext } from "react";
-import { jwtDecode } from "jwt-decode";
-import API from "../axios";
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { setAccessToken, clearAccessToken } from "../authStorage";
+import {
+  login as loginService,
+  register as registerService,
+  getProfile,
+  logout as logoutService,
+  updateProfile as updateProfileService,
+  changePassword as changePasswordService,
+} from "../services/authService";
 
 const AuthContext = createContext(null);
 
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+}
+
+const normaliseUser = (profile) => ({
+  userId: profile.userId || profile.id,
+  username: profile.username || "",
+  email: profile.email,
+  role: profile.role,
+  fullName: profile.fullName || profile.username || "",
+  phoneNumber: profile.phoneNumber || "",
+  address: profile.address || "",
+  profilePictureUrl: profile.profilePictureUrl || "",
+  bio: profile.bio || "",
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const fetchProfile = async () => {
-    if (!token) return;
-    try {
-      const response = await API.get("/auth/profile");
-      const profile = response.data.data;
-      setUser({
-        userId: profile.userId,
-        email: profile.email,
-        role: profile.role,
-        fullName: profile.fullName || "",
-        phoneNumber: profile.phoneNumber || "",
-        address: profile.address || "",
-        profilePictureUrl: profile.profilePictureUrl || "",
-        bio: profile.bio || "",
-      });
-    } catch (err) {
-      // If the user is not fully set up yet (e.g. just registered), tolerate 404
-      console.warn("Profile fetch failed, using JWT data only:", err.message || err);
-    }
-  };
+  // ── Initial session restore ─────────────────────────────────────────────────
+  // useRef so the effect dependency never changes — avoids StrictMode double-fire
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (token) {
+    // StrictMode guard — only run once even in dev double-mount
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    let cancelled = false;
+
+    const initAuth = async () => {
       try {
-        const decoded = jwtDecode(token);
-        const roleArray = decoded.roles || [];
-        const role = roleArray.length > 0 ? roleArray[0].replace("ROLE_", "") : (decoded.role || "USER");
-        setUser({
-          userId: decoded.userId,
-          email: decoded.sub,
-          role: role,
-          fullName: "",
-          phoneNumber: "",
-          address: "",
-          profilePictureUrl: "",
-          bio: "",
-        });
-        fetchProfile();
+        const profile = await getProfile({ _isGuestCheck: true });
+        if (!cancelled) setUser(normaliseUser(profile));
       } catch (err) {
-        console.error("Failed to decode token", err);
-        logout();
+        // Ignore aborts (StrictMode unmount, fast navigation)
+        // ERR_CANCELED = axios cancel, CanceledError = AbortController
+        const isAbort =
+          err?.code === "ERR_CANCELED" ||
+          err?.name === "CanceledError" ||
+          err?.name === "AbortError";
+
+        if (isAbort) return; // not a real failure — do nothing, stay loading
+
+        // Genuine failure (401, network error) — user is simply not logged in
+        // Do NOT redirect here — being a guest on a public page is fine
+        if (!cancelled) {
+          clearAccessToken();
+          setUser(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    }
-    setLoading(false);
-  }, [token]);
+    };
 
+    initAuth();
+
+    return () => {
+      cancelled = true; // cleanup — prevent state updates after unmount
+    };
+  }, []); // empty deps — runs once on mount only
+
+  // ── Login ───────────────────────────────────────────────────────────────────
   const login = async (email, password) => {
-    const response = await API.post("/auth/login", { email, password });
-    const { token, userId, email: userEmail, role } = response.data.data;
-    localStorage.setItem("token", token);
-    setToken(token);
-    setUser({ userId, email: userEmail, role });
-    return response;
+    const data = await loginService(email, password);
+    const { accessToken, user: userData } = data;
+    setAccessToken(accessToken);
+    setUser(normaliseUser(userData));
+    return data;
   };
 
-  const register = async (email, password, confirmPassword) => {
-    const response = await API.post("/auth/register", { email, password, confirmPassword });
-    return response;
+  // ── Register ────────────────────────────────────────────────────────────────
+  const register = async (username, email, password, confirmPassword, fullName) => {
+    const data = await registerService(username, email, password, confirmPassword, fullName);
+    const { accessToken, user: userData } = data;
+    setAccessToken(accessToken);
+    setUser(normaliseUser({ ...userData, fullName: userData.fullName || fullName }));
+    return data;
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
+  // ── Logout ──────────────────────────────────────────────────────────────────
+  const logout = async () => {
+    try {
+      await logoutService();
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("Logout API failed:", err);
+    }
+    clearAccessToken();
     setUser(null);
+    navigate("/");
   };
 
+  // ── Profile update ──────────────────────────────────────────────────────────
   const updateProfile = async (profileData) => {
-    const response = await API.put("/auth/profile", profileData);
-    const profile = response.data.data;
-    setUser(prev => ({ ...prev, ...profile }));
-    return response;
+    const profile = await updateProfileService(profileData);
+    setUser((prev) => ({ ...prev, ...normaliseUser(profile) }));
+    return profile;
+  };
+
+  // ── Password change ─────────────────────────────────────────────────────────
+  const changePassword = async (currentPassword, newPassword, confirmNewPassword) => {
+    return await changePasswordService(currentPassword, newPassword, confirmNewPassword);
   };
 
   const value = {
     user,
-    token,
     isAuthenticated: !!user,
     isAdmin: user?.role === "ADMIN",
     login,
     register,
     logout,
     updateProfile,
-    loading
+    changePassword,
+    loading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
 };

@@ -1,105 +1,82 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { useAuth } from "../Context/AuthContext";
+import { useAuth } from "./AuthContext";
+import { getAccessToken } from "../authStorage";
 
 const WebSocketContext = createContext();
 
 export const useWebSocket = () => useContext(WebSocketContext);
 
 export const WebSocketProvider = ({ children }) => {
-  const { token } = useAuth();
-  const [client, setClient] = useState(null);
+  const { isAuthenticated } = useAuth();
   const [connected, setConnected] = useState(false);
-  const [orderUpdates, setOrderUpdates] = useState([]);
-  const [paymentUpdates, setPaymentUpdates] = useState([]);
+  const clientRef = useRef(null);
+  const subscriptionsRef = useRef(new Map());
 
-  useEffect(() => {
-    // Build SockJS URL with JWT token as query parameter
-    const socketUrl = token
-      ? `http://localhost:8080/ws?token=${encodeURIComponent(token)}`
-      : "http://localhost:8080/ws";
+useEffect(() => {
+    if (!isAuthenticated) {
+      if (clientRef.current) {
+        clientRef.current.deactivate();
+      }
+      subscriptionsRef.current.clear();
+      setConnected(false);
+      return;
+    }
 
-    const stompClient = new Client({
-      webSocketFactory: () => new SockJS(socketUrl),
+    const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL;
+    const subs = subscriptionsRef.current;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS(`${WS_BASE_URL}/ws?token=${getAccessToken()}`),
       reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
       onConnect: () => {
-        console.log("WebSocket connected");
         setConnected(true);
-
-        // Subscribe to order updates
-        stompClient.subscribe("/topic/orders", (message) => {
-          const order = JSON.parse(message.body);
-          setOrderUpdates((prev) => [...prev, order]);
-        });
-
-        // Subscribe to payment updates
-        stompClient.subscribe("/topic/payments", (message) => {
-          const payment = JSON.parse(message.body);
-          setPaymentUpdates((prev) => [...prev, payment]);
+        subs.forEach((callback, topic) => {
+          client.subscribe(topic, callback);
         });
       },
-      onDisconnect: () => {
-        console.log("WebSocket disconnected");
-        setConnected(false);
-      },
+      onDisconnect: () => setConnected(false),
       onStompError: (frame) => {
-        console.error("STOMP error", frame);
+        if (import.meta.env.DEV) console.warn('STOMP error', frame);
       },
     });
 
-    stompClient.activate();
-    setClient(stompClient);
+    client.activate();
+    clientRef.current = client;
 
     return () => {
-      if (stompClient) {
-        stompClient.deactivate();
+      const c = clientRef.current;
+      if (c) {
+        c.deactivate();
       }
+      subs.clear();
     };
-  }, [token]);
+  }, [isAuthenticated]);
 
-  const subscribeToOrder = useCallback((orderId, callback) => {
-    if (!client || !connected) return;
-    
-    const subscription = client.subscribe(`/topic/orders/${orderId}`, (message) => {
-      const order = JSON.parse(message.body);
-      callback(order);
-    });
+  const subscribe = useCallback((topic, callback) => {
+    if (!clientRef.current || !connected) return () => {};
 
-    return () => subscription.unsubscribe();
-  }, [client, connected]);
+    const subscription = clientRef.current.subscribe(topic, callback);
+    const id = `${topic}-${Date.now()}`;
+    subscriptionsRef.current.set(id, callback);
 
-  const subscribeToPayment = useCallback((orderId, callback) => {
-    if (!client || !connected) return;
-    
-    const subscription = client.subscribe(`/topic/payments/${orderId}`, (message) => {
-      const payment = JSON.parse(message.body);
-      callback(payment);
-    });
+    return () => {
+      subscription.unsubscribe();
+      subscriptionsRef.current.delete(id);
+    };
+  }, [connected]);
 
-    return () => subscription.unsubscribe();
-  }, [client, connected]);
-
-  const clearOrderUpdates = useCallback(() => {
-    setOrderUpdates([]);
-  }, []);
-
-  const clearPaymentUpdates = useCallback(() => {
-    setPaymentUpdates([]);
+  const unsubscribe = useCallback((subscriptionId) => {
+    subscriptionsRef.current.delete(subscriptionId);
   }, []);
 
   return (
     <WebSocketContext.Provider
       value={{
         connected,
-        orderUpdates,
-        paymentUpdates,
-        subscribeToOrder,
-        subscribeToPayment,
-        clearOrderUpdates,
-        clearPaymentUpdates,
+        subscribe,
+        unsubscribe,
       }}
     >
       {children}
