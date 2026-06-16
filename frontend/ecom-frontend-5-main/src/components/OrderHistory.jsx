@@ -1,71 +1,107 @@
-import React, { useEffect, useState } from "react";
-import axios from "../axios";
-import { useWebSocket } from "../Context/WebSocketContext";
+import { useEffect, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./Toast";
-import { Link, ArrowLeft, Package, Calendar, CreditCard, MapPin, Truck, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { getOrders, cancelOrder } from "../services/orderService";
+import { Clock } from "lucide-react";
+import Pagination from "./Pagination";
+import { usePagination } from "../hooks/usePagination";
+import OrderCardSkeleton from "./OrderCardSkeleton";
+import EmptyState from "./EmptyState";
+import ErrorState from "./ErrorState";
 
-const OrderHistory = () => {
-  const [orders, setOrders] = useState([]);
+const STATUSES = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+const STATUS_CONFIG = {
+  PENDING: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending" },
+  CONFIRMED: { bg: "bg-blue-100", text: "text-blue-800", label: "Confirmed" },
+  SHIPPED: { bg: "bg-purple-100", text: "text-purple-800", label: "Shipped" },
+  DELIVERED: { bg: "bg-green-100", text: "text-green-800", label: "Delivered" },
+  CANCELLED: { bg: "bg-red-100", text: "text-red-800", label: "Cancelled" },
+};
+
+export default function OrderHistory() {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { orderUpdates, subscribeToOrder } = useWebSocket();
-  const { showToast } = useToast();
+  const [error, setError] = useState("");
+  const [activeStatus, setActiveStatus] = useState("ALL");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+  const toast = useToast().toast;
+  const navigate = useNavigate();
+  const { page, pageSize, setPage, setPageSize } = usePagination();
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    orders.forEach(order => {
-      subscribeToOrder(order.id, (updatedOrder) => {
-        setOrders(prev => prev.map(o =>
-          o.id === updatedOrder.orderId ? { ...o, status: updatedOrder.status } : o
-        ));
-        showToast(`Order #${updatedOrder.orderId} status: ${updatedOrder.status}`);
-      });
-    });
-  }, [orders.length, subscribeToOrder]);
-
-  useEffect(() => {
-    if (orderUpdates.length > 0) {
-      const latestUpdate = orderUpdates[orderUpdates.length - 1];
-      setOrders(prev => prev.map(o =>
-        o.id === latestUpdate.orderId ? { ...o, status: latestUpdate.status } : o
-      ));
-    }
-  }, [orderUpdates]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      const response = await axios.get("/orders");
-      const ordersData = Array.isArray(response.data) ? response.data : [];
-      setOrders(ordersData);
+      const params = { page, pageSize };
+      if (activeStatus !== "ALL") params.status = activeStatus;
+      const response = await getOrders(params);
+      setData(response);
     } catch (error) {
-      console.error("Error fetching orders:", error);
-      showToast("Error fetching orders");
+      const msg = error.response?.data?.message || error.response?.data?.error || "Failed to fetch orders";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
+  }, [page, pageSize, activeStatus, toast]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const handleCancelClick = (orderId) => {
+    setOrderToCancel(orderId);
+    setShowConfirmModal(true);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "PAID": return { bg: "bg-green-100", text: "text-green-700", border: "border-green-500", icon: CheckCircle };
-      case "PENDING": return { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-500", icon: Clock };
-      case "SHIPPED": return { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-500", icon: Truck };
-      case "DELIVERED": return { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-500", icon: CheckCircle };
-      case "CANCELLED": return { bg: "bg-red-100", text: "text-red-700", border: "border-red-500", icon: XCircle };
-      default: return { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-500", icon: AlertCircle };
+  const handleCancelConfirm = async () => {
+    if (!orderToCancel) return;
+    try {
+      await cancelOrder(orderToCancel);
+      setData((prev) => ({
+        ...prev,
+        content: prev.content.map((o) => (o.id === orderToCancel ? { ...o, status: "CANCELLED" } : o)),
+      }));
+      toast.success("Order cancelled successfully");
+    } catch (error) {
+      const msg = error.response?.data?.message || error.response?.data?.error || "Failed to cancel order";
+      toast.error(msg);
+    } finally {
+      setShowConfirmModal(false);
+      setOrderToCancel(null);
     }
   };
 
-  if (loading) {
+  const handleLeaveReview = (productId) => {
+    navigate(`/products/${productId}#reviews`);
+  };
+
+  const totalPages = data?.totalPages ?? 0;
+  const totalElements = data?.totalElements ?? 0;
+
+if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="empty-state">
-          <Package className="empty-state-icon text-blue-600" />
-          <h2 className="empty-state-title">Loading orders...</h2>
-          <p className="empty-state-description">Please wait while we fetch your order history.</p>
+      <div className="page-container">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <OrderCardSkeleton key={idx} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="max-w-4xl mx-auto">
+          <ErrorState
+            title="Failed to load orders"
+            message={error}
+            onRetry={() => fetchOrders()}
+          />
         </div>
       </div>
     );
@@ -73,135 +109,141 @@ const OrderHistory = () => {
 
   return (
     <div className="page-container">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Order History</h1>
-            <p className="page-subtitle">Track and manage your recent orders</p>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="page-title">Order History</h1>
+          <p className="page-subtitle">Track and manage your recent orders</p>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="empty-state">
-            <Package className="empty-state-icon text-blue-600" />
-            <h2 className="empty-state-title">No orders yet</h2>
-            <p className="empty-state-description">
-              Your orders will appear here after purchase. Start shopping to see your orders!
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              as={Link}
-              to="/"
-              className="btn btn-modern btn-modern-primary"
+        <div className="flex flex-wrap gap-2 mb-6">
+          {STATUSES.map((status) => (
+            <button
+              key={status}
+              onClick={() => {
+                setPage(0);
+                setActiveStatus(status);
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeStatus === status
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+              }`}
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Start Shopping
-            </motion.button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {orders.map((order, index) => {
-              const statusConfig = getStatusColor(order.status);
-              const StatusIcon = statusConfig.icon;
+              {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase().replace("_", " ")}
+            </button>
+          ))}
+        </div>
 
-              return (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className="order-card"
-                >
-                  <div className="order-card-header">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                        <Package className="w-6 h-6 text-white" />
-                      </div>
+        {(!data?.content || data.content.length === 0) ? (
+          <EmptyState
+            icon={Clock}
+            title="No orders found"
+            description={activeStatus === "ALL" ? "You have no orders yet. Start shopping to see your orders here." : `No ${activeStatus.toLowerCase().replace("_", " ")} orders found.`}
+            actionLabel="Shop Now"
+            actionHref="/products"
+          />
+        ) : (
+          <>
+            <div className="space-y-4">
+              {data.content.map((order) => {
+                const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING;
+                const itemCount = order.items?.length ?? order.itemCount ?? 0;
+
+                return (
+                  <div key={order.id} className="order-card">
+                    <div className="order-card-header flex justify-between items-center">
                       <div>
-                        <h3 className="text-xl font-bold text-white">Order #{order.id}</h3>
-                        <p className="text-blue-100 text-sm">
-                          {order.orderDate ? new Date(order.orderDate).toLocaleString() : 'Unknown date'}
+                        <h3 className="font-bold text-lg">Order #{order.id}</h3>
+                        <p className="text-sm opacity-75">
+                          {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Unknown date"}
                         </p>
                       </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
+                        {statusConfig.label}
+                      </span>
                     </div>
-                    <div className={`px-4 py-2 rounded-full ${statusConfig.bg} ${statusConfig.text} font-semibold flex items-center gap-2`}>
-                      <StatusIcon className="w-4 h-4" />
-                      {order.status}
-                    </div>
-                  </div>
-
-                  <div className="order-card-body">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
-                          <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-                            <p className="font-bold text-xl text-blue-600">
-                              ₹{order.totalAmount?.toFixed(2) || '0.00'}
-                            </p>
-                          </div>
+                    <div className="order-card-body">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Items</p>
+                          <p className="font-medium">{itemCount} items</p>
                         </div>
-
-                        <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
-                          <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Shipping Address</p>
-                            <p className="font-semibold text-sm">
-                              {order.shippingAddress || 'Address not provided'}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                          <p className="font-bold text-lg">₹{order.totalAmount?.toFixed(2) ?? "0.00"}</p>
                         </div>
-
-                        {order.shippingCarrier && (
-                          <div className="p-4 rounded-xl flex items-center gap-3" style={{ backgroundColor: 'var(--muted)' }}>
-                            <Truck className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                            <div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">Carrier</p>
-                              <p className="font-semibold text-sm">{order.shippingCarrier}</p>
-                            </div>
-                          </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/orders/${order.id}`}
+                          className="btn-modern btn-modern-primary"
+                        >
+                          View Details
+                        </Link>
+                        {order.status === "PENDING" && (
+                          <button
+                            onClick={() => handleCancelClick(order.id)}
+                            className="btn-modern btn-modern-danger"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {order.status === "DELIVERED" && order.items?.[0]?.productId && (
+                          <button
+                            onClick={() => handleLeaveReview(order.items[0].productId)}
+                            className="btn-modern btn-modern-secondary"
+                          >
+                            Leave a Review
+                          </button>
                         )}
                       </div>
-
-                      <div>
-                        <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                          <Package className="w-5 h-5 text-blue-600" />
-                          Order Items
-                        </h4>
-                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                          {order.orderItems && order.orderItems.map((item, idx) => (
-                            <div key={idx} className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-all">
-                              <div className="flex justify-between items-start gap-3">
-                                <div className="flex-1">
-                                  <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{item.productBrand || ''}</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-semibold text-blue-600">
-                                    {item.quantity} x ₹{item.subtotal?.toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </div>
-                </motion.div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(0);
+                }}
+              />
+            )}
+          </>
+        )}
+
+        {showConfirmModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+              <h3 className="text-lg font-bold mb-4">Cancel Order?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to cancel this order? This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="btn-modern btn-modern-secondary"
+                >
+                  No, Keep Order
+                </button>
+                <button
+                  onClick={handleCancelConfirm}
+                  className="btn-modern btn-modern-danger"
+                >
+                  Yes, Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
-};
-
-export default OrderHistory;
+}

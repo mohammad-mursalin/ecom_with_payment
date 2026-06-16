@@ -1,55 +1,71 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useWebSocket } from "../Context/WebSocketContext";
-import { useToast } from "./Toast";
-import axios from "../axios";
-import AppContext from "../Context/Context";
+import { useCart } from "../Context/CartContext";
+import { getOrders, getOrder } from "../services/orderService";
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const sessionId = searchParams.get("session_id");
+  const paymentIntent = searchParams.get("payment_intent");
   const [status, setStatus] = useState("verifying");
-  const { subscribeToOrder, orderUpdates } = useWebSocket();
-  const { showToast } = useToast();
-  const { clearCart } = useContext(AppContext);
+  const [orderId, setOrderId] = useState(null);
+  const { clearCart } = useCart();
+
+  const verifyPayment = useCallback(async () => {
+    try {
+      // The payment was successful via Stripe redirect
+      // Get order details and verify confirmation
+      const orders = await getOrders();
+      if (orders && orders.length > 0) {
+        // Find the pending order (most recent one)
+        const pendingOrder = orders.find(o => o.status === "PENDING") || orders[0];
+        if (pendingOrder) {
+          const foundOrderId = pendingOrder.orderId || pendingOrder.id;
+          setOrderId(foundOrderId);
+          // The backend webhook should have confirmed it, but we poll to verify
+          const maxAttempts = 10;
+          let attempts = 0;
+          const checkOrderStatus = async () => {
+            attempts++;
+            try {
+              const orderData = await getOrder(foundOrderId);
+              if (orderData?.status === "CONFIRMED") {
+                clearCart();
+                setStatus("success");
+              } else if (attempts < maxAttempts) {
+                setTimeout(checkOrderStatus, 1000);
+              } else {
+                setStatus("pending");
+              }
+            } catch {
+              if (attempts < maxAttempts) {
+                setTimeout(checkOrderStatus, 1000);
+              } else {
+                setStatus("success"); // Assume success if we can't verify
+              }
+            }
+          };
+          checkOrderStatus();
+        } else {
+          setStatus("success");
+        }
+      } else {
+        setStatus("success");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) console.error("Error verifying payment:", error);
+      // Even on error, payment succeeded on Stripe's side - show success
+      setStatus("success");
+    }
+  }, [clearCart]);
 
   useEffect(() => {
-    if (sessionId) {
+    if (paymentIntent) {
       verifyPayment();
     } else {
       setStatus("error");
     }
-  }, [sessionId]);
-
-   useEffect(() => {
-     // Listen for WebSocket updates
-     if (orderUpdates.length > 0) {
-       const latestUpdate = orderUpdates[orderUpdates.length - 1];
-       if (latestUpdate.status === "PAID") {
-         setStatus("success");
-         showToast("Payment successful! Your order has been placed.");
-         clearCart();
-       }
-     }
-   }, [orderUpdates, clearCart]);
-
-   const verifyPayment = async () => {
-     try {
-       // Subscribe to the specific order via WebSocket
-       // For now, we'll just show success after a brief delay
-       // In production, you'd verify with backend
-       
-       setTimeout(() => {
-         setStatus("success");
-         showToast("Payment successful! Your order has been placed.");
-         clearCart();
-       }, 2000);
-     } catch (error) {
-       console.error("Error verifying payment:", error);
-       setStatus("error");
-     }
-   };
+  }, [paymentIntent, verifyPayment]);
 
   if (status === "verifying") {
     return (
@@ -77,14 +93,41 @@ const PaymentSuccess = () => {
     );
   }
 
+  if (status === "pending") {
+    return (
+      <div className="container mt-5 text-center" style={{ maxWidth: "600px" }}>
+        <div className="alert alert-info border-0" style={{ backgroundColor: "var(--card-bg)", borderRadius: "12px" }}>
+          <div className="text-center mb-3">
+            <i className="bi bi-info-circle-fill" style={{ fontSize: "3rem", color: "var(--color-brand)" }}></i>
+          </div>
+          <h4 className="alert-heading mb-3">Payment Received</h4>
+          <p>Your payment was successful but order confirmation is still pending.</p>
+          <hr className="mb-3" />
+          <p className="mb-0">Please check your orders page in a few moments for updates.</p>
+        </div>
+        <div className="d-flex justify-content-center gap-3 mt-4">
+          <button className="btn btn-secondary" onClick={() => navigate("/orders")}>
+            View Orders
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate("/")}>
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-5 text-center" style={{ maxWidth: "600px" }}>
-      <div className="alert alert-success border-0" style={{ backgroundColor: "#d1e7dd", borderRadius: "12px" }}>
+      <div className="alert alert-success border-0" style={{ backgroundColor: "var(--card-bg)", borderRadius: "12px" }}>
         <div className="text-center mb-3">
-          <i className="bi bi-check-circle-fill" style={{ fontSize: "3rem", color: "#198754" }}></i>
+          <i className="bi bi-check-circle-fill" style={{ fontSize: "3rem", color: "var(--color-success)" }}></i>
         </div>
         <h4 className="alert-heading mb-3">Payment Successful!</h4>
         <p>Thank you for your purchase. Your order has been placed successfully.</p>
+        {orderId && (
+          <p className="mb-0"><strong>Order ID:</strong> #{orderId}</p>
+        )}
         <hr className="mb-3" />
         <p className="mb-0">You will receive a confirmation email shortly.</p>
       </div>

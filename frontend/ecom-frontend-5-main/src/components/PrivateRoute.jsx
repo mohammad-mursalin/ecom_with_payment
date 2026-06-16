@@ -1,23 +1,24 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+import PageLoader from "./PageLoader";
 
-const PrivateRoute = ({ children, requiredRole }) => {
+const PrivateRoute = ({ admin = false }) => {
   const { isAuthenticated, user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <PageLoader />;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (admin && user?.role !== "ADMIN") {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default PrivateRoute;
