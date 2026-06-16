@@ -22,7 +22,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin
 public class OrderController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);

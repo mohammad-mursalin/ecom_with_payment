@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
 @RequestMapping("/api/cart")
-@CrossOrigin
 public class CartController {
 
     private static final Logger logger = LoggerFactory.getLogger(CartController.class);

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin
 @PreAuthorize("hasRole('USER')")
 public class PaymentController {
 

@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/me/recently-viewed")
-@CrossOrigin
 public class RecentlyViewedController {
 
     @Autowired

@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/shipping")
-@CrossOrigin
 @Validated
 public class ShippingController {
 
