@@ -6,14 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-//@NoArgsConstructor
-//@AllArgsConstructor
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class CreateOrderRequest {
     private List<OrderItemDTO> items;
     private String customerEmail;
@@ -30,71 +30,4 @@ public class CreateOrderRequest {
 
     @NotBlank(message = "Shipping method is required")
     private String shippingMethod;
-
-    public CreateOrderRequest() {
-    }
-
-    public CreateOrderRequest(List<OrderItemDTO> items, String customerEmail, String shippingAddress, BigDecimal shippingCost, String shippingMethod) {
-        this.items = items;
-        this.customerEmail = customerEmail;
-        this.shippingAddress = shippingAddress;
-        this.shippingCost = shippingCost;
-        this.shippingMethod = shippingMethod;
-    }
-
-    public List<OrderItemDTO> getItems() {
-        return items;
-    }
-
-    public void setItems(List<OrderItemDTO> items) {
-        this.items = items;
-    }
-
-    public String getCustomerEmail() {
-        return customerEmail;
-    }
-
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
-    }
-
-    public String getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(String shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-
-    public BigDecimal getShippingCost() {
-        return shippingCost;
-    }
-
-    public void setShippingCost(BigDecimal shippingCost) {
-        this.shippingCost = shippingCost;
-    }
-
-    public String getShippingMethod() {
-        return shippingMethod;
-    }
-
-    public void setShippingMethod(String shippingMethod) {
-        this.shippingMethod = shippingMethod;
-    }
-
-    public String getCouponCode() {
-        return couponCode;
-    }
-
-    public void setCouponCode(String couponCode) {
-        this.couponCode = couponCode;
-    }
-
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(BigDecimal discountAmount) {
-        this.discountAmount = discountAmount;
-    }
 }

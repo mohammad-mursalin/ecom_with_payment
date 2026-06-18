@@ -1,7 +1,13 @@
 package com.mursalin.ecom.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChangePasswordRequest {
 
     @NotBlank(message = "Current password is required")
@@ -9,28 +15,4 @@ public class ChangePasswordRequest {
 
     @NotBlank(message = "New password is required")
     private String newPassword;
-
-    public ChangePasswordRequest() {
-    }
-
-    public ChangePasswordRequest(String currentPassword, String newPassword) {
-        this.currentPassword = currentPassword;
-        this.newPassword = newPassword;
-    }
-
-    public String getCurrentPassword() {
-        return currentPassword;
-    }
-
-    public void setCurrentPassword(String currentPassword) {
-        this.currentPassword = currentPassword;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
 }

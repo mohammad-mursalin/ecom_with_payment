@@ -1,7 +1,5 @@
 package com.mursalin.ecom.dto;
 
-import com.mursalin.ecom.model.Role;
-
 public class RefreshTokenRequest {
 
     private String refreshToken;
