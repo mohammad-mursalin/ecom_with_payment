@@ -1,136 +1,173 @@
-import { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { setAccessToken, clearAccessToken } from "../authStorage";
-import {
-  login as loginService,
-  register as registerService,
-  getProfile,
-  logout as logoutService,
-  updateProfile as updateProfileService,
-  changePassword as changePasswordService,
-} from "../services/authService";
+// src/Context/AuthContext.jsx
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import API from '../axios';
+import { setAccessToken, clearTokens } from '../authStorage';
+import * as authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
-  return context;
-}
-
-const normaliseUser = (profile) => ({
-  userId: profile.userId || profile.id,
-  username: profile.username || "",
-  email: profile.email,
-  role: profile.role,
-  fullName: profile.fullName || profile.username || "",
-  phoneNumber: profile.phoneNumber || "",
-  address: profile.address || "",
-  profilePictureUrl: profile.profilePictureUrl || "",
-  bio: profile.bio || "",
-});
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true); // true until session restore completes
 
-  // ── Initial session restore ─────────────────────────────────────────────────
-  // useRef so the effect dependency never changes — avoids StrictMode double-fire
-  const hasFetchedRef = useRef(false);
-
+  // ─── SESSION RESTORE ───────────────────────────────────────────────────────
+  // Runs once on every page mount (including F5 reload).
+  // Memory is always empty on mount — the access token must be recovered via refresh.
+  // The browser automatically sends the HttpOnly cookie with the refresh request.
+  // No body is sent — the backend reads the cookie.
   useEffect(() => {
-    // StrictMode guard — only run once even in dev double-mount
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-
-    let cancelled = false;
-
-    const initAuth = async () => {
+    const restoreSession = async () => {
       try {
-        const profile = await getProfile({ _isGuestCheck: true });
-        if (!cancelled) setUser(normaliseUser(profile));
-      } catch (err) {
-        // Ignore aborts (StrictMode unmount, fast navigation)
-        // ERR_CANCELED = axios cancel, CanceledError = AbortController
-        const isAbort =
-          err?.code === "ERR_CANCELED" ||
-          err?.name === "CanceledError" ||
-          err?.name === "AbortError";
+        // Use raw axios (not API) because there is no access token yet —
+        // the request interceptor would add nothing, but more importantly,
+        // if this fails with 401 we do NOT want the response interceptor to
+        // try to refresh again (that would recurse). Using raw axios bypasses
+        // both interceptors entirely for this one call.
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+          {}, // Empty body — backend reads HttpOnly cookie
+          { withCredentials: true }
+        );
 
-        if (isAbort) return; // not a real failure — do nothing, stay loading
+        // response.data = { success: true, data: { accessToken, refreshToken, user } }
+        const { accessToken, user: minimalUser } = response.data.data;
 
-        // Genuine failure (401, network error) — user is simply not logged in
-        // Do NOT redirect here — being a guest on a public page is fine
-        if (!cancelled) {
-          clearAccessToken();
-          setUser(null);
+        setAccessToken(accessToken);
+
+        // Set the minimal user immediately so the UI is not blocked.
+        // minimalUser = { id, username, email, role } — only 4 fields.
+        setUser(minimalUser);
+
+        // Fetch the full profile in the background for pages that need
+        // fullName, phoneNumber, profilePictureUrl, etc.
+        // This call goes through API (which now has the access token set).
+        // Failure here is non-fatal — the user is still authenticated.
+        try {
+          const profileResponse = await API.get('/auth/profile');
+          setUser(profileResponse.data.data);
+        } catch {
+          // Keep the minimal user object — profile fetch is best-effort
         }
+
+      } catch {
+        // 401 = no cookie, expired cookie, or invalid cookie.
+        // This is normal for first-time visitors and after logout.
+        // Do NOT redirect to login here. Just set user to null.
+        setUser(null);
       } finally {
-        if (!cancelled) setLoading(false);
+        // Always release the loading gate — whether auth succeeded or failed.
+        setLoading(false);
       }
     };
 
-    initAuth();
+    restoreSession();
+  }, []); // Empty dependency array — run exactly once on mount
 
-    return () => {
-      cancelled = true; // cleanup — prevent state updates after unmount
-    };
-  }, []); // empty deps — runs once on mount only
+  // ─── LOGIN ─────────────────────────────────────────────────────────────────
+  // Stores the access token in memory and sets the user state.
+  // Does NOT redirect — the calling component handles redirect.
+  // Throws on error — caller must wrap in try/catch.
+  const login = useCallback(async (email, password) => {
+    const response = await authService.login(email, password);
+    // response = { success, data: { accessToken, refreshToken, user }, message }
 
-  // ── Login ───────────────────────────────────────────────────────────────────
-  const login = async (email, password) => {
-    const data = await loginService(email, password);
-    const { accessToken, user: userData } = data;
+    const { accessToken, user: minimalUser } = response.data;
+
     setAccessToken(accessToken);
-    setUser(normaliseUser(userData));
-    return data;
-  };
+    // refreshToken stays in the HttpOnly cookie set by the backend — do not touch it
+    setUser(minimalUser);
 
-  // ── Register ────────────────────────────────────────────────────────────────
-  const register = async (username, email, password, confirmPassword, fullName) => {
-    const data = await registerService(username, email, password, confirmPassword, fullName);
-    const { accessToken, user: userData } = data;
-    setAccessToken(accessToken);
-    setUser(normaliseUser({ ...userData, fullName: userData.fullName || fullName }));
-    return data;
-  };
-
-  // ── Logout ──────────────────────────────────────────────────────────────────
-  const logout = async () => {
+    // Fetch full profile in the background
     try {
-      await logoutService();
-    } catch (err) {
-      if (import.meta.env.DEV) console.warn("Logout API failed:", err);
+      const profileResponse = await authService.getProfile();
+      setUser(profileResponse.data);
+    } catch {
+      // Non-fatal — keep the minimal user from login response
     }
-    clearAccessToken();
-    setUser(null);
-    navigate("/");
-  };
+  }, []);
 
-  // ── Profile update ──────────────────────────────────────────────────────────
-  const updateProfile = async (profileData) => {
-    const profile = await updateProfileService(profileData);
-    setUser((prev) => ({ ...prev, ...normaliseUser(profile) }));
-    return profile;
-  };
+  // ─── REGISTER ──────────────────────────────────────────────────────────────
+  // Identical flow to login — register now also sets the HttpOnly cookie (backend fixed).
+  // Auto-logs the user in. Does NOT redirect — caller handles redirect.
+  // Throws on error — caller must wrap in try/catch.
+  const register = useCallback(async (username, email, password, confirmPassword) => {
+    const response = await authService.register(username, email, password, confirmPassword);
 
-  // ── Password change ─────────────────────────────────────────────────────────
-  const changePassword = async (currentPassword, newPassword, confirmNewPassword) => {
-    return await changePasswordService(currentPassword, newPassword, confirmNewPassword);
-  };
+    const { accessToken, user: minimalUser } = response.data;
+
+    setAccessToken(accessToken);
+    setUser(minimalUser);
+
+    // Fetch full profile in the background
+    try {
+      const profileResponse = await authService.getProfile();
+      setUser(profileResponse.data);
+    } catch {
+      // Non-fatal
+    }
+  }, []);
+
+  // ─── LOGOUT ────────────────────────────────────────────────────────────────
+  // Calls the backend to delete the refresh token from the DB and clear the cookie.
+  // Backend logout no longer requires authentication — it always returns 200.
+  // clearTokens() clears the in-memory access token.
+  // Redirects to home using window.location (not useNavigate — context wraps the router).
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Silent — even if the network call fails, we still clear locally
+    } finally {
+      clearTokens();   // Clear in-memory access token
+      setUser(null);
+      window.location.href = '/'; // Hard redirect — clears all React state
+    }
+  }, []);
+
+  // ─── UPDATE PROFILE ───────────────────────────────────────────────────────
+  const updateProfile = useCallback(async (profileData) => {
+    const response = await authService.updateProfile(profileData);
+    setUser((prev) => ({ ...prev, ...response.data }));
+    return response;
+  }, []);
+
+  // ─── CHANGE PASSWORD ───────────────────────────────────────────────────────
+  const changePassword = useCallback(
+    (currentPassword, newPassword, confirmNewPassword) =>
+      authService.changePassword(currentPassword, newPassword, confirmNewPassword),
+    []
+  );
+
+  // ─── DERIVED STATE ─────────────────────────────────────────────────────────
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'ADMIN';
 
   const value = {
     user,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === "ADMIN",
+    isAuthenticated,
+    isAdmin,
+    loading,
     login,
     register,
     logout,
     updateProfile,
     changePassword,
-    loading,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Render children unconditionally. Individual pages and RequireAuth
+  // handle the loading state — the provider does not block rendering.
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used inside <AuthProvider>');
+  }
+  return context;
 };
