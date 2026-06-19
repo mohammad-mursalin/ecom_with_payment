@@ -1,125 +1,110 @@
+// src/axios.jsx
 import axios from 'axios';
-import { getAccessToken, setAccessToken, clearAccessToken } from './authStorage';
+import { getAccessToken, setAccessToken, clearTokens } from './authStorage';
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,  // send cookies on every request (needed for refresh token cookie)
+  withCredentials: true, // Always send cookies — required for HttpOnly refresh cookie
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// ── Request interceptor ───────────────────────────────────────────────────────
+// ─── REQUEST INTERCEPTOR ─────────────────────────────────────────────────────
+// Attach the access token to every outgoing request when one exists in memory.
 API.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ── Response interceptor ──────────────────────────────────────────────────────
+// ─── RESPONSE INTERCEPTOR ────────────────────────────────────────────────────
+// On 401: attempt one silent token refresh, then retry the original request.
+// Uses a queue to handle multiple simultaneous 401s without triggering multiple
+// refresh calls.
 
-// Public endpoints — 401 from these is normal for guest users, never redirect
-const PUBLIC_ENDPOINTS = [
-  '/categories',
-  '/brands',
-  '/products',
-  '/product/',
-  '/shipping/estimate',
-  '/coupons/validate',
-  '/auth/check-username',
-  '/auth/check-email',
-];
-
-// Concurrent refresh queue — if multiple requests fail with 401 simultaneously,
-// only one refresh call is made; the rest wait and retry with the new token
 let isRefreshing = false;
-let failedQueue = [];
+let failedQueue = []; // Requests that arrived while a refresh was already in progress
 
-const processQueue = (error) => {
-  failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve()
-  );
+// After refresh completes, resolve or reject every queued request.
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token);
+    }
+  });
   failedQueue = [];
 };
 
 API.interceptors.response.use(
-  (response) => response,
+  (response) => response, // Pass through all successful responses unchanged
+
   async (error) => {
     const originalRequest = error.config;
 
-    // Not a 401 — pass through, let the calling code handle it
+    // Only handle 401 Unauthorized. All other errors pass through.
     if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    // The refresh endpoint itself returned 401 — don't retry, just clear and redirect
-    if (originalRequest.url?.includes('/auth/refresh')) {
-      clearAccessToken();
+    // If this request was already a retry (i.e., the refresh itself returned 401),
+    // do not retry again — that would cause an infinite loop.
+    if (originalRequest._isRetry) {
+      processQueue(error, null);
+      clearTokens();
       window.location.href = '/login';
       return Promise.reject(error);
     }
 
-    // Public endpoint returned 401 (guest user) — normal, don't redirect
-    const isPublic = PUBLIC_ENDPOINTS.some(path =>
-      originalRequest.url?.includes(path)
-    );
-    if (isPublic) {
-      return Promise.reject(error);
-    }
-
-    if (originalRequest._isGuestCheck) {
-      return Promise.reject(error);
-    }
-
-    // Already retried once and still got 401 — token is genuinely invalid
-    if (originalRequest._retry) {
-      clearAccessToken();
-      window.location.href = '/login';
-      return Promise.reject(error);
-    }
-
-    // Another refresh is already in flight — queue this request to retry after
+    // If a refresh is already in progress, queue this request and wait.
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      })
-        .then(() => {
-          originalRequest.headers.Authorization = `Bearer ${getAccessToken()}`;
-          return API(originalRequest);
-        })
-        .catch((err) => Promise.reject(err));
+      }).then((token) => {
+        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+        return API(originalRequest);
+      }).catch((err) => Promise.reject(err));
     }
 
-    // Attempt token refresh
-    originalRequest._retry = true;
+    // First 401 — start the refresh process.
+    originalRequest._isRetry = true;
     isRefreshing = true;
 
     try {
-      const response = await API.post('/auth/refresh', {}, {
-        withCredentials: true,  // ensure refresh token cookie is sent
-        _retry: true,           // prevent this call itself from being intercepted
-      });
+      // Call refresh directly with axios (not API) to avoid the interceptor
+      // running on the refresh call itself.
+      // Send no body — the backend reads the HttpOnly cookie automatically.
+      // withCredentials ensures the cookie is included.
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+        {}, // Empty body — backend reads HttpOnly cookie, not body
+        { withCredentials: true }
+      );
 
-      // Backend wraps responses as { success, data: { accessToken, ... } }
-      const newToken = response.data?.data?.accessToken;
+      // Response: { success: true, data: { accessToken, refreshToken, user } }
+      // We only need the accessToken here — ignore refreshToken (stays in HttpOnly cookie).
+      const { accessToken } = response.data.data;
 
-      if (!newToken) {
-        throw new Error('No access token returned from refresh endpoint');
-      }
+      setAccessToken(accessToken);
 
-      setAccessToken(newToken);
-      originalRequest.headers.Authorization = `Bearer ${newToken}`;
-      processQueue(null);
+      // Update the failed original request and drain the queue.
+      originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+      processQueue(null, accessToken);
+
       return API(originalRequest);
-
     } catch (refreshError) {
-      processQueue(refreshError);
-      clearAccessToken();
+      // Refresh failed — session is truly expired or invalid.
+      processQueue(refreshError, null);
+      clearTokens();
       window.location.href = '/login';
       return Promise.reject(refreshError);
-
     } finally {
       isRefreshing = false;
     }
