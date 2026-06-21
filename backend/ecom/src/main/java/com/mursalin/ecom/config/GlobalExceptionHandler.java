@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -135,5 +136,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
         ErrorResponse body = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "An unexpected error occurred");
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleStaleTokenDelete(ObjectOptimisticLockingFailureException ex) {
+        // This occurs when two requests race to consume the same single-use
+        // refresh token. By the time this request's delete runs, the token
+        // was already rotated/deleted by the other request. Treat this the
+        // same as "token not found" — the client should retry with whatever
+        // new token it already received, or log in again.
+        ErrorResponse body = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", "Refresh token expired. Please login again.");
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
 }
