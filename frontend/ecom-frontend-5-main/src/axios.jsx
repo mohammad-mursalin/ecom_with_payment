@@ -1,6 +1,7 @@
 // src/axios.jsx
 import axios from 'axios';
 import { getAccessToken, setAccessToken, clearTokens } from './authStorage';
+import { performRefresh } from './refreshCoordinator';
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -78,29 +79,15 @@ API.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // Call refresh directly with axios (not API) to avoid the interceptor
-      // running on the refresh call itself.
-      // Send no body — the backend reads the HttpOnly cookie automatically.
-      // withCredentials ensures the cookie is included.
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
-        {}, // Empty body — backend reads HttpOnly cookie, not body
-        { withCredentials: true }
-      );
-
-      // Response: { success: true, data: { accessToken, refreshToken, user } }
-      // We only need the accessToken here — ignore refreshToken (stays in HttpOnly cookie).
-      const { accessToken } = response.data.data;
+      const { accessToken } = await performRefresh();
 
       setAccessToken(accessToken);
 
-      // Update the failed original request and drain the queue.
       originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
       processQueue(null, accessToken);
 
       return API(originalRequest);
     } catch (refreshError) {
-      // Refresh failed — session is truly expired or invalid.
       processQueue(refreshError, null);
       clearTokens();
       window.location.href = '/login';
