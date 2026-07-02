@@ -64,19 +64,35 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             Pageable pageable
     );
 
-    @Query("select o from Order o where " +
-            "(:search is null or :search = '' or " +
-            " lower(o.customerEmail) like lower(concat('%', :search, '%')) or " +
-            " lower(cast(o.id as string)) like lower(concat('%', :search, '%'))) and " +
-            "(:status is null or o.status = :status) and " +
-            "(:startDate is null or o.createdAt >= :startDate) and " +
-            "(:endDate is null or o.createdAt < :endDate) and " +
-            "(:paymentMethod is null or o.paymentMethod = :paymentMethod)")
+    @Query(value = """
+            SELECT o.* FROM orders o
+            WHERE
+              (:search IS NULL OR :search = '' OR
+               LOWER(o.customer_email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CAST(o.id AS TEXT)) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:status IS NULL OR o.status = :status)
+              AND (:startDate IS NULL OR o.created_at >= CAST(:startDate AS timestamp))
+              AND (:endDate IS NULL OR o.created_at < CAST(:endDate AS timestamp))
+              AND (:paymentMethod IS NULL OR o.payment_method = :paymentMethod)
+            ORDER BY o.created_at DESC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM orders o
+            WHERE
+              (:search IS NULL OR :search = '' OR
+               LOWER(o.customer_email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+               LOWER(CAST(o.id AS TEXT)) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:status IS NULL OR o.status = :status)
+              AND (:startDate IS NULL OR o.created_at >= CAST(:startDate AS timestamp))
+              AND (:endDate IS NULL OR o.created_at < CAST(:endDate AS timestamp))
+              AND (:paymentMethod IS NULL OR o.payment_method = :paymentMethod)
+            """,
+            nativeQuery = true)
     Page<Order> searchAdminOrders(
             @Param("search") String search,
-            @Param("status") Order.OrderStatus status,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            @Param("status") String status,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate,
             @Param("paymentMethod") String paymentMethod,
             Pageable pageable
     );
