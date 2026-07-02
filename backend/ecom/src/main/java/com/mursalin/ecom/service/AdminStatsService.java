@@ -220,9 +220,24 @@ public class AdminStatsService {
         return new UserAnalyticsResponse(newPerDay, totalActive);
     }
 
-    public Page<Order> getAdminOrders(String search, Order.OrderStatus status, LocalDateTime startDate, LocalDateTime endDate, String paymentMethod, int page, int pageSize) {
-        Pageable pageable = PageRequest.of(page, pageSize, org.springframework.data.domain.Sort.by("createdAt").descending());
-        return orderRepository.searchAdminOrders(search, status, startDate, endDate, paymentMethod, pageable);
+    public Page<Order> getAdminOrders(
+            String search,
+            Order.OrderStatus status,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            String paymentMethod,
+            int page,
+            int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        String startDateStr = startDate != null
+                ? startDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : null;
+        String endDateStr = endDate != null
+                ? endDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : null;
+        String statusStr = status != null ? status.name() : null;
+        return orderRepository.searchAdminOrders(
+                search, statusStr, startDateStr, endDateStr, paymentMethod, pageable);
     }
 
     private double percentChange(double current, double previous) {
