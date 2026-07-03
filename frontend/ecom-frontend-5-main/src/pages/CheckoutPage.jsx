@@ -56,7 +56,7 @@ const CheckoutPage = () => {
     setLoadingAddresses(true);
     try {
       const data = await getAddresses();
-      const list = data?.items || data || [];
+      const list = data || [];
       setAddresses(list);
       const def = list.find(a => a.isDefault) || list[0];
       if (def) setSelectedAddressId(def.id || def.addressId);
@@ -98,9 +98,8 @@ const CheckoutPage = () => {
     setSavingAddress(true);
     try {
       const data = await createAddress(addressForm);
-      const newAddr = data?.data || data;
-      setAddresses(prev => [...prev, newAddr]);
-      setSelectedAddressId(newAddr.id || newAddr.addressId);
+      setAddresses(prev => [...prev, data]);
+      setSelectedAddressId(data.id || data.addressId);
       setShowAddressForm(false);
       setAddressForm({
         label: "HOME", fullName: "", phone: "", line1: "", line2: "",
@@ -120,16 +119,15 @@ const CheckoutPage = () => {
     setCouponMsg(""); setCouponOk(false);
     try {
       const data = await validateCoupon({ code: couponCode.trim(), orderSubtotal: subtotal });
-      const d = data?.data || data;
-      if (d?.valid) {
-        setCouponDiscount(d.discountAmount || 0);
-        setCouponCode(d.couponCode || couponCode);
+      if (data?.valid) {
+        setCouponDiscount(data.discountAmount || 0);
+        setCouponCode(data.couponCode || couponCode);
         setCouponOk(true);
-        setCouponMsg(`Coupon applied: ₹${(d.discountAmount || 0).toFixed(2)} off`);
+        setCouponMsg(`Coupon applied: ₹${(data.discountAmount || 0).toFixed(2)} off`);
         toast.success("Coupon applied");
       } else {
         setCouponOk(false);
-        setCouponMsg(d?.message || "Invalid coupon");
+        setCouponMsg(data?.message || "Invalid coupon");
         setCouponDiscount(0);
         setCouponCode("");
       }
@@ -191,7 +189,8 @@ const CheckoutPage = () => {
     setProcessingMsg("Processing your order...");
 
     try {
-      await confirmOrder(orderResult.orderId);
+      const paymentIntentId = orderResult?.clientSecret?.split("_secret_")[0];
+      await confirmOrder(orderResult.orderId, paymentIntentId);
     } catch (err) {
       toast.error(err.response?.data?.message || err.response?.data?.error || "Failed to confirm order");
       setProcessingMsg(null);
@@ -550,18 +549,21 @@ function CheckoutForm({ onPaymentSuccess, processingMsg, total }) {
     setPaying(true);
     setStripeError("");
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/payment/success`,
       },
+      redirect: "if_required",
     });
 
     if (error) {
       setStripeError(error.message || "Payment failed");
       toast.error(error.message || "Payment failed");
-    } else {
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
       onPaymentSuccess();
+    } else {
+      setStripeError("Payment could not be confirmed. Please try again.");
     }
     setPaying(false);
   };
