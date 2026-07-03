@@ -291,12 +291,14 @@ public class OrderService {
 
     @Transactional
     public Order processSuccessfulPaymentByIntentId(String paymentIntentId) {
-        Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found for intent: " + paymentIntentId));
-        Order order = payment.getOrder();
+        Order order = orderRepository
+                .findByStripePaymentIntentId(paymentIntentId)
+                .orElseThrow(() -> new RuntimeException("Order not found for intent: " + paymentIntentId));
         if (order.getStatus() == Order.OrderStatus.CONFIRMED) {
-            logger.info("Order id={} already CONFIRMED", order.getId()); return order;
+            logger.info("Order id={} already CONFIRMED, skipping webhook", order.getId());
+            return order;
         }
+        Payment payment = order.getPayment();
         String oldStatus = order.getStatus().name();
         order.setStatus(Order.OrderStatus.CONFIRMED);
         order.setStripePaymentIntentId(paymentIntentId);
