@@ -17,6 +17,7 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByStripeSessionId(String stripeSessionId);
+    Optional<Order> findByStripePaymentIntentId(String stripePaymentIntentId);
     
     @Query("select o from Order o where o.user.userId = :userId")
     List<Order> findByUserId(@Param("userId") Long userId);
