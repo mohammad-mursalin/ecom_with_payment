@@ -1,6 +1,7 @@
 package com.mursalin.ecom.controller;
 
 import com.mursalin.ecom.dto.*;
+import com.mursalin.ecom.dto.admin.AdminOrderSummaryDTO;
 import com.mursalin.ecom.model.Order;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.AdminStatsService;
@@ -65,7 +66,7 @@ public class AdminStatsController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<Page<Order>> getAdminOrders(
+    public ResponseEntity<Page<AdminOrderSummaryDTO>> getAdminOrders(
             @RequestParam(required = false, defaultValue = "") String search,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -82,12 +83,12 @@ public class AdminStatsController {
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
         Pageable pageable = org.springframework.data.domain.PageRequest.of(page, pageSize);
-        Page<Order> result = adminStatsService.getAdminOrders(search, statusEnum, startDateTime, endDateTime, paymentMethod, page, pageSize);
+        Page<AdminOrderSummaryDTO> result = adminStatsService.getAdminOrders(search, statusEnum, startDateTime, endDateTime, paymentMethod, page, pageSize);
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("/orders/{id}/status")
-    public ResponseEntity<Order> updateOrderStatus(
+    public ResponseEntity<OrderDetailsResponse> updateOrderStatus(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal UserPrinciples userPrinciple
@@ -105,7 +106,7 @@ public class AdminStatsController {
         }
 
         Order order = orderService.adminUpdateOrderStatus(id, newStatus, note, trackingNumber, courierName, userPrinciple.getUserId());
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(OrderDetailsResponse.fromOrder(order));
     }
 
     @PostMapping("/orders/{id}/resend-email")

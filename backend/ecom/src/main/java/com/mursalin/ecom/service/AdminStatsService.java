@@ -1,6 +1,7 @@
 package com.mursalin.ecom.service;
 
 import com.mursalin.ecom.dto.*;
+import com.mursalin.ecom.dto.admin.AdminOrderSummaryDTO;
 import com.mursalin.ecom.model.*;
 import com.mursalin.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -220,7 +221,7 @@ public class AdminStatsService {
         return new UserAnalyticsResponse(newPerDay, totalActive);
     }
 
-    public Page<Order> getAdminOrders(
+    public Page<AdminOrderSummaryDTO> getAdminOrders(
             String search,
             Order.OrderStatus status,
             LocalDateTime startDate,
@@ -236,8 +237,9 @@ public class AdminStatsService {
                 ? endDate.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 : null;
         String statusStr = status != null ? status.name() : null;
-        return orderRepository.searchAdminOrders(
+        Page<Order> orders = orderRepository.searchAdminOrders(
                 search, statusStr, startDateStr, endDateStr, paymentMethod, pageable);
+        return orders.map(AdminOrderSummaryDTO::fromOrder);
     }
 
     private double percentChange(double current, double previous) {
