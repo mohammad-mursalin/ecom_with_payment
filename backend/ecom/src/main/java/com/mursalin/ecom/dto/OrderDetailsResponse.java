@@ -1,6 +1,7 @@
 package com.mursalin.ecom.dto;
 
 import com.mursalin.ecom.model.AddressSnapshot;
+import com.mursalin.ecom.model.Order;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,7 +29,7 @@ public class OrderDetailsResponse {
     private String courierName;
     private List<StatusHistoryDTO> statusHistory;
 
-    public static OrderDetailsResponse fromOrder(com.mursalin.ecom.model.Order order) {
+    public static OrderDetailsResponse fromOrder(Order order) {
         OrderDetailsResponse response = new OrderDetailsResponse();
         response.setId(order.getId());
         response.setCreatedAt(order.getCreatedAt());
