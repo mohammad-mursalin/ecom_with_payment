@@ -473,8 +473,8 @@ const renderTimeline = (history) => {
             </thead>
             <tbody>
               {orders.map((order) => {
-                const itemCount = order.orderItems?.length || 0;
-                const firstItem = order.orderItems?.[0]?.productName || "";
+                const itemCount = order.itemCount ?? 0;
+                const firstItem = "";
                 const statusColor = STATUS_COLORS[order.status] || { bg: "var(--border-color)", text: "var(--text-primary)" };
                 return (
                   <tr key={order.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
