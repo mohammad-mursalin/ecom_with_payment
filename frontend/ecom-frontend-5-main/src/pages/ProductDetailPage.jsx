@@ -267,7 +267,7 @@ const ProductDetailPage = () => {
           <p className="font-medium text-gray-900 dark:text-white">Standard Delivery</p>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {shippingEstimate
-              ? `₹${Number(shippingEstimate?.amount ?? 0).toFixed(2)} - Estimated 3-7 business days`
+              ? `₹${Number(shippingEstimate ?? 0).toFixed(2)} - Estimated 3-7 business days`
               : "Estimated 3-7 business days"}
           </p>
         </div>
@@ -315,7 +315,7 @@ const ProductDetailPage = () => {
           <div className="lg:col-span-6 space-y-4">
             <div
               className="relative overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
-              style={{ height: "520px" }}
+              style={{ aspectRatio: "1 / 1", maxHeight: "520px" }}
             >
               <img
                 src={primaryImage}

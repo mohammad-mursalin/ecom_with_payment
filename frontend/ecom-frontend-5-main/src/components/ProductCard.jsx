@@ -111,7 +111,7 @@ const ProductCard = ({ product }) => {
   const handleCardClick = () => {
     navigate(`/products/${id}`);
   };
-
+console.log(product);
   return (
     <div className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full">
 <div className="relative h-[200px] overflow-hidden bg-gray-50 dark:bg-gray-700">
