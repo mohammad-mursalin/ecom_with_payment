@@ -12,6 +12,7 @@ import com.mursalin.ecom.dto.ProductResponse;
 import com.mursalin.ecom.dto.ProductSpecResponse;
 import com.mursalin.ecom.dto.WishlistItemResponse;
 import com.mursalin.ecom.dto.WishlistResponse;
+import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.mursalin.ecom.model.Product;
 import com.mursalin.ecom.model.Review;
 import com.mursalin.ecom.model.UserPrinciples;
@@ -74,7 +75,7 @@ public class ProductController {
     ) {
         Product product = service.getProductEntityById(prodId);
         if (product == null) {
-            throw new com.mursalin.ecom.exception.ResourceNotFoundException("Product not found with id: " + prodId);
+            throw new ResourceNotFoundException("Product not found with id: " + prodId);
         }
         Long userId = userPrinciple != null ? userPrinciple.getUserId() : null;
         boolean isWishlisted = userId != null && wishlistRepository.existsByUserIdAndProductId(userId, prodId);
