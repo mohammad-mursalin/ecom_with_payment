@@ -15,8 +15,8 @@ export const initiateOrder = async (data) => {
   return response.data;
 };
 
-export const confirmOrder = async (orderId) => {
-  const response = await API.post(`/orders/${orderId}/confirm`);
+export const confirmOrder = async (orderId, paymentIntentId) => {
+  const response = await API.post(`/orders/${orderId}/confirm`, { paymentIntentId });
   return response.data;
 };
 

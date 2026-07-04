@@ -2,17 +2,17 @@ import API from '../axios';
 
 export const getReviews = async (productId, params = {}) => {
   const response = await API.get(`/reviews/product/${productId}`, { params });
-  return response.data;
+  return response.data.data;
 };
 
 export const getMyReview = async (productId) => {
   const response = await API.get(`/reviews/my/${productId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const checkEligibility = async (productId) => {
   const response = await API.get(`/reviews/check-eligibility/${productId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const createReview = async (data) => {

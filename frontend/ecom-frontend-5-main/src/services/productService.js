@@ -7,7 +7,7 @@ export const getProducts = async (params = {}) => {
 
 export const getProduct = async (id) => {
   const response = await API.get(`/product/${id}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const searchSuggestions = async (query, limit = 8) => {
