@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "./Toast";
 import {
@@ -19,98 +19,17 @@ import {
   ToggleRight,
   Star,
 } from "lucide-react";
-
-const MOCK_CATEGORIES = [
-  { id: 1, name: "Laptops", slug: "laptops", icon: "💻" },
-  { id: 2, name: "Headphones", slug: "headphones", icon: "🎧" },
-  { id: 3, name: "Mobile", slug: "mobile", icon: "📱" },
-  { id: 4, name: "Electronics", slug: "electronics", icon: "⚡" },
-];
-
-const MOCK_BRANDS = [
-  { id: 1, name: "Apple", slug: "apple" },
-  { id: 2, name: "Samsung", slug: "samsung" },
-  { id: 3, name: "Sony", slug: "sony" },
-  { id: 4, name: "Nike", slug: "nike" },
-];
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: "MacBook Pro 14-inch",
-    category: { id: 1, name: "Laptops" },
-    brand: { id: 1, name: "Apple" },
-    price: 1499.99,
-    originalPrice: 1599.99,
-    stock: 25,
-    lowStockThreshold: 5,
-    isActive: true,
-    isFeatured: true,
-    primaryImageUrl: "https://via.placeholder.com/150/2563eb/ffffff?text=MacBook",
-    createdAt: "2026-06-01T10:00:00",
-  },
-  {
-    id: 2,
-    name: "AirPods Pro 2",
-    category: { id: 2, name: "Headphones" },
-    brand: { id: 1, name: "Apple" },
-    price: 249.99,
-    originalPrice: null,
-    stock: 150,
-    lowStockThreshold: 10,
-    isActive: true,
-    isFeatured: true,
-    primaryImageUrl: "https://via.placeholder.com/150/16a34a/ffffff?text=AirPods",
-    createdAt: "2026-06-02T14:30:00",
-  },
-  {
-    id: 3,
-    name: "Galaxy S24 Ultra",
-    category: { id: 3, name: "Mobile" },
-    brand: { id: 2, name: "Samsung" },
-    price: 1199.99,
-    originalPrice: 1299.99,
-    stock: 3,
-    lowStockThreshold: 5,
-    isActive: true,
-    isFeatured: false,
-    primaryImageUrl: "https://via.placeholder.com/150/f59e0b/ffffff?text=Galaxy",
-    createdAt: "2026-06-03T09:15:00",
-  },
-  {
-    id: 4,
-    name: "WH-1000XM5 Headphones",
-    category: { id: 2, name: "Headphones" },
-    brand: { id: 3, name: "Sony" },
-    price: 349.99,
-    originalPrice: null,
-    stock: 0,
-    lowStockThreshold: 5,
-    isActive: false,
-    isFeatured: false,
-    primaryImageUrl: "https://via.placeholder.com/150/7c3aed/ffffff?text=Sony",
-    createdAt: "2026-05-28T16:45:00",
-  },
-  {
-    id: 5,
-    name: "Nike Air Max 270",
-    category: { id: 4, name: "Electronics" },
-    brand: { id: 4, name: "Nike" },
-    price: 150.0,
-    originalPrice: 180.0,
-    stock: 42,
-    lowStockThreshold: 5,
-    isActive: true,
-    isFeatured: true,
-    primaryImageUrl: "https://via.placeholder.com/150/dc2626/ffffff?text=Nike",
-    createdAt: "2026-06-04T11:20:00",
-  },
-];
+import { getAdminProducts, createProduct, updateProduct, deleteProduct, toggleProductActive } from "../services/adminService";
+import { getCategories } from "../services/categoryService";
+import { getBrands } from "../services/brandService";
 
 const AdminProducts = () => {
   const { toast } = useToast();
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [filteredProducts, setFilteredProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState("");
+  const [totalElements, setTotalElements] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pageSize, setPageSize] = useState(20);
@@ -120,10 +39,11 @@ const AdminProducts = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [statusToggleConfirm, setStatusToggleConfirm] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [categories] = useState(MOCK_CATEGORIES);
-  const [brands] = useState(MOCK_BRANDS);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
   const fileInputRef = useRef(null);
   const searchTimerRef = useRef(null);
 
@@ -150,8 +70,56 @@ const AdminProducts = () => {
     setSelectedIds(new Set());
   }, [debouncedSearch, products]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-  const [currentPage, setCurrentPage] = useState(0);
+  const fetchProducts = useCallback(async () => {
+    setLoadingProducts(true);
+    setProductsError("");
+    try {
+      const res = await getAdminProducts({
+        page: currentPage,
+        size: pageSize,
+        search: debouncedSearch || undefined,
+      });
+      const data = res.data || res;
+      const content = data.content || data.items || data || [];
+      const total = data.totalElements ?? content.length;
+      setProducts(content);
+      setFilteredProducts(content);
+      setTotalElements(total);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load products";
+      setProductsError(msg);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [currentPage, pageSize, debouncedSearch]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const fetchMeta = async () => {
+      try {
+        const [catRes, brandRes] = await Promise.all([
+          getCategories(),
+          getBrands(),
+        ]);
+        const catData = catRes.data || catRes;
+        setCategories(
+          Array.isArray(catData) ? catData : catData.content || catData.items || []
+        );
+        const brandData = brandRes.data || brandRes;
+        setBrands(
+          Array.isArray(brandData) ? brandData : brandData.content || brandData.items || []
+        );
+      } catch (err) {
+        console.error("Failed to load categories/brands", err);
+      }
+    };
+    fetchMeta();
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages - 1);
   const startIndex = safeCurrentPage * pageSize;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
@@ -196,62 +164,69 @@ const AdminProducts = () => {
 
   const handleSave = async (formData) => {
     setSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                ...formData,
-                brand: { id: formData.brandId, name: formData.brandName },
-                category: { id: formData.categoryId, name: categories.find((c) => c.id === formData.categoryId)?.name || p.category.name },
-                primaryImageUrl: imagePreviews[0]?.url || p.primaryImageUrl,
-              }
-            : p
-        )
-      );
-      toast.success("Product updated successfully");
-    } else {
-      const newProduct = {
-        id: Date.now(),
-        ...formData,
-        brand: { id: formData.brandId, name: formData.brandName },
-        category: { id: formData.categoryId, name: categories.find((c) => c.id === formData.categoryId)?.name || "Uncategorized" },
-        primaryImageUrl: imagePreviews[0]?.url || "https://via.placeholder.com/150/2563eb/ffffff?text=New",
-        createdAt: new Date().toISOString(),
+    try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        price: Number(formData.price),
+        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
+        stockQuantity: Number(formData.stockQuantity),
+        lowStockThreshold: Number(formData.lowStockThreshold) || 5,
+        categoryId: formData.categoryId,
+        brandId: formData.brandId,
+        isActive: formData.isActive,
+        isFeatured: formData.isFeatured,
+        tags: formData.tags || [],
+        specifications: (formData.specs || []).filter(s => s.key && s.value).reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}),
+        imageUrls: imagePreviews.map(img => img.url).filter(Boolean),
       };
-      setProducts((prev) => [newProduct, ...prev]);
-      toast.success("Product created successfully");
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, payload);
+        toast.success("Product updated successfully");
+      } else {
+        await createProduct(payload);
+        toast.success("Product created successfully");
+      }
+      await fetchProducts();
+      setDrawerOpen(false);
+      setEditingProduct(null);
+      setImagePreviews([]);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to save product";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    setDrawerOpen(false);
-    setEditingProduct(null);
-    setImagePreviews([]);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteConfirm) return;
-    setProducts((prev) => prev.filter((p) => p.id !== deleteConfirm.id));
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(deleteConfirm.id);
-      return next;
-    });
-    toast.info(`"${deleteConfirm.name}" deleted`);
-    setDeleteConfirm(null);
+    try {
+      await deleteProduct(deleteConfirm.id);
+      toast.info(`"${deleteConfirm.name}" deleted`);
+      await fetchProducts();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to delete product";
+      toast.error(msg);
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
-  const confirmToggleStatus = () => {
+  const confirmToggleStatus = async () => {
     if (!statusToggleConfirm) return;
-    const newStatus = !statusToggleConfirm.isActive;
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === statusToggleConfirm.id ? { ...p, isActive: newStatus } : p
-      )
-    );
-    toast.success(`Product ${newStatus ? "activated" : "deactivated"} successfully`);
-    setStatusToggleConfirm(null);
+    try {
+      await toggleProductActive(statusToggleConfirm.id);
+      const newStatus = !statusToggleConfirm.isActive;
+      toast.success(`Product ${newStatus ? "activated" : "deactivated"} successfully`);
+      await fetchProducts();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to update product status";
+      toast.error(msg);
+    } finally {
+      setStatusToggleConfirm(null);
+    }
   };
 
   const handleBulkAction = async (action) => {
@@ -356,6 +331,21 @@ toast.success("Product created");
         </motion.div>
       )}
 
+      {loadingProducts && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
+      {productsError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {productsError}
+          <button onClick={fetchProducts} className="ml-2 underline hover:no-underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loadingProducts && !productsError && (
       <div className="card overflow-hidden p-0">
         <div className="flex flex-col gap-3 border-b border-gray-200 p-4 dark:border-gray-700 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -490,6 +480,7 @@ toast.success("Product created");
           </div>
         </div>
       </div>
+      )}
 
       <AnimatePresence>
         {drawerOpen && (

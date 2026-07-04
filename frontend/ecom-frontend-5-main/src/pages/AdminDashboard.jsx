@@ -97,7 +97,7 @@ const AdminDashboard = () => {
     setStatsError("");
     try {
       const response = await getStats();
-      const data = response.data || response;
+      const data = response.data?.data || response.data || response;
       setStats({
         totalRevenue: data.totalRevenue ?? 0,
         ordersToday: data.ordersToday ?? 0,
