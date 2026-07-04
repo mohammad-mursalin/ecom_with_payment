@@ -130,7 +130,7 @@ const Profile = () => {
     setAddressesError("");
     try {
       const data = await getAddresses();
-      setAddresses(data.data || data || []);
+      setAddresses(data || []);
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load addresses";
       setAddressesError(msg);
