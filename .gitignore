@@ -86,3 +86,6 @@ backend/application.yml
 # =========================
 .env*
 !.env.example
+
+.playwright-mcp
+*.png
