@@ -271,14 +271,14 @@ const ProductsPage = () => {
   const showSortInHeader = searchQuery || activeFilterCount > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         {searchQuery && (
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">
               Search results for &#39;{searchQuery}&#39;
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-muted mt-1">
               {meta.totalElements} {meta.totalElements === 1 ? "product" : "products"} found
             </p>
           </div>
@@ -286,15 +286,15 @@ const ProductsPage = () => {
 
         {!searchQuery && (
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">All Products</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary">All Products</h1>
+            <p className="text-muted mt-1">
               {meta.totalElements} {meta.totalElements === 1 ? "product" : "products"} available
             </p>
           </div>
         )}
 
-        <div className="flex gap-6">
-          <div className="hidden lg:block w-64 flex-shrink-0">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="hidden md:block w-64 flex-shrink-0">
             <div className="sticky top-20">
               <FilterSidebar
                 filters={{
@@ -321,18 +321,18 @@ const ProductsPage = () => {
                 <button
                   type="button"
                   onClick={() => setMobileFilterOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-surface-elevated md:hidden"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-xs font-bold">
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-white text-xs font-bold">
                       {activeFilterCount}
                     </span>
                   )}
                 </button>
                 {showSortInHeader && (
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-muted">
                     {startElement}–{endElement} of {meta.totalElements} results
                   </span>
                 )}
@@ -340,12 +340,12 @@ const ProductsPage = () => {
               <div className="flex items-center gap-3">
                 {showSortInHeader && (
                   <div className="flex items-center gap-2">
-                    <label htmlFor="sort-select" className="text-sm text-gray-600 dark:text-gray-400">Sort:</label>
+                    <label htmlFor="sort-select" className="text-sm text-muted">Sort:</label>
                     <select
                       id="sort-select"
                       value={sort}
                       onChange={handleSortChange}
-                      className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                      className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
                       {SORT_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -380,7 +380,7 @@ const ProductsPage = () => {
                 />
               ) : (
               <>
-                <div className="product-grid">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
@@ -422,9 +422,9 @@ const ProductsPage = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-3xl max-h-[85vh] overflow-y-auto"
+              className="absolute bottom-0 left-0 right-0 bg-surface-elevated rounded-t-3xl max-h-[85vh] overflow-y-auto"
             >
-              <div className="sticky top-0 bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="sticky top-0 bg-surface-elevated px-4 py-3 border-b border-default flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">Filters</h2>

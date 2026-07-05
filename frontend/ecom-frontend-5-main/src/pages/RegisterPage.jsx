@@ -2,26 +2,25 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const RegisterPage = () => {
   const { register, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [username,        setUsername]        = useState('');
-  const [email,           setEmail]           = useState('');
-  const [password,        setPassword]        = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [submitting,      setSubmitting]      = useState(false);
-  const [fieldErrors,     setFieldErrors]     = useState({});
-  const [apiError,        setApiError]        = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [apiError, setApiError] = useState('');
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -33,11 +32,11 @@ const RegisterPage = () => {
 
   const validate = () => {
     const errors = {};
-    if (!username.trim())                         errors.username        = 'Username is required.';
-    if (!email.trim())                            errors.email           = 'Email is required.';
-    if (!password)                                errors.password        = 'Password is required.';
-    else if (password.length < 8)                 errors.password        = 'Password must be at least 8 characters.';
-    if (password !== confirmPassword)             errors.confirmPassword = 'Passwords do not match.';
+    if (!username.trim()) errors.username = 'Username is required.';
+    if (!email.trim()) errors.email = 'Email is required.';
+    if (!password) errors.password = 'Password is required.';
+    else if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
+    if (password !== confirmPassword) errors.confirmPassword = 'Passwords do not match.';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -49,8 +48,6 @@ const RegisterPage = () => {
     setSubmitting(true);
     try {
       await register(username.trim(), email.trim(), password, confirmPassword);
-      // register() auto-logs the user in — tokens set, user state set
-      // Do NOT redirect to /login — user is already authenticated
       const destination = location.state?.from?.pathname || '/';
       navigate(destination, { replace: true });
     } catch (err) {
@@ -65,25 +62,24 @@ const RegisterPage = () => {
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center py-5"
-      style={{ minHeight: '100vh' }}
-    >
-      <div className="card shadow-sm p-4" style={{ width: '100%', maxWidth: '480px' }}>
-        <h4 className="mb-4 text-center">Create Account</h4>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md dark:shadow-none">
+        <h2 className="mb-6 text-center text-2xl font-bold text-primary">Create Account</h2>
 
         {apiError && (
-          <div className="alert alert-danger py-2" role="alert">
+          <div className="rounded-lg bg-danger/10 p-3 text-sm font-medium text-danger">
             {apiError}
           </div>
         )}
 
-        <div className="mb-3">
-          <label htmlFor="reg-username" className="form-label">Username</label>
+        <div className="mb-4">
+          <label htmlFor="reg-username" className="text-sm font-medium text-secondary">
+            Username
+          </label>
           <input
             id="reg-username"
             type="text"
-            className={`form-control ${fieldErrors.username ? 'is-invalid' : ''}`}
+            className={`w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.username ? 'border-danger' : ''}`}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="johndoe"
@@ -91,16 +87,18 @@ const RegisterPage = () => {
             disabled={submitting}
           />
           {fieldErrors.username && (
-            <div className="invalid-feedback">{fieldErrors.username}</div>
+            <p className="mt-1 text-sm text-danger">{fieldErrors.username}</p>
           )}
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="reg-email" className="form-label">Email</label>
+        <div className="mb-4">
+          <label htmlFor="reg-email" className="text-sm font-medium text-secondary">
+            Email
+          </label>
           <input
             id="reg-email"
             type="email"
-            className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
+            className={`w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.email ? 'border-danger' : ''}`}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -108,16 +106,18 @@ const RegisterPage = () => {
             disabled={submitting}
           />
           {fieldErrors.email && (
-            <div className="invalid-feedback">{fieldErrors.email}</div>
+            <p className="mt-1 text-sm text-danger">{fieldErrors.email}</p>
           )}
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="reg-password" className="form-label">Password</label>
+        <div className="mb-4">
+          <label htmlFor="reg-password" className="text-sm font-medium text-secondary">
+            Password
+          </label>
           <input
             id="reg-password"
             type="password"
-            className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
+            className={`w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.password ? 'border-danger' : ''}`}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Min. 8 characters"
@@ -125,16 +125,18 @@ const RegisterPage = () => {
             disabled={submitting}
           />
           {fieldErrors.password && (
-            <div className="invalid-feedback">{fieldErrors.password}</div>
+            <p className="mt-1 text-sm text-danger">{fieldErrors.password}</p>
           )}
         </div>
 
         <div className="mb-4">
-          <label htmlFor="reg-confirm" className="form-label">Confirm Password</label>
+          <label htmlFor="reg-confirm" className="text-sm font-medium text-secondary">
+            Confirm Password
+          </label>
           <input
             id="reg-confirm"
             type="password"
-            className={`form-control ${fieldErrors.confirmPassword ? 'is-invalid' : ''}`}
+            className={`w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.confirmPassword ? 'border-danger' : ''}`}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Repeat your password"
@@ -142,30 +144,28 @@ const RegisterPage = () => {
             disabled={submitting}
           />
           {fieldErrors.confirmPassword && (
-            <div className="invalid-feedback">{fieldErrors.confirmPassword}</div>
+            <p className="mt-1 text-sm text-danger">{fieldErrors.confirmPassword}</p>
           )}
         </div>
 
         <button
-          className="btn btn-primary w-100"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-none"
           onClick={handleSubmit}
           disabled={submitting}
         >
           {submitting ? (
             <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              />
+              <Loader2 className="h-4 w-4 animate-spin" />
               Creating account...
             </>
           ) : 'Create Account'}
         </button>
 
-        <p className="text-center mt-3 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+        <p className="mt-4 text-center text-sm text-muted">
           Already have an account?{' '}
-          <Link to="/login">Sign In</Link>
+          <Link to="/login" className="font-medium text-primary hover:text-primary-hover">
+            Sign In
+          </Link>
         </p>
       </div>
     </div>

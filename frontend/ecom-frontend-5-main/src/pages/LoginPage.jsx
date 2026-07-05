@@ -2,31 +2,26 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../Context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
   const { login, isAuthenticated, loading } = useAuth();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email,      setEmail]      = useState('');
-  const [password,   setPassword]   = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error,      setError]      = useState('');
+  const [error, setError] = useState('');
 
-  // If auth state is still loading, show a spinner — do not flash the form
-  // before we know whether the user is already authenticated.
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  // If already authenticated, redirect away from the login page.
-  // Destination is wherever they came from, or home if they navigated directly.
   if (isAuthenticated) {
     const destination = location.state?.from?.pathname || '/';
     return <Navigate to={destination} replace />;
@@ -42,7 +37,6 @@ const LoginPage = () => {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      // login() succeeded — tokens and user are set in AuthContext
       const destination = location.state?.from?.pathname || '/';
       navigate(destination, { replace: true });
     } catch (err) {
@@ -61,25 +55,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: '100vh' }}
-    >
-      <div className="card shadow-sm p-4" style={{ width: '100%', maxWidth: '420px' }}>
-        <h4 className="mb-4 text-center fw-500">Sign In</h4>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md dark:shadow-none">
+        <h2 className="mb-6 text-center text-2xl font-bold text-primary">Sign In</h2>
 
         {error && (
-          <div className="alert alert-danger py-2" role="alert">
+          <div className="rounded-lg bg-danger/10 p-3 text-sm font-medium text-danger">
             {error}
           </div>
         )}
 
-        <div className="mb-3">
-          <label htmlFor="login-email" className="form-label">Email</label>
+        <div className="mb-4">
+          <label htmlFor="login-email" className="text-sm font-medium text-secondary">
+            Email
+          </label>
           <input
             id="login-email"
             type="email"
-            className="form-control"
+            className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -90,11 +83,13 @@ const LoginPage = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="login-password" className="form-label">Password</label>
+          <label htmlFor="login-password" className="text-sm font-medium text-secondary">
+            Password
+          </label>
           <input
             id="login-password"
             type="password"
-            className="form-control"
+            className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -105,25 +100,23 @@ const LoginPage = () => {
         </div>
 
         <button
-          className="btn btn-primary w-100"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-none"
           onClick={handleSubmit}
           disabled={submitting}
         >
           {submitting ? (
             <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              />
+              <Loader2 className="h-4 w-4 animate-spin" />
               Signing in...
             </>
           ) : 'Sign In'}
         </button>
 
-        <p className="text-center mt-3 mb-0 text-muted" style={{ fontSize: '0.9rem' }}>
+        <p className="mt-4 text-center text-sm text-muted">
           Don&apos;t have an account?{' '}
-          <Link to="/register">Register</Link>
+          <Link to="/register" className="font-medium text-primary hover:text-primary-hover">
+            Register
+          </Link>
         </p>
       </div>
     </div>
