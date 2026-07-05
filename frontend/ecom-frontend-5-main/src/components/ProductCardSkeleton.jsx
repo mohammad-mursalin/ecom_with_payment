@@ -1,9 +1,9 @@
 import Skeleton from "./Skeleton";
 
 const ProductCardSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border" style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}>
+  <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none">
     <Skeleton height="200px" width="100%" rounded="0" />
-    <div className="p-4 space-y-3">
+    <div className="space-y-3 mt-6">
       <Skeleton width="40%" height="12px" rounded />
       <Skeleton width="90%" height="20px" rounded />
       <Skeleton width="70%" height="18px" rounded />

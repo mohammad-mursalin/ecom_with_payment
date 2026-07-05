@@ -14,22 +14,22 @@ function FractionalStars({ rating, count }) {
   return (
     <div className="flex items-center gap-1">
       <div className="flex items-center">
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-        ))}
-        {decimal > 0 && (
-          <span className="relative inline-flex">
-            <Star className="w-4 h-4 text-gray-300" />
-            <span className="absolute inset-0 overflow-hidden" style={{ width: `${decimal * 100}%` }}>
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            </span>
-          </span>
-        )}
+         {[...Array(fullStars)].map((_, i) => (
+           <Star key={`full-${i}`} className="w-4 h-4 fill-warning text-warning" />
+         ))}
+         {decimal > 0 && (
+           <span className="relative inline-flex">
+             <Star className="w-4 h-4 text-muted" />
+             <span className="absolute inset-0 overflow-hidden" style={{ width: `${decimal * 100}%` }}>
+               <Star className="w-4 h-4 fill-warning text-warning" />
+             </span>
+           </span>
+         )}
         {[...Array(Math.max(0, emptyStars))].map((_, i) => (
-          <Star key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
+          <Star key={`empty-${i}`} className="w-4 h-4 text-muted" />
         ))}
       </div>
-      <span className="text-xs text-gray-500 dark:text-gray-400">
+      <span className="text-xs text-muted">
         {(count ?? 0) === 0 ? "(No reviews yet)" : `(${count} reviews)`}
       </span>
     </div>
@@ -100,21 +100,25 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     if (outOfStock) return;
+    if (!isAuthenticated) {
+      toast.info("Please login to add items to your cart");
+      navigate("/login");
+      return;
+    }
     try {
       await addItem(id, 1);
       toast.success("Added to cart");
     } catch (error) {
-      toast.info("Added to cart (local)");
+      toast.error("Couldn't add to cart. Please try again.");
     }
   };
 
-  const handleCardClick = () => {
-    navigate(`/products/${id}`);
-  };
-console.log(product);
-  return (
-    <div className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full">
-<div className="relative h-[200px] overflow-hidden bg-gray-50 dark:bg-gray-700">
+   const handleCardClick = () => {
+     navigate(`/products/${id}`);
+   };
+   return (
+     <div className="group rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md dark:shadow-none flex flex-col h-full">
+<div className="relative aspect-square overflow-hidden bg-surface">
           <span
             className={`absolute top-2 left-2 px-2 py-1 text-xs font-medium text-white rounded-full ${getStockBadgeClass()}`}
           >
@@ -124,7 +128,7 @@ console.log(product);
           src={primaryImageUrl || "https://via.placeholder.com/400x300?text=No+Image"}
           alt={name || "Product"}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.03] cursor-pointer"
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03] cursor-pointer"
           onClick={handleCardClick}
         />
         <button
@@ -139,18 +143,18 @@ console.log(product);
         </button>
       </div>
 
-      <div className="p-4 flex flex-col flex-1">
-        <div className="mb-1">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+      <div className="flex flex-col flex-1">
+        <div className="mb-2">
+          <span className="text-xs font-medium text-secondary uppercase tracking-wide">
             {brand?.name || "Brand"}
           </span>
         </div>
 
-        <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-1 line-clamp-2 leading-snug min-h-[44px]">
+        <h3 className="font-semibold text-lg mb-2 line-clamp-2 leading-snug min-h-[44px]">
           <button
             type="button"
             onClick={handleCardClick}
-            className="text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className="text-left hover:text-primary font-medium transition-colors"
           >
             {name || "Product"}
           </button>
@@ -162,15 +166,15 @@ console.log(product);
 
         <div className="mt-auto">
           <div className="flex items-baseline gap-2 mb-4 flex-wrap">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            <span className="text-xl font-bold text-primary">
               ₹{Number(price || 0).toFixed(2)}
             </span>
             {originalPrice && originalPrice > price && (
               <>
-                <span className="text-sm text-gray-500 line-through">
+                <span className="text-sm text-muted line-through">
                   ₹{Number(originalPrice).toFixed(2)}
                 </span>
-                <span className="text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-danger bg-danger/10 px-2.5 py-0.5 rounded-full">
                   {discountPercent}% off
                 </span>
               </>
@@ -180,10 +184,10 @@ console.log(product);
             type="button"
             onClick={handleAddToCart}
             disabled={outOfStock}
-            className={`w-full py-3 px-4 font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+            className={`w-full py-3 px-4 font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
               outOfStock
-                ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
+                ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed transition-colors"
+                : "bg-primary hover:bg-primary-hover text-white shadow-sm transition-colors hover:shadow-md dark:shadow-none"
             }`}
           >
             <ShoppingBasket className="w-5 h-5" />

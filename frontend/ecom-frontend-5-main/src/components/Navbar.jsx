@@ -41,10 +41,10 @@ function useFocusTrap(isOpen, onClose) {
     const focusable = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstFocusable = focusable[0];
     const lastFocusable = focusable[focusable.length - 1];
-    
+
     firstFocusableRef.current = firstFocusable;
     lastFocusableRef.current = lastFocusable;
 
@@ -56,7 +56,7 @@ function useFocusTrap(isOpen, onClose) {
 
       if (e.key === "Tab") {
         if (focusable.length === 0) return;
-        
+
         if (e.shiftKey && document.activeElement === firstFocusable) {
           e.preventDefault();
           lastFocusable?.focus();
@@ -109,6 +109,7 @@ const Navbar = () => {
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   const mobileMenuRef = useFocusTrap(isMenuOpen, () => setIsMenuOpen(false));
 
@@ -136,17 +137,14 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setShowSearchResults(false);
-        setShowRecentSearches(false);
-        setHighlightedIndex(-1);
-      }
-      if (userMenuOpen && !event.target.closest(".user-menu-container")) {
+    function handleClickOutside(event) {
+      if (userMenuOpen && userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setUserMenuOpen(false);
       }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
+    }
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userMenuOpen]);
 
@@ -319,23 +317,15 @@ const Navbar = () => {
   }, [location.pathname, isMobile]);
 
   return (
-    <header className={`header ${scrolled ? "scrolled" : ""}`}>
-      <nav className="navbar-container">
-        <div className="navbar-content">
-          {/* Left Section - Logo */}
-          <Link to="/" className="nav-logo">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="logo-icon"
-            >
-              <ShoppingBasket className="logo-icon-svg" />
-            </motion.div>
-            <span className="logo-text">Mursalin</span>
+    <header className={`sticky top-0 z-50 bg-surface/95 backdrop-blur border-b border-default ${scrolled ? "shadow-md" : ""}`}>
+      <nav className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2">
+            <ShoppingBasket className="w-6 h-6 text-primary" strokeWidth={2.5} />
+            <span className="text-lg font-bold text-primary">Mursalin</span>
           </Link>
 
-          {/* Center Section - Navigation Links */}
-          <nav className="nav-links">
+          <nav className="hidden md:flex items-center gap-6">
             {visibleNavLinks.map((link) => {
               const isActive = location.pathname === link.href;
               const Icon = link.icon;
@@ -343,237 +333,235 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className={`nav-link ${isActive ? "active" : ""}`}
+                  className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isActive ? "text-primary" : "text-muted hover:text-primary"
+                    }`}
                   aria-label={link.name}
                 >
-                  <Icon className="nav-link-icon" />
-                  <span className="nav-link-text">{link.name}</span>
-                  {isActive && <span className="active-indicator" />}
+                  <Icon className="w-4 h-4" strokeWidth={2} />
+                  <span>{link.name}</span>
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-full" />
+                  )}
                 </Link>
               );
             })}
           </nav>
+        </div>
 
-          {/* Right Section - Actions */}
-          <div className="nav-actions">
-            {/* Search */}
-            <div ref={searchContainerRef} className="search-container">
-              {isMobile && !isMobileSearchOpen && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={handleSearchFocus}
-                  className="nav-action-btn"
-                  aria-label="Open search"
-                >
-                  <Search className="nav-action-icon" />
-                </motion.button>
-              )}
+        <div className="flex items-center gap-2">
+          <div ref={searchContainerRef} className="relative">
+            {isMobile && !isMobileSearchOpen && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={handleSearchFocus}
+                className="w-10 h-10 flex items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors"
+                aria-label="Open search"
+              >
+                <Search className="w-5 h-5 text-muted" strokeWidth={2} />
+              </motion.button>
+            )}
 
-              {(isMobileSearchOpen || !isMobile) && (
-                <div className="relative">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    onFocus={handleSearchFocus}
-                    onKeyDown={handleKeyDown}
-                    className="search-input"
-                    aria-label="Search products"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="search-clear"
-                      aria-label="Clear search"
-                    >
-                      <SearchX className="w-4 h-4" />
-                    </button>
-                  )}
-                  {isMobile && (
-                    <button
-                      type="button"
-                      onClick={() => setIsMobileSearchOpen(false)}
-                      className="search-clear"
-                      aria-label="Close search"
-                      style={{ right: searchQuery ? "28px" : "8px" }}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <AnimatePresence>
-                {(showRecentSearches || showSearchResults) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="search-results-dropdown"
+            {(isMobileSearchOpen || !isMobile) && (
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={handleSearchFocus}
+                  onKeyDown={handleKeyDown}
+                  className="w-64 lg:w-80 h-10 px-4 pr-10 rounded-lg border border-default bg-surface text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  aria-label="Search products"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-surface-elevated transition-colors"
+                    aria-label="Clear search"
                   >
-                    <div className="max-h-96 overflow-y-auto p-2">
-                      {showRecentSearches && !showSearchResults && recentSearches.length > 0 && (
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between px-2 py-1">
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent</span>
+                    <SearchX className="w-4 h-4 text-muted" strokeWidth={2} />
+                  </button>
+                )}
+                {isMobile && (
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileSearchOpen(false)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-surface-elevated transition-colors"
+                    aria-label="Close search"
+                  >
+                    <X className="w-4 h-4 text-muted" strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <AnimatePresence>
+              {(showRecentSearches || showSearchResults) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-surface-elevated rounded-xl border border-default shadow-xl overflow-hidden z-50"
+                >
+                  <div className="max-h-96 overflow-y-auto p-2">
+                    {showRecentSearches && !showSearchResults && recentSearches.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between px-2 py-1">
+                          <span className="text-xs font-semibold text-muted uppercase tracking-wide">Recent</span>
+                          <button
+                            type="button"
+                            onClick={clearRecentSearches}
+                            className="text-xs text-muted hover:text-danger transition-colors"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                        {recentSearches.map((term, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition-colors ${highlightedIndex === idx ? "bg-surface-elevated" : "hover:bg-surface-elevated"
+                              }`}
+                          >
+                            <div
+                              className="flex items-center gap-3 flex-1 min-w-0"
+                              onClick={() => navigateToSearch(term)}
+                            >
+                              <Clock className="w-4 h-4 text-muted" strokeWidth={2} />
+                              <span className="text-sm text-primary truncate">{term}</span>
+                            </div>
                             <button
                               type="button"
-                              onClick={clearRecentSearches}
-                              className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeRecentSearch(term);
+                              }}
+                              className="p-1 rounded hover:bg-surface-elevated transition-colors"
+                              aria-label={`Remove ${term}`}
                             >
-                              Clear all
+                              <SearchX className="w-3.5 h-3.5 text-muted" strokeWidth={2} />
                             </button>
                           </div>
-                          {recentSearches.map((term, idx) => (
-                            <div
-                              key={idx}
-                              className={`flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition-colors ${
-                                highlightedIndex === idx ? "bg-gray-100 dark:bg-gray-700" : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                              }`}
-                            >
-                              <div
-                                className="flex items-center gap-3 flex-1"
-                                onClick={() => navigateToSearch(term)}
-                              >
-                                <Clock className="w-4 h-4 text-gray-400" />
-                                <span className="text-sm text-gray-700 dark:text-gray-200">{term}</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeRecentSearch(term);
-                                }}
-                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                aria-label={`Remove ${term}`}
-                              >
-                                <SearchX className="w-3.5 h-3.5 text-gray-400" />
-                              </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {showSearchResults && (
+                      <div>
+                        {searchResults.map((product, idx) => (
+                          <Link
+                            key={product.id}
+                            to={`/products/${product.id}`}
+                            className="flex items-center gap-3 flex-1 min-w-0 px-2 py-2 rounded-lg hover:bg-surface-elevated transition-colors"
+                            onClick={() => handleResultClick(product)}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                              {product.imageUrl ? (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <Package className="w-4 h-4 text-muted" strokeWidth={2} />
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {showSearchResults && (
-                        <div>
-                          {searchResults.map((product, idx) => (
-                            <Link
-                              key={product.id}
-                              to={`/products/${product.id}`}
-                              className="search-result-item"
-                              onClick={() => handleResultClick(product)}
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                {product.imageUrl ? (
-                                  <img
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    className="w-8 h-8 rounded object-cover flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                                    <Package className="w-4 h-4 text-gray-400" />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{product.name}</p>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getCategoryPillClass(idx)}`}>
-                                      {product.category?.name || product.category?.slug || "General"}
-                                    </span>
-                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{formatPrice(product.price)}</span>
-                                  </div>
-                                </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-primary truncate">{product.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryPillClass(idx)}`}>
+                                  {product.category?.name || product.category?.slug || "General"}
+                                </span>
+                                <span className="text-xs font-semibold text-muted">{formatPrice(product.price)}</span>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            </Link>
-                          ))}
-                          {searchQuery && searchResults.length === 0 && (
-                            <button
-                              type="button"
-                              onClick={() => navigateToSearch(searchQuery)}
-                              className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                            >
-                              Search for &ldquo;{searchQuery}&rdquo;
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted flex-shrink-0" strokeWidth={2} />
+                          </Link>
+                        ))}
+                        {searchQuery && searchResults.length === 0 && (
+                          <button
+                            type="button"
+                            onClick={() => navigateToSearch(searchQuery)}
+                            className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted hover:bg-surface-elevated transition-colors"
+                          >
+                            Search for &ldquo;{searchQuery}&rdquo;
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-            {/* Cart */}
+          <div className="relative shrink-0">
             <Link
               to="/cart"
-              className={`nav-action-btn cart-btn ${isAuthenticated ? "" : "disabled"}`}
+              className="w-10 h-10 flex items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Shopping Cart"
               title="View Cart"
             >
-              <ShoppingCart className="nav-action-icon" />
+              <ShoppingCart className="w-5 h-5 text-primary" strokeWidth={2} />
               {isAuthenticated && itemCount > 0 && (
-                <span className="cart-badge" aria-label={`${itemCount} items in cart`}>
-                  {itemCount}
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white">
+                  {itemCount > 9 ? "9+" : itemCount}
                 </span>
               )}
             </Link>
+          </div>
 
-            {/* Wishlist */}
+          <div className="relative shrink-0">
             <Link
               to="/wishlist"
-              className={`nav-action-btn wishlist-btn ${isAuthenticated ? "" : "disabled"}`}
+              className="w-10 h-10 flex items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Wishlist"
               title="View Wishlist"
             >
-              <Heart className="nav-action-icon" />
+              <Heart className="w-5 h-5 text-primary" strokeWidth={2} />
               {isAuthenticated && wishlistItems.length > 0 && (
-                <span className="wishlist-badge" aria-label={`${wishlistItems.length} items in wishlist`}>
-                  {wishlistItems.length}
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white">
+                  {wishlistItems.length > 9 ? "9+" : wishlistItems.length}
                 </span>
               )}
             </Link>
+          </div>
 
-            {/* Theme Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleTheme}
-              className="nav-action-btn theme-btn"
-              aria-label="Toggle Theme"
-              title="Toggle Dark/Light Mode"
-            >
-              {isDark ? (
-                <Sun className="theme-icon" />
-              ) : (
-                <Moon className="theme-icon" />
-              )}
-            </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors shrink-0"
+            aria-label="Toggle Theme"
+            title="Toggle Dark/Light Mode"
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-primary" strokeWidth={2} />
+            ) : (
+              <Moon className="w-5 h-5 text-primary" strokeWidth={2} />
+            )}
+          </motion.button>
 
-            {/* User Menu */}
+          <div className="hidden md:flex shrink-0">
             {isAuthenticated ? (
-              <div className="user-menu-container">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => {
                     setUserMenuOpen((prev) => !prev);
                     setShowSearchResults(false);
                     setShowRecentSearches(false);
                   }}
-                  className="user-menu-btn"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors"
                   aria-label="User Menu"
                   aria-expanded={userMenuOpen}
                 >
-                  <div className="user-avatar">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-elevated text-primary font-semibold text-sm">
                     {user?.username?.charAt(0) || user?.email?.charAt(0)}
                   </div>
-                  <span className="user-name">{user?.username || user?.fullName || user?.email}</span>
-                  <ChevronDown className="user-chevron" />
+                  <ChevronDown className="w-4 h-4 text-muted transition-transform" strokeWidth={2} />
                 </button>
 
                 {userMenuOpen && (
@@ -582,108 +570,104 @@ const Navbar = () => {
                       initial={{ opacity: 0, y: -10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="user-dropdown"
+                      className="absolute right-0 top-full mt-2 w-64 bg-surface-elevated rounded-xl border border-default shadow-xl overflow-hidden z-50"
                     >
                       <Link
                         to="/profile"
                         onClick={() => setUserMenuOpen(false)}
-                        className="user-dropdown-item"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-surface-elevated transition-colors"
                       >
-                        <User className="user-dropdown-icon" />
-                        <div className="user-dropdown-content">
-                          <span className="user-dropdown-title">Profile</span>
-                          <span className="user-dropdown-subtitle">Manage your account</span>
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <User className="w-5 h-5" strokeWidth={2} />
                         </div>
-                        <ChevronRight className="user-dropdown-chevron" />
+                        <div className="flex-1">
+                          <span className="block text-sm font-semibold text-primary">Profile</span>
+                          <span className="block text-xs text-muted">Manage your account</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted" strokeWidth={2} />
                       </Link>
                       <Link
                         to="/wishlist"
                         onClick={() => setUserMenuOpen(false)}
-                        className="user-dropdown-item"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-surface-elevated transition-colors"
                       >
-                        <Heart className="user-dropdown-icon" />
-                        <div className="user-dropdown-content">
-                          <span className="user-dropdown-title">Wishlist</span>
-                          <span className="user-dropdown-subtitle">View saved items</span>
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <Heart className="w-5 h-5" strokeWidth={2} />
                         </div>
-                        <ChevronRight className="user-dropdown-chevron" />
+                        <div className="flex-1">
+                          <span className="block text-sm font-semibold text-primary">Wishlist</span>
+                          <span className="block text-xs text-muted">View saved items</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted" strokeWidth={2} />
                       </Link>
-                      <div className="user-dropdown-divider" />
                       {isAdmin && (
                         <Link
                           to="/admin"
                           onClick={() => setUserMenuOpen(false)}
-                          className="user-dropdown-item"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-surface-elevated transition-colors"
                         >
-                          <Settings className="user-dropdown-icon" />
-                          <div className="user-dropdown-content">
-                            <span className="user-dropdown-title">Admin Dashboard</span>
-                            <span className="user-dropdown-subtitle">Manage products and orders</span>
+                          <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Settings className="w-5 h-5" strokeWidth={2} />
                           </div>
-                          <ChevronRight className="user-dropdown-chevron" />
+                          <div className="flex-1">
+                            <span className="block text-sm font-semibold text-primary">Admin Dashboard</span>
+                            <span className="block text-xs text-muted">Manage products and orders</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted" strokeWidth={2} />
                         </Link>
                       )}
-                      <div className="user-dropdown-divider" />
+                      <div className="border-t border-default" />
                       <button
-                        onClick={handleLogout}
-                        className="user-dropdown-item text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          handleLogout();
+                          setUserMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-600 hover:text-red-700 hover:bg-surface-elevated transition-colors"
                       >
-                        <LogOut className="user-dropdown-icon" />
-                        <div className="user-dropdown-content">
-                          <span className="user-dropdown-title">Logout</span>
-                        </div>
-                        <ChevronRight className="user-dropdown-chevron" />
+                        <LogOut className="w-5 h-5" strokeWidth={2} />
+                        <span className="text-sm font-medium">Logout</span>
                       </button>
                     </motion.div>
                   </AnimatePresence>
                 )}
               </div>
             ) : (
-              <div className="auth-buttons">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="auth-btn auth-btn-login"
-                  aria-label="Login"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
                 >
-                  <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    Login
-                  </motion.span>
+                  Login
                 </Link>
                 <Link
                   to="/register"
-                  className="auth-btn auth-btn-register"
-                  aria-label="Register"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-hover transition-colors shadow-sm"
                 >
-                  <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <span>Register</span>
-                    <ChevronRight className="auth-btn-arrow" />
-                  </motion.span>
+                  Register
                 </Link>
               </div>
             )}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => {
-                setIsMenuOpen(!isMenuOpen);
-                setShowSearchResults(false);
-                setShowRecentSearches(false);
-              }}
-              className="mobile-menu-btn"
-              aria-label="Toggle Menu"
-              aria-expanded={isMenuOpen}
-            >
-              {isMenuOpen ? (
-                <X className="mobile-menu-icon" />
-              ) : (
-                <Menu className="mobile-menu-icon" />
-              )}
-            </button>
           </div>
+
+          <button
+            onClick={() => {
+              setIsMenuOpen(!isMenuOpen);
+              setShowSearchResults(false);
+              setShowRecentSearches(false);
+            }}
+            className="flex md:hidden shrink-0 w-10 h-10 items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors"
+            aria-label="Toggle Menu"
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? (
+              <X className="w-6 h-6 text-primary" strokeWidth={2} />
+            ) : (
+              <Menu className="w-6 h-6 text-primary" strokeWidth={2} />
+            )}
+          </button>
         </div>
       </nav>
 
-      {/* Mobile Navigation */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -692,75 +676,77 @@ const Navbar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="mobile-menu-overlay"
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
               onClick={() => setIsMenuOpen(false)}
               aria-hidden="true"
             />
-<motion.div
-               initial={{ x: "-100%" }}
-               animate={{ x: 0 }}
-               exit={{ x: "-100%" }}
-               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-               className="mobile-menu"
-               ref={mobileMenuRef}
-               role="dialog"
-               aria-modal="true"
-               aria-label="Mobile navigation menu"
-           >
-              <div className="mobile-menu-header">
-                <Link to="/" className="mobile-logo" onClick={() => setIsMenuOpen(false)}>
-                  <ShoppingBasket className="mobile-logo-icon" />
-                  <span className="mobile-logo-text">Mursalin</span>
-                </Link>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="mobile-close-btn"
-                  aria-label="Close menu"
-                >
-                  <X className="mobile-close-icon" />
-                </button>
-              </div>
-
-              <div className="mobile-nav-links">
-                {visibleNavLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.name}
-                      to={link.href}
-                      className="mobile-nav-link"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Icon className="mobile-nav-link-icon" />
-                      <span className="mobile-nav-link-text">{link.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {isAuthenticated && (
-                <>
-                  <div className="mobile-menu-divider" />
-                  <div className="mobile-user-section">
-                    <div className="mobile-user-avatar">
-                      {user?.username?.charAt(0) || user?.email?.charAt(0)}
-                    </div>
-                    <div className="mobile-user-info">
-                      <p className="mobile-user-name">{user?.username || user?.fullName || user?.email}</p>
-                      <p className="mobile-user-role">{user?.role}</p>
-                    </div>
-                  </div>
-
-                  <div className="mobile-menu-divider" />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-72 bg-surface border-r border-default z-50 md:hidden"
+              ref={mobileMenuRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation menu"
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-4 border-b border-default">
+                  <Link to="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                    <ShoppingBasket className="w-6 h-6 text-primary" strokeWidth={2.5} />
+                    <span className="text-lg font-bold text-primary">Mursalin</span>
+                  </Link>
                   <button
-                    onClick={handleLogout}
-                    className="mobile-logout-btn"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-default bg-surface hover:bg-surface-elevated transition-colors"
+                    aria-label="Close menu"
                   >
-                    <LogOut className="mobile-logout-icon" />
-                    <span>Logout</span>
+                    <X className="w-5 h-5 text-primary" strokeWidth={2} />
                   </button>
-                </>
-              )}
+                </div>
+
+                <div className="flex flex-col p-4 space-y-1 overflow-y-auto">
+                  {visibleNavLinks.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-primary hover:bg-surface-elevated transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Icon className="w-5 h-5" strokeWidth={2} />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {isAuthenticated && (
+                  <>
+                    <div className="border-t border-default" />
+                    <div className="p-4">
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-default bg-surface">
+                        <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-base">
+                          {user?.username?.charAt(0) || user?.email?.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-primary truncate">{user?.username || user?.fullName || user?.email}</p>
+                          <p className="text-xs text-muted">{user?.role}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full mt-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-red-600 hover:text-red-700 hover:bg-surface-elevated transition-colors"
+                      >
+                        <LogOut className="w-5 h-5" strokeWidth={2} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </motion.div>
           </>
         )}
