@@ -37,9 +37,9 @@ const RecommendationsRow = ({ productId, type = "related" }) => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-white dark:bg-gray-900">
+    <section className="py-12 bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="h-8 w-48 rounded mb-6" style={{ backgroundColor: "var(--border-color)" }}></div>
+          <div className="h-8 w-48 rounded mb-6 bg-surface-elevated animate-pulse"></div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
@@ -52,7 +52,7 @@ const RecommendationsRow = ({ productId, type = "related" }) => {
 
   if (error) {
     return (
-      <section className="py-8 bg-white dark:bg-gray-900">
+      <section className="py-8 bg-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ErrorState
             title="Failed to load recommendations"
@@ -69,13 +69,13 @@ const RecommendationsRow = ({ productId, type = "related" }) => {
   const heading = type === "also-bought" ? "Customers Also Bought" : "You May Also Like";
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900">
+    <section className="py-12 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{heading}</h2>
+          <h2 className="text-2xl font-bold text-primary">{heading}</h2>
           <Link
             to="/products"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="text-sm text-primary hover:underline"
           >
             View all
           </Link>

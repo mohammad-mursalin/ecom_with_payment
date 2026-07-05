@@ -25,15 +25,10 @@ function StarDisplay({ rating, size = 16, interactive = false, onHover, onClick,
         onClick={() => interactive && onClick?.(i)}
         onMouseEnter={() => interactive && onHover?.(i)}
         onMouseLeave={() => interactive && onHover?.(null)}
-        className={`${interactive ? "cursor-pointer" : "cursor-default"} ${selected ? "text-yellow-400" : ""}`}
-        style={{
-          color: filled ? "var(--color-brand)" : "var(--text-muted)",
-          backgroundColor: "transparent",
-          border: "none",
-        }}
+        className={`${interactive ? "cursor-pointer" : "cursor-default"} ${selected ? "text-warning" : ""}`}
       >
         <Star
-          className={`${filled ? "fill-current" : ""}`}
+          className={`${filled ? "fill-warning text-warning" : "text-muted"}`}
           style={{ width: `${size}px`, height: `${size}px` }}
         />
       </button>
@@ -51,21 +46,21 @@ function FractionalStarsDisplay({ rating, count, size = 16 }) {
     <div className="flex items-center gap-2 flex-wrap">
       <div className="flex items-center">
         {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} className="fill-current" style={{ width: `${size}px`, height: `${size}px`, color: "var(--color-brand)" }} />
+          <Star key={`full-${i}`} className="fill-warning text-warning" style={{ width: `${size}px`, height: `${size}px` }} />
         ))}
         {decimal > 0 && (
           <span className="relative inline-flex">
-            <Star style={{ width: `${size}px`, height: `${size}px`, color: "var(--text-muted)" }} />
+            <Star className="text-muted" style={{ width: `${size}px`, height: `${size}px` }} />
             <span className="absolute inset-0 overflow-hidden" style={{ width: `${Math.max(decimal, 0) * 100}%` }}>
-              <Star className="fill-current" style={{ width: `${size}px`, height: `${size}px`, color: "var(--color-brand)" }} />
+              <Star className="fill-warning text-warning" style={{ width: `${size}px`, height: `${size}px` }} />
             </span>
           </span>
         )}
         {[...Array(Math.max(0, emptyStars))].map((_, i) => (
-          <Star key={`empty-${i}`} style={{ width: `${size}px`, height: `${size}px`, color: "var(--text-muted)" }} />
+          <Star key={`empty-${i}`} className="text-muted" style={{ width: `${size}px`, height: `${size}px` }} />
         ))}
       </div>
-      <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+      <span className="text-sm text-muted">
         {count == null || Number(count) === 0 ? "No reviews yet" : `(${Number(count)} reviews)`}
       </span>
     </div>
@@ -79,19 +74,14 @@ function ReviewSummaryBlock({ summary, onFilterByStars }) {
   const displayRating = Math.round((averageRating || 0) * 10) / 10;
 
   return (
-    <div className="rounded-xl border" style={{
-      backgroundColor: "var(--card-bg)",
-      borderColor: "var(--border-color)",
-      padding: "1.5rem",
-      marginBottom: "1.5rem"
-    }}>
+    <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md dark:shadow-none mb-6">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex flex-col items-center justify-center">
-          <div className="text-5xl font-bold" style={{ color: "var(--text-primary)" }}>{displayRating}</div>
+          <div className="text-5xl font-bold text-primary">{displayRating}</div>
           <div className="mt-2">
             <FractionalStarsDisplay rating={averageRating || 0} count={totalCount} size={20} />
           </div>
-          <p className="text-sm" style={{ color: "var(--text-muted)", marginTop: "0.25rem" }}>Based on {totalCount} reviews</p>
+          <p className="text-sm text-muted mt-1">Based on {totalCount} reviews</p>
         </div>
         <div className="flex-1 space-y-2">
           {[5, 4, 3, 2, 1].map((star) => {
@@ -103,19 +93,15 @@ function ReviewSummaryBlock({ summary, onFilterByStars }) {
                 type="button"
                 onClick={() => onFilterByStars?.(star)}
                 className="w-full flex items-center gap-3 group"
-                style={{ cursor: "pointer", background: "transparent", border: "none" }}
               >
-                <span className="text-sm font-medium" style={{ color: "var(--text-primary)", width: "24px" }}>{star}★</span>
-                <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: "var(--bg-secondary)" }}>
+                <span className="text-sm font-medium text-primary w-6">{star}★</span>
+                <div className="flex-1 h-3 rounded-full overflow-hidden bg-surface-elevated">
                   <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${percentage}%`,
-                      backgroundColor: "var(--color-brand)"
-                    }}
+                    className="h-full rounded-full transition-all bg-primary"
+                    style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <span className="text-xs" style={{ color: "var(--text-muted)", width: "64px", textAlign: "right" }}>{count} reviews</span>
+                <span className="text-xs text-muted w-16 text-right">{count} reviews</span>
               </button>
             );
           })}
@@ -186,26 +172,16 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-xl border" style={{
-        backgroundColor: "var(--card-bg)",
-        borderColor: "var(--border-color)",
-        padding: "1.5rem",
-        textAlign: "center"
-      }}>
-        <p style={{ color: "var(--text-muted)" }}>Please login to write a review</p>
+      <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none text-center">
+        <p className="text-muted">Please login to write a review</p>
       </div>
     );
   }
 
   if (!hasPurchased && !isEdit && !checkingEligibility) {
     return (
-      <div className="rounded-xl border" style={{
-        backgroundColor: "var(--card-bg)",
-        borderColor: "var(--border-color)",
-        padding: "1.5rem",
-        textAlign: "center"
-      }}>
-        <p style={{ color: "var(--text-muted)" }}>You need to purchase this product to leave a review</p>
+      <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none text-center">
+        <p className="text-muted">You need to purchase this product to leave a review</p>
       </div>
     );
   }
@@ -215,12 +191,7 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors"
-        style={{
-          borderColor: "var(--color-brand)",
-          color: "var(--color-brand)",
-          backgroundColor: "transparent"
-        }}
+        className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated"
       >
         <Pencil className="w-4 h-4" />
         Edit Review
@@ -233,11 +204,7 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style={{
-          backgroundColor: "var(--color-brand)",
-          color: "white"
-        }}
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-none"
       >
         Write a Review
       </button>
@@ -245,27 +212,22 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border" style={{
-      backgroundColor: "var(--card-bg)",
-      borderColor: "var(--border-color)",
-      padding: "1.5rem"
-    }}>
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+        <h3 className="text-lg font-semibold text-primary">
           {isEdit ? "Edit Review" : "Write a Review"}
         </h3>
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="text-sm"
-          style={{ color: "var(--text-muted)", background: "transparent", border: "none", cursor: "pointer" }}
+          className="text-muted hover:text-primary"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-primary)" }}>Rating *</label>
+        <label className="block text-sm font-medium text-primary mb-2">Rating *</label>
         <div
           onMouseLeave={() => setHoverRating(0)}
           className="flex items-center gap-1"
@@ -278,32 +240,26 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
             selected={rating > 0}
           />
           {rating > 0 && (
-            <span className="ml-2 text-sm" style={{ color: "var(--text-muted)" }}>{rating} / 5</span>
+            <span className="ml-2 text-sm text-muted">{rating} / 5</span>
           )}
         </div>
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Title (optional)</label>
+        <label className="block text-sm font-medium text-primary mb-1">Title (optional)</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={maxTitle}
           placeholder="Summarize your experience"
-          className="w-full rounded-lg border text-sm focus:outline-none focus:ring-2"
-          style={{
-            borderColor: "var(--border-color)",
-            backgroundColor: "var(--card-bg)",
-            color: "var(--text-primary)",
-            padding: "0.5rem 0.75rem"
-          }}
+          className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
-        <p className="text-xs mt-1 text-right" style={{ color: "var(--text-muted)" }}>{title.length}/{maxTitle}</p>
+        <p className="text-xs mt-1 text-right text-muted">{title.length}/{maxTitle}</p>
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Review *</label>
+        <label className="block text-sm font-medium text-primary mb-1">Review *</label>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -311,44 +267,27 @@ function WriteReviewForm({ productId, onSubmitSuccess, isAuthenticated, hasPurch
           maxLength={maxBody}
           rows={4}
           placeholder="Share your thoughts about this product..."
-          className="w-full rounded-lg border text-sm focus:outline-none focus:ring-2 resize-y"
-          style={{
-            borderColor: "var(--border-color)",
-            backgroundColor: "var(--card-bg)",
-            color: "var(--text-primary)",
-            padding: "0.5rem 0.75rem"
-          }}
+          className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
         />
-        <p className={`text-xs mt-1 text-right ${body.length < minBody ? "text-red-500" : ""}`} style={{ color: body.length < minBody ? "var(--color-danger)" : "var(--text-muted)" }}>
+        <p className={`text-xs mt-1 text-right ${body.length < minBody ? "text-danger" : "text-muted"}`}>
           {body.length}/{maxBody} {body.length > 0 && body.length < minBody && `(min ${minBody})`}
         </p>
       </div>
 
-      {error && <p className="text-sm mb-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
+      {error && <p className="text-sm mb-4 text-danger">{error}</p>}
 
       <div className="flex items-center justify-end gap-3">
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="px-4 py-2 rounded-lg border text-sm transition-colors"
-          style={{
-            borderColor: "var(--border-color)",
-            color: "var(--text-primary)",
-            backgroundColor: "transparent"
-          }}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={!canSubmit}
-          className="px-6 py-2 rounded-lg text-sm font-medium transition-colors"
-          style={{
-            backgroundColor: "var(--color-brand)",
-            color: "white",
-            opacity: !canSubmit ? 0.5 : 1,
-            cursor: !canSubmit ? "not-allowed" : "pointer"
-          }}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-none"
         >
           {submitting ? "Submitting..." : isEdit ? "Update Review" : "Post Review"}
         </button>
@@ -392,11 +331,7 @@ function ReviewCard({ review, currentUserId, onVote, onReport, onEdit, onDelete 
     : "";
 
   return (
-    <div className="rounded-xl border" style={{
-      backgroundColor: "var(--card-bg)",
-      borderColor: "var(--border-color)",
-      padding: "1rem"
-    }}>
+    <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md dark:shadow-none">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div
@@ -406,20 +341,20 @@ function ReviewCard({ review, currentUserId, onVote, onReport, onEdit, onDelete 
             {review.userInitial || "?"}
           </div>
           <div>
-            <p className="font-medium text-sm" style={{ color: "var(--text-primary)" }}>{review.username}</p>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>{dateStr}</p>
+            <p className="font-medium text-sm text-primary">{review.username}</p>
+            <p className="text-xs text-muted">{dateStr}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <StarDisplay rating={review.rating} size={14} />
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>{review.rating}.0</span>
+          <span className="text-xs text-muted">{review.rating}.0</span>
         </div>
       </div>
 
       {review.title && (
-        <p className="font-semibold text-sm mb-2" style={{ color: "var(--text-primary)" }}>{review.title}</p>
+        <p className="font-semibold text-sm mb-2 text-primary">{review.title}</p>
       )}
-      <p className="text-sm mb-3 whitespace-pre-line" style={{ color: "var(--text-muted)" }}>{review.body}</p>
+      <p className="text-sm mb-3 whitespace-pre-line text-secondary">{review.body}</p>
 
       {review.images && review.images.length > 0 && (
         <div className="flex gap-2 flex-wrap mb-3">
@@ -428,27 +363,20 @@ function ReviewCard({ review, currentUserId, onVote, onReport, onEdit, onDelete 
               key={img.id}
               src={img.url}
               alt="Review"
-              className="w-20 h-20 object-cover rounded-lg border"
-              style={{ borderColor: "var(--border-color)" }}
+              className="w-20 h-20 object-cover rounded-lg border border-default"
             />
           ))}
         </div>
       )}
 
-      <div className="flex items-center gap-4 pt-2 border-t" style={{ borderTopColor: "var(--border-color)" }}>
+      <div className="flex items-center gap-4 pt-2 border-t border-default">
         <div className="flex items-center gap-3 text-sm">
           <button
             type="button"
             onClick={() => handleVote("HELPFUL")}
             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
-              review.userVote === "HELPFUL"
-                ? "font-medium"
-                : ""
+              review.userVote === "HELPFUL" ? "bg-success/10 text-success font-medium" : "text-muted"
             }`}
-            style={{
-              backgroundColor: review.userVote === "HELPFUL" ? "rgba(22, 163, 74, 0.1)" : "transparent",
-              color: review.userVote === "HELPFUL" ? "var(--color-success)" : "var(--text-muted)"
-            }}
           >
             <Check className="w-3.5 h-3.5" />
             Yes ({review.helpfulCount || 0})
@@ -457,14 +385,8 @@ function ReviewCard({ review, currentUserId, onVote, onReport, onEdit, onDelete 
             type="button"
             onClick={() => handleVote("NOT_HELPFUL")}
             className={`inline-flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
-              review.userVote === "NOT_HELPFUL"
-                ? "font-medium"
-                : ""
+              review.userVote === "NOT_HELPFUL" ? "bg-danger/10 text-danger font-medium" : "text-muted"
             }`}
-style={{
-               backgroundColor: review.userVote === "NOT_HELPFUL" ? "rgba(220, 38, 38, 0.1)" : "transparent",
-               color: review.userVote === "NOT_HELPFUL" ? "var(--color-danger)" : "var(--text-muted)"
-             }}
           >
             <X className="w-3.5 h-3.5" />
             No ({review.notHelpfulCount || 0})
@@ -476,13 +398,7 @@ style={{
         <button
           type="button"
           onClick={() => setShowReportForm(!showReportForm)}
-          className="inline-flex items-center gap-1 text-xs transition-colors"
-          style={{
-            color: "var(--text-muted)",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer"
-          }}
+          className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary transition-colors"
         >
           <Flag className="w-3.5 h-3.5" />
           Report
@@ -493,13 +409,7 @@ style={{
             <button
               type="button"
               onClick={() => onEdit?.(review)}
-              className="inline-flex items-center gap-1 text-xs transition-colors"
-              style={{
-                color: "var(--text-muted)",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer"
-              }}
+              className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary transition-colors"
             >
               <Pencil className="w-3.5 h-3.5" />
               Edit
@@ -511,13 +421,7 @@ style={{
                   onDelete?.(review.id);
                 }
               }}
-              className="inline-flex items-center gap-1 text-xs transition-colors"
-              style={{
-                color: "var(--text-muted)",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer"
-              }}
+              className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete
@@ -533,38 +437,19 @@ style={{
             value={reportReason}
             onChange={(e) => setReportReason(e.target.value)}
             placeholder="Reason for reporting..."
-            className="flex-1 rounded-lg border text-sm focus:outline-none focus:ring-2"
-            style={{
-              borderColor: "var(--border-color)",
-              backgroundColor: "var(--card-bg)",
-              color: "var(--text-primary)",
-              padding: "0.375rem 0.75rem"
-            }}
+            className="flex-1 rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <button
             type="submit"
             disabled={reporting || !reportReason.trim()}
-            className="px-3 py-1.5 rounded-lg text-sm"
-            style={{
-              backgroundColor: "var(--color-danger)",
-              color: "white",
-              opacity: reporting || !reportReason.trim() ? 0.5 : 1,
-              cursor: reporting || !reportReason.trim() ? "not-allowed" : "pointer",
-              border: "none"
-            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-none"
           >
             {reporting ? "..." : "Submit"}
           </button>
           <button
             type="button"
             onClick={() => setShowReportForm(false)}
-            className="px-3 py-1.5 rounded-lg text-sm"
-            style={{
-              borderColor: "var(--border-color)",
-              backgroundColor: "transparent",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border-color)"
-            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated"
           >
             Cancel
           </button>
@@ -703,7 +588,7 @@ const ReviewsSection = ({ productId }) => {
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "var(--text-primary)" }}>
+          <label className="flex items-center gap-2 text-sm cursor-pointer text-primary">
             <input
               type="checkbox"
               checked={verifiedOnly}
@@ -711,7 +596,7 @@ const ReviewsSection = ({ productId }) => {
                 setVerifiedOnly(e.target.checked);
                 setPage(0);
               }}
-              className="form-checkbox"
+              className="accent-primary"
             />
             Verified purchases only
           </label>
@@ -733,11 +618,7 @@ const ReviewsSection = ({ productId }) => {
               setMinRatingFilter(null);
               setPage(0);
             }}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm"
-            style={{
-              backgroundColor: "rgba(37, 99, 235, 0.1)",
-              color: "var(--color-brand)"
-            }}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm bg-primary/10 text-primary"
           >
             {minRatingFilter}★ only <X className="w-3.5 h-3.5" />
           </button>
@@ -747,21 +628,18 @@ const ReviewsSection = ({ productId }) => {
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl border p-5 space-y-3 animate-pulse" style={{
-              backgroundColor: "var(--card-bg)",
-              borderColor: "var(--border-color)"
-            }}>
+            <div key={i} className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none space-y-3 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full" style={{ backgroundColor: "var(--border-color)" }} />
+                <div className="w-10 h-10 rounded-full bg-surface-elevated animate-pulse" />
                 <div className="space-y-2 flex-1">
-                  <div className="h-4 rounded w-32" style={{ backgroundColor: "var(--border-color)" }} />
-                  <div className="h-3 rounded w-24" style={{ backgroundColor: "var(--border-color)" }} />
+                  <div className="h-4 rounded w-32 bg-surface-elevated animate-pulse" />
+                  <div className="h-3 rounded w-24 bg-surface-elevated animate-pulse" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="h-4 rounded w-3/4" style={{ backgroundColor: "var(--border-color)" }} />
-                <div className="h-4 rounded w-full" style={{ backgroundColor: "var(--border-color)" }} />
-                <div className="h-4 rounded w-5/6" style={{ backgroundColor: "var(--border-color)" }} />
+                <div className="h-4 rounded w-3/4 bg-surface-elevated animate-pulse" />
+                <div className="h-4 rounded w-full bg-surface-elevated animate-pulse" />
+                <div className="h-4 rounded w-5/6 bg-surface-elevated animate-pulse" />
               </div>
             </div>
           ))}
@@ -775,32 +653,27 @@ const ReviewsSection = ({ productId }) => {
           />
         </div>
       ) : reviews.length === 0 ? (
-         <div className="empty-state">
-           <Star className="empty-state-icon text-blue-600" />
-           <h2 className="empty-state-title">No reviews yet</h2>
-           <p className="empty-state-description">
-             Be the first to share your experience with this product.
-           </p>
-         </div>
-       ) : (
+       <div className="flex flex-col items-center justify-center text-center py-12">
+         <Star className="w-16 h-16 text-primary mb-4" />
+         <h2 className="text-2xl font-bold text-primary mb-2">No reviews yet</h2>
+         <p className="text-base text-secondary mb-6 max-w-md">
+           Be the first to share your experience with this product.
+         </p>
+       </div>
+     ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, summary?.totalCount || 0)} of {summary?.totalCount || 0} reviews
-            </p>
-            <select
-              value={sort}
-              onChange={(e) => {
-                setSort(e.target.value);
-                setPage(0);
-              }}
-              className="px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2"
-              style={{
-                borderColor: "var(--border-color)",
-                backgroundColor: "var(--card-bg)",
-                color: "var(--text-primary)"
-              }}
-            >
+             <p className="text-sm text-muted">
+               Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, summary?.totalCount || 0)} of {summary?.totalCount || 0} reviews
+             </p>
+             <select
+               value={sort}
+               onChange={(e) => {
+                 setSort(e.target.value);
+                 setPage(0);
+               }}
+               className="rounded-lg border border-default bg-surface-card px-3 py-1.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
