@@ -116,14 +116,14 @@ const FilterSidebar = ({
   const upperPercent = maxPrice > 0 ? (sliderMax / maxPrice) * 100 : 100;
 
   return (
-    <aside className="w-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 space-y-6">
+    <aside className="w-full bg-surface-elevated rounded-2xl border border-default p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Filters</h2>
+        <h2 className="text-2xl font-bold text-primary">Filters</h2>
         {hasActiveFilters && (
           <button
             type="button"
             onClick={clearAll}
-            className="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-danger hover:text-danger/80 transition-colors"
           >
             <X className="w-4 h-4" />
             Clear All
@@ -131,16 +131,16 @@ const FilterSidebar = ({
         )}
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">Category</h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-primary">Category</h3>
         <input
           type="text"
           placeholder="Search categories..."
           value={categorySearch}
           onChange={(e) => setCategorySearch(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+          className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
-<div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
           {isLoadingCategories ? (
             <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, idx) => (
@@ -151,7 +151,7 @@ const FilterSidebar = ({
               ))}
             </div>
           ) : filteredCategories.length === 0 ? (
-            <p className="text-sm text-gray-500">No categories found</p>
+            <p className="text-sm text-muted">No categories found</p>
           ) : (
             filteredCategories.map((cat) => (
               <label key={cat.id} className="flex items-center gap-2 cursor-pointer group">
@@ -159,9 +159,9 @@ const FilterSidebar = ({
                   type="checkbox"
                   checked={(filters.categories || []).includes(cat.slug)}
                   onChange={() => handleCategoryToggle(cat.slug)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border border-default bg-surface-card text-primary focus:ring-primary/20"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">
+                <span className="text-sm text-primary group-hover:text-primary/80 transition-colors">
                   {cat.name}
                 </span>
               </label>
@@ -170,41 +170,39 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-          Price Range
-        </h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-primary">Price Range</h3>
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Min</label>
+              <label className="block text-xs font-medium text-secondary mb-1">Min</label>
               <input
                 type="number"
                 min={0}
                 max={maxPrice}
                 value={localMin}
                 onChange={(e) => setLocalMin(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="0"
               />
             </div>
-            <span className="text-gray-400 mt-5">–</span>
+            <span className="text-muted mt-5">–</span>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max</label>
+              <label className="block text-xs font-medium text-secondary mb-1">Max</label>
               <input
                 type="number"
                 min={0}
                 max={maxPrice}
                 value={localMax}
                 onChange={(e) => setLocalMax(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder={`${maxPrice}`}
               />
             </div>
           </div>
-          <div ref={trackRef} className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+          <div ref={trackRef} className="relative h-2 bg-surface rounded-full">
             <div
-              className="absolute h-2 bg-blue-500 rounded-full"
+              className="absolute h-2 bg-primary rounded-full"
               style={{
                 left: `${lowerPercent}%`,
                 width: `${upperPercent - lowerPercent}%`,
@@ -234,49 +232,47 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">Brand</h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-primary">Brand</h3>
         <input
           type="text"
           placeholder="Search brands..."
           value={brandSearch}
           onChange={(e) => setBrandSearch(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+          className="w-full rounded-lg border border-default bg-surface-card px-3.5 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
-<div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-           {isLoadingBrands ? (
-            <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <Skeleton width="16px" height="16px" rounded />
-                  <Skeleton width="70%" height="14px" rounded />
-                </div>
-              ))}
-            </div>
-          ) : filteredBrands.length === 0 ? (
-            <p className="text-sm text-gray-500">No brands found</p>
-          ) : (
-            filteredBrands.map((brand) => (
-              <label key={brand.id} className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={(filters.brands || []).includes(brand.slug)}
-                  onChange={() => handleBrandToggle(brand.slug)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">
-                  {brand.name}
-                </span>
-              </label>
-            ))
-          )}
-         </div>
+        <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+            {isLoadingBrands ? (
+             <div className="space-y-2">
+               {Array.from({ length: 6 }).map((_, idx) => (
+                 <div key={idx} className="flex items-center gap-2">
+                   <Skeleton width="16px" height="16px" rounded />
+                   <Skeleton width="70%" height="14px" rounded />
+                 </div>
+               ))}
+             </div>
+           ) : filteredBrands.length === 0 ? (
+             <p className="text-sm text-muted">No brands found</p>
+           ) : (
+             filteredBrands.map((brand) => (
+               <label key={brand.id} className="flex items-center gap-2 cursor-pointer group">
+                 <input
+                   type="checkbox"
+                   checked={(filters.brands || []).includes(brand.slug)}
+                   onChange={() => handleBrandToggle(brand.slug)}
+                   className="h-4 w-4 rounded border border-default bg-surface-card text-primary focus:ring-primary/20"
+                 />
+                 <span className="text-sm text-primary group-hover:text-primary/80 transition-colors">
+                   {brand.name}
+                 </span>
+               </label>
+             ))
+           )}
+          </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-          Rating
-        </h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-primary">Rating</h3>
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer group">
             <input
@@ -284,9 +280,9 @@ const FilterSidebar = ({
               name="rating-filter"
               checked={filters.minRating === undefined}
               onChange={() => handleRatingChange(undefined)}
-              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border border-default bg-surface-card text-primary focus:ring-primary/20"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">
+            <span className="text-sm text-primary group-hover:text-primary/80 transition-colors">
               Any
             </span>
           </label>
@@ -296,9 +292,9 @@ const FilterSidebar = ({
               name="rating-filter"
               checked={filters.minRating === 4}
               onChange={() => handleRatingChange(4)}
-              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border border-default bg-surface-card text-primary focus:ring-primary/20"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">
+            <span className="text-sm text-primary group-hover:text-primary/80 transition-colors">
               4★ &amp; up
             </span>
           </label>
@@ -308,9 +304,9 @@ const FilterSidebar = ({
               name="rating-filter"
               checked={filters.minRating === 3}
               onChange={() => handleRatingChange(3)}
-              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border border-default bg-surface-card text-primary focus:ring-primary/20"
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">
+            <span className="text-sm text-primary group-hover:text-primary/80 transition-colors">
               3★ &amp; up
             </span>
           </label>

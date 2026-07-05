@@ -4,80 +4,65 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer
-      className="py-4 py-md-5"
-      style={{
-        backgroundColor: "var(--bg-secondary)",
-        borderTop: "1px solid var(--border-color)",
-      }}
-    >
-      <div className="container">
-        <div className="row">
-          <div className="col-md-6 mb-4 mb-md-0">
-            <Link to="/" className="d-flex align-items-center mb-2 text-decoration-none">
-              <span
-                className="fs-4 fw-bold"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Mursalin
-              </span>
+    <footer className="bg-surface border-t border-default">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <Link to="/" className="flex items-center gap-2 mb-4 text-decoration-none">
+              <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary">
+                <span className="text-sm font-bold text-white">M</span>
+              </div>
+              <span className="text-xl font-bold text-primary">Mursalin</span>
             </Link>
-            <p className="mb-0" style={{ color: "var(--text-muted)" }}>
+            <p className="text-base text-muted">
               Quality products for your lifestyle
             </p>
           </div>
 
-          <div className="col-md-6">
-            <div className="d-flex flex-wrap gap-3 justify-content-md-end">
-              <Link
-                to="/"
-                className="text-decoration-none"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Home
-              </Link>
-              <Link
-                to="/products"
-                className="text-decoration-none"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Products
-              </Link>
-              <Link
-                to="/products"
-                className="text-decoration-none"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Categories
-              </Link>
-              <Link
-                to="/cart"
-                className="text-decoration-none"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Cart
-              </Link>
-              <Link
-                to="/wishlist"
-                className="text-decoration-none"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Wishlist
-              </Link>
-              <span style={{ color: "var(--text-muted)", cursor: "default" }}>
-                Privacy Policy
-              </span>
-              <span style={{ color: "var(--text-muted)", cursor: "default" }}>
-                Terms
-              </span>
-            </div>
+          <div className="flex flex-wrap gap-6 justify-start md:justify-end">
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted hover:text-primary transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              to="/products"
+              className="text-sm font-medium text-muted hover:text-primary transition-colors"
+            >
+              Products
+            </Link>
+            <Link
+              to="/products"
+              className="text-sm font-medium text-muted hover:text-primary transition-colors"
+            >
+              Categories
+            </Link>
+            <Link
+              to="/cart"
+              className="text-sm font-medium text-muted hover:text-primary transition-colors"
+            >
+              Cart
+            </Link>
+            <Link
+              to="/wishlist"
+              className="text-sm font-medium text-muted hover:text-primary transition-colors"
+            >
+              Wishlist
+            </Link>
+            <span className="text-sm font-medium text-muted">
+              Privacy Policy
+            </span>
+            <span className="text-sm font-medium text-muted">
+              Terms
+            </span>
           </div>
         </div>
 
-        <hr className="my-4" style={{ borderColor: "var(--border-color)" }} />
+        <div className="border-t border-default" />
 
-        <p className="text-center mb-0" style={{ color: "var(--text-muted)" }}>
-          &copy; {currentYear} Mursalin. All rights reserved.
+        <p className="text-center text-sm text-muted mt-8">
+          © {currentYear} Mursalin. All rights reserved.
         </p>
       </div>
     </footer>

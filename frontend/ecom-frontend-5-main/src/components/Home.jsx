@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Package } from "lucide-react";
+import { Package, Truck, Lock, RotateCcw, Headset } from "lucide-react";
 import { getCategories } from "../services/categoryService";
 import { getProducts } from "../services/productService";
 import ProductCard from "./ProductCard";
@@ -10,10 +10,10 @@ import EmptyState from "./EmptyState";
 import ErrorState from "./ErrorState";
 
 const trustBadgeIcons = {
-  shipping: "🚚",
-  secure: "🔒",
-  returns: "↩️",
-  support: "📱"
+  shipping: Truck,
+  secure: Lock,
+  returns: RotateCcw,
+  support: Headset
 };
 
 const Home = () => {
@@ -93,31 +93,29 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
-      <section className="py-5 py-md-6 text-center text-white" style={{ backgroundColor: "var(--color-brand)" }}>
-        <div className="container">
-          <h1 className="display-4 fw-bold mb-3">Discover Amazing Products</h1>
-          <p className="lead mb-4 mb-md-5">Quality products for your lifestyle, delivered to your doorstep</p>
-          <Link to="/products" className="btn btn-light btn-lg fw-semibold">
+    <div className="min-h-screen bg-background">
+      <section className="py-12 md:py-16 text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary mb-4">Discover Amazing Products</h1>
+          <p className="text-base text-secondary mb-6">Quality products for your lifestyle, delivered to your doorstep</p>
+          <Link to="/products" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover dark:shadow-none">
             Shop Now
           </Link>
         </div>
       </section>
 
-      <section className="py-5" style={{ backgroundColor: "var(--bg-secondary)" }}>
-        <div className="container">
-          <h2 className="h3 fw-bold mb-4 mb-md-5 text-center text-md-start" style={{ color: "var(--text-primary)" }}>
-            Categories
-          </h2>
-          <div className="row g-3 g-md-4">
+      <section className="py-12 md:py-16 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-primary mb-6">Categories</h2>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
             {categoriesLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="col-6 col-md-4 col-lg-3">
+                <div key={i} className="flex flex-col items-center gap-2">
                   <CategoryCardSkeleton />
                 </div>
               ))
             ) : categoriesError ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <ErrorState
                   title="Failed to load categories"
                   message={categoriesError}
@@ -125,7 +123,7 @@ const Home = () => {
                 />
               </div>
             ) : categories.length === 0 ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <EmptyState
                   icon={Package}
                   title="No categories available"
@@ -136,20 +134,18 @@ const Home = () => {
               </div>
             ) : (
               categories.map((category) => (
-                <div key={category.id} className="col-6 col-md-4 col-lg-3">
+                <div key={category.id} className="flex flex-col items-center gap-2">
                   <Link
                     to={`/products?category=${category.id}`}
-                    className="text-decoration-none"
+                    className="flex flex-col items-center gap-2"
                   >
-                    <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}>
-                      <div className="card-body text-center p-3 p-md-4">
-                        <div className="mb-2 fs-1">
-                          {category.icon || category.emoji || "📦"}
-                        </div>
-                        <h6 className="card-title mb-0 fw-semibold" style={{ color: "var(--text-primary)" }}>
-                          {category.name}
-                        </h6>
+                    <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm hover:shadow-md transition-shadow w-40 text-center dark:shadow-none">
+                      <div className="text-3xl mb-2">
+                        {category.icon || category.emoji || "📦"}
                       </div>
+                      <h6 className="font-semibold text-primary mb-0">
+                        {category.name}
+                      </h6>
                     </div>
                   </Link>
                 </div>
@@ -159,27 +155,27 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-5">
-        <div className="container">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 mb-md-5">
+      <section className="py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="h3 fw-bold mb-1" style={{ color: "var(--text-primary)" }}>Featured Products</h2>
-              <p className="text-muted mb-0">Handpicked for you</p>
+              <h2 className="text-2xl font-bold text-primary mb-1">Featured Products</h2>
+              <p className="text-sm text-muted">Handpicked for you</p>
             </div>
-            <Link to="/products" className="text-primary fw-medium mt-2 mt-md-0">
+            <Link to="/products" className="text-primary hover:text-primary-hover font-medium">
               View All →
             </Link>
           </div>
 
-<div className="row g-3 g-md-4 row-cols-2 row-cols-md-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {featuredLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="col">
+                <div key={i}>
                   <ProductCardSkeleton />
                 </div>
               ))
             ) : featuredError ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <ErrorState
                   title="Failed to load featured products"
                   message={featuredError}
@@ -187,7 +183,7 @@ const Home = () => {
                 />
               </div>
             ) : featuredProducts.length === 0 ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <EmptyState
                   icon={Package}
                   title="No featured products available"
@@ -198,7 +194,7 @@ const Home = () => {
               </div>
             ) : (
               featuredProducts.map((product) => (
-                <div key={product.id} className="col">
+                <div key={product.id}>
                   <ProductCard product={product} />
                 </div>
               ))
@@ -207,27 +203,27 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-5" style={{ backgroundColor: "var(--bg-secondary)" }}>
-        <div className="container">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 mb-md-5">
+      <section className="py-12 md:py-16 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="h3 fw-bold mb-1" style={{ color: "var(--text-primary)" }}>New Arrivals</h2>
-              <p className="text-muted mb-0">Latest additions to our collection</p>
+              <h2 className="text-2xl font-bold text-primary mb-1">New Arrivals</h2>
+              <p className="text-sm text-muted">Latest additions to our collection</p>
             </div>
-            <Link to="/products" className="text-primary fw-medium mt-2 mt-md-0">
+            <Link to="/products" className="text-primary hover:text-primary-hover font-medium">
               View All →
             </Link>
           </div>
 
-<div className="row g-3 g-md-4 row-cols-2 row-cols-md-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {newArrivalsLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="col">
+                <div key={i}>
                   <ProductCardSkeleton />
                 </div>
               ))
             ) : newArrivalsError ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <ErrorState
                   title="Failed to load new arrivals"
                   message={newArrivalsError}
@@ -235,7 +231,7 @@ const Home = () => {
                 />
               </div>
             ) : newArrivals.length === 0 ? (
-              <div className="col-12">
+              <div className="col-span-12">
                 <EmptyState
                   icon={Package}
                   title="No new arrivals available"
@@ -246,7 +242,7 @@ const Home = () => {
               </div>
             ) : (
               newArrivals.map((product) => (
-                <div key={product.id} className="col">
+                <div key={product.id}>
                   <ProductCard product={product} />
                 </div>
               ))
@@ -255,29 +251,18 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="py-4 py-md-5">
-        <div className="container">
-          <div className="row g-3 g-md-4 text-center justify-content-center">
+      <section className="py-6">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-4 md:flex md:flex-row md:justify-center md:gap-10">
             {trustBadges.map((badge) => (
-              <div key={badge.label} className="col-6 col-md-3">
-                <div className="d-flex flex-column flex-md-row align-items-center justify-content-center gap-2">
-                  <span className="fs-3">{badge.icon}</span>
-                  <span className="fw-medium" style={{ color: "var(--text-primary)" }}>
-                    {badge.label}
-                  </span>
-                </div>
+              <div key={badge.label} className="flex items-center gap-2 text-sm text-secondary">
+                <badge.icon className="w-5 h-5 text-muted" />
+                <span className="font-medium">
+                  {badge.label}
+                </span>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="py-3 py-md-4" style={{ backgroundColor: "var(--bg-secondary)" }}>
-        <hr className="my-0" style={{ borderColor: "var(--border-color)" }} />
-        <div className="container text-center py-3">
-          <p className="mb-0" style={{ color: "var(--text-muted)" }}>
-            &copy; {new Date().getFullYear()} Mursalin E-Commerce. All rights reserved.
-          </p>
         </div>
       </section>
     </div>
