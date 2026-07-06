@@ -96,17 +96,17 @@ const Pagination = ({
           <ChevronRight className="w-4 h-4" />
         </button>
 
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
-          className="ml-2 w-20 rounded-lg border border-default bg-surface-card px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-        >
-          {PAGE_SIZE_OPTIONS.map((size) => (
-            <option key={size} value={size}>
-              {size} / page
-            </option>
-          ))}
-        </select>
+         <select
+           value={pageSize}
+           onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
+           className="ml-2 w-24 rounded-lg border border-default bg-surface-card px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 whitespace-nowrap"
+         >
+           {PAGE_SIZE_OPTIONS.map((size) => (
+             <option key={size} value={size}>
+               {size} / page
+             </option>
+           ))}
+         </select>
       </div>
     </div>
   );
