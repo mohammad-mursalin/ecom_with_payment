@@ -11,7 +11,7 @@ import ErrorState from "../components/ErrorState";
 
 const STATUSES = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
 
-const BASE_BADGE_CLASSES = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
+const BASE_BADGE_CLASSES = "inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium";
 
 const STATUS_CONFIG = {
   PENDING: { color: "bg-warning/10 text-warning", label: "Pending" },

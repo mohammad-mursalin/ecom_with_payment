@@ -19,7 +19,7 @@ const STATUS_CONFIG = {
   REFUND_REQUESTED: { color: "bg-warning/10 text-warning", icon: Undo2 },
 };
 
-const BASE_BADGE_CLASSES = "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium";
+const BASE_BADGE_CLASSES = "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium";
 
 const OrderDetails = () => {
   const { id } = useParams();
