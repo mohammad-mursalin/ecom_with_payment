@@ -6,7 +6,7 @@ import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import { validateCoupon } from "../services/couponService";
 import { getShippingEstimate } from "../services/shippingService";
-import { ShoppingBasket, Plus, Minus, CreditCard, ChevronRight, Heart } from "lucide-react";
+import { ShoppingBasket, Plus, Minus, CreditCard, Heart } from "lucide-react";
 import ProductCardSkeleton from "./ProductCardSkeleton";
 import EmptyState from "./EmptyState";
 

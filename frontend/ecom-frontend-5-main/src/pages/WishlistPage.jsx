@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { useWishlist } from "../Context/WishlistContext";
 import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
@@ -5,8 +6,40 @@ import ErrorState from "../components/ErrorState";
 import EmptyState from "../components/EmptyState";
 import { Heart } from "lucide-react";
 
+const SORT_OPTIONS = [
+  { label: "Date Added", value: "date_added" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+];
+
 const WishlistPage = () => {
+  const [sortBy, setSortBy] = useState("date_added");
   const { items, loading: wishlistLoading, error: wishlistError } = useWishlist();
+
+  const sortedItems = useMemo(() => {
+    const list = Array.isArray(items) ? [...items] : [];
+    switch (sortBy) {
+      case "price_asc": {
+        return list.sort((a, b) => {
+          const priceA = Number((a.product || a)?.price || 0);
+          const priceB = Number((b.product || b)?.price || 0);
+          return priceA - priceB;
+        });
+      }
+      case "price_desc": {
+        return list.sort((a, b) => {
+          const priceA = Number((a.product || a)?.price || 0);
+          const priceB = Number((b.product || b)?.price || 0);
+          return priceB - priceA;
+        });
+      }
+      case "date_added":
+      default:
+        return list;
+    }
+  }, [items, sortBy]);
+
+  const itemCount = sortedItems.length;
 
   if (wishlistLoading) {
     return (
@@ -46,8 +79,6 @@ const WishlistPage = () => {
     );
   }
 
-  const itemCount = Array.isArray(items) ? items.length : 0;
-
   return (
     <div className="min-h-screen bg-background px-4 md:px-6 lg:px-8 py-12 md:py-16">
       <div className="max-w-7xl mx-auto">
@@ -62,12 +93,15 @@ const WishlistPage = () => {
             <label htmlFor="wishlist-sort" className="text-sm text-secondary">Sort by:</label>
             <select
               id="wishlist-sort"
-              defaultValue="date_added"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
               className="px-3 py-2 rounded-lg border border-default bg-surface-card text-sm text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
-              <option value="date_added">Date Added</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -83,7 +117,7 @@ const WishlistPage = () => {
         />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => {
+            {sortedItems.map((item) => {
               const product = item.product || item;
               return <ProductCard key={product.id || item.productId || item.id} product={product} />;
             })}
