@@ -19,6 +19,8 @@ const STATUS_CONFIG = {
   REFUND_REQUESTED: { color: "bg-warning/10 text-warning", icon: Undo2 },
 };
 
+const BASE_BADGE_CLASSES = "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium";
+
 const OrderDetails = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
@@ -130,7 +132,7 @@ const OrderDetails = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className={statusCfg.color} className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium">
+            <span className={`${statusCfg.color} ${BASE_BADGE_CLASSES}`}>
               <StatusIcon className="w-4 h-4" />
               {order.status?.replace("_", " ")}
             </span>

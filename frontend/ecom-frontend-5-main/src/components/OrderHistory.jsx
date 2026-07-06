@@ -11,6 +11,8 @@ import ErrorState from "../components/ErrorState";
 
 const STATUSES = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
 
+const BASE_BADGE_CLASSES = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
+
 const STATUS_CONFIG = {
   PENDING: { color: "bg-warning/10 text-warning", label: "Pending" },
   CONFIRMED: { color: "bg-primary/10 text-primary", label: "Confirmed" },
@@ -158,7 +160,7 @@ if (loading) {
                           {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Unknown date"}
                         </p>
                       </div>
-                      <span className={statusConfig.color} className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                      <span className={`${statusConfig.color} ${BASE_BADGE_CLASSES}`}>
                         {statusConfig.label}
                       </span>
                     </div>
