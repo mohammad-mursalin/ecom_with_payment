@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useToast } from "../components/Toast";
 import { getUsers, updateUserRole, updateUserStatus } from "../services/adminService";
-import { Users } from "lucide-react";
+import { Search, Download, Eye, XCircle, Trash2, Users } from "lucide-react";
 import Pagination from "../components/Pagination";
 import TableRowSkeleton from "../components/TableRowSkeleton";
 import EmptyState from "../components/EmptyState";
@@ -55,13 +55,13 @@ function useFocusTrap(isOpen, onClose) {
 }
 
 const ROLE_BADGE = {
-  ADMIN: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  USER: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+  ADMIN: "bg-primary/10 text-primary",
+  USER: "bg-surface-elevated text-muted",
 };
 
 const STATUS_BADGE = {
-  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  SUSPENDED: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  ACTIVE: "bg-success/10 text-success",
+  SUSPENDED: "bg-warning/10 text-warning",
 };
 
 function hashStringToColor(str) {
@@ -87,11 +87,11 @@ function Avatar({ username, size = 36 }) {
 }
 
 function getRoleBadgeClass(role) {
-  return ROLE_BADGE[role] || "bg-gray-100 text-gray-600";
+  return ROLE_BADGE[role] || "bg-surface-elevated text-muted";
 }
 
 function getStatusBadgeClass(status) {
-  return STATUS_BADGE[status] || "bg-gray-100 text-gray-600";
+  return STATUS_BADGE[status] || "bg-surface-elevated text-muted";
 }
 
 function formatDate(value) {
@@ -266,21 +266,21 @@ function AdminUsers() {
     return (
       <div className="space-y-4">
         <div className="flex flex-col gap-3">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Users Management</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Loading users...</p>
+          <h2 className="text-xl font-semibold text-primary">Users Management</h2>
+          <p className="text-sm text-muted">Loading users...</p>
         </div>
-        <div className="admin-table-container rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-          <table className="admin-table text-left text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-default bg-surface-card">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">User</th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Role</th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Joined</th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Actions</th>
+              <tr className="border-b border-default bg-surface-elevated text-left text-xs font-semibold text-muted uppercase">
+                <th className="px-4 py-3">User</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Joined</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-default">
               {Array.from({ length: 8 }).map((_, idx) => (
                 <TableRowSkeleton key={idx} columns={5} />
               ))}
@@ -293,26 +293,24 @@ function AdminUsers() {
 
 if (error) {
      return (
-       <div className="page-container">
-         <div className="max-w-5xl mx-auto">
-           <ErrorState
-             title="Failed to load users"
-             message={error}
-             onRetry={() => fetchUsers(currentPage, pageSize, searchQuery)}
-           />
-         </div>
+       <div className="max-w-5xl mx-auto">
+         <ErrorState
+           title="Failed to load users"
+           message={error}
+           onRetry={() => fetchUsers(currentPage, pageSize, searchQuery)}
+         />
        </div>
      );
-   }
+    }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-primary">
             Users Management
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted">
             Showing {totalElements === 0 ? 0 : currentPage * pageSize + 1}–
             {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
             {totalElements} users
@@ -321,21 +319,21 @@ if (error) {
 
         <div className="flex gap-2">
           <div className="relative">
-            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               type="text"
               placeholder="Search by email or username..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full rounded-xl border border-default bg-surface-card py-2.5 pl-9 pr-4 text-sm text-primary placeholder:text-muted outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <button
             onClick={handleExportCsv}
             disabled={users.length === 0}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated disabled:opacity-60"
           >
-            <i className="bi bi-download" />
+            <Download className="h-4 w-4" />
             Export CSV
           </button>
         </div>
@@ -350,43 +348,43 @@ if (error) {
             onAction={searchQuery ? () => setSearchQuery("") : fetchUsers}
           />
         ) : (
-        <div className="admin-table-container rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-          <table className="admin-table text-left text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-default bg-surface-card">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+              <tr className="border-b border-default bg-surface-elevated text-left text-xs font-semibold text-muted uppercase">
+                <th className="px-4 py-3">
                   User
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                <th className="px-4 py-3">
                   Role
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                <th className="px-4 py-3">
                   Status
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                <th className="px-4 py-3">
                   Joined
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                <th className="px-4 py-3">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-default">
               {users.map((u) => {
                 const self = isSelf(u.userId);
                 return (
                   <tr
                     key={u.userId}
-                    className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    className="transition-colors hover:bg-surface-elevated"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar username={u.username} size={36} />
                         <div className="min-w-0">
-                          <div className="truncate font-medium text-gray-900 dark:text-white">
+                          <div className="truncate font-medium text-primary">
                             {u.username}
                           </div>
-                          <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                          <div className="truncate text-xs text-muted">
                             {u.email}
                           </div>
                         </div>
@@ -404,7 +402,7 @@ if (error) {
                           value={u.role}
                           onChange={(e) => handleRoleChange(u, e.target.value)}
                           disabled={actionLoading}
-                          className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="rounded-lg border border-default bg-surface-card px-2 py-1.5 text-xs text-primary"
                         >
                           <option value="USER">USER</option>
                           <option value="ADMIN">ADMIN</option>
@@ -418,16 +416,16 @@ if (error) {
                         {u.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-secondary">
                       {formatDate(u.createdAt)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-1">
                         <button
                           onClick={() => handleViewUser(u)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                          className="inline-flex items-center gap-1 rounded-lg border border-default bg-surface-card px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-surface-elevated"
                         >
-                          <i className="bi bi-eye" />
+                          <Eye className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline">View</span>
                         </button>
                         {!self && (
@@ -437,11 +435,11 @@ if (error) {
                               disabled={actionLoading}
                               className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-60 ${
                                 u.status === "SUSPENDED"
-                                  ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300"
-                                  : "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-300"
+                                  ? "bg-success/10 text-success"
+                                  : "bg-warning/10 text-warning"
                               }`}
                             >
-                              <i className={u.status === "SUSPENDED" ? "bi bi-check-circle" : "bi bi-x-circle"} />
+                              <XCircle className="h-3.5 w-3.5" />
                               <span className="hidden sm:inline">
                                 {u.status === "SUSPENDED" ? "Unsuspend" : "Suspend"}
                               </span>
@@ -449,9 +447,9 @@ if (error) {
                             <button
                               onClick={() => handleStatusChange(u, "DELETED")}
                               disabled={actionLoading}
-                              className="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-200 disabled:opacity-60 dark:bg-red-900 dark:text-red-300"
+                              className="inline-flex items-center gap-1 rounded-lg bg-danger/10 px-2.5 py-1.5 text-xs font-medium text-danger disabled:opacity-60"
                             >
-                              <i className="bi bi-trash" />
+                              <Trash2 className="h-3.5 w-3.5" />
                               <span className="hidden sm:inline">Delete</span>
                             </button>
                           </>
@@ -505,7 +503,7 @@ function UserDetailDrawer({ user, isOpen, onClose, focusTrapRef }) {
       />
       <div
         ref={focusTrapRef}
-        className={`relative h-full w-full max-w-md transform overflow-y-auto border-l border-gray-200 bg-white p-6 shadow-2xl transition-transform dark:border-gray-700 dark:bg-gray-800 ${
+        className={`relative h-full w-full max-w-md transform overflow-y-auto border-l border-default bg-surface-card p-6 shadow-2xl transition-transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -513,10 +511,10 @@ function UserDetailDrawer({ user, isOpen, onClose, focusTrapRef }) {
           <div className="flex items-center gap-3">
             <Avatar username={user.username} size={64} />
             <div>
-              <h3 id="user-drawer-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 id="user-drawer-title" className="text-lg font-semibold text-primary">
                 {user.username}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted">
                 {user.email}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -535,39 +533,39 @@ function UserDetailDrawer({ user, isOpen, onClose, focusTrapRef }) {
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-muted hover:bg-surface-elevated"
             aria-label="Close user details"
           >
-            <i className="bi bi-x-lg" />
+            <XCircle className="h-5 w-5" />
           </button>
         </div>
 
         <section className="mb-6 space-y-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted">
             Account Info
           </h4>
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">User ID</dt>
-              <dd className="font-mono text-gray-900 dark:text-white">
+              <dt className="text-muted">User ID</dt>
+              <dd className="font-mono text-primary">
                 {user.userId}
               </dd>
             </div>
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">Joined</dt>
-              <dd className="text-gray-900 dark:text-white">
+              <dt className="text-muted">Joined</dt>
+              <dd className="text-primary">
                 {formatDate(user.createdAt)}
               </dd>
             </div>
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">Total Orders</dt>
-              <dd className="text-gray-900 dark:text-white">
+              <dt className="text-muted">Total Orders</dt>
+              <dd className="text-primary">
                 {user.orderCount ?? 0}
               </dd>
             </div>
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">Lifetime Spend</dt>
-              <dd className="text-gray-900 dark:text-white">
+              <dt className="text-muted">Lifetime Spend</dt>
+              <dd className="text-primary">
                 {formatCurrency(user.totalSpent)}
               </dd>
             </div>
@@ -576,26 +574,26 @@ function UserDetailDrawer({ user, isOpen, onClose, focusTrapRef }) {
 
         {user.addresses && user.addresses.length > 0 && (
           <section className="mb-6 space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted">
               Saved Addresses
             </h4>
             <div className="space-y-2">
               {user.addresses.map((addr, idx) => (
                 <div
                   key={addr.id || idx}
-                  className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-2xl border border-default bg-surface-elevated p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                    <span className="rounded-full bg-surface-card px-2 py-0.5 text-xs font-medium uppercase text-secondary dark:bg-surface">
                       {addr.label || "Address"}
                     </span>
                     {addr.isDefault && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                         Default
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+                  <p className="mt-1 text-sm text-primary">
                     {addr.line1}
                     {addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}
                     {addr.state ? `, ${addr.state}` : ""}, {addr.country}
