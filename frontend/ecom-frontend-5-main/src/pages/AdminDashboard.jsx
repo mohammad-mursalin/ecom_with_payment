@@ -19,6 +19,7 @@ import {
   Zap,
   ArrowUpRight,
   ArrowDownRight,
+  ExternalLink,
 } from "lucide-react";
 import {
   LineChart,
@@ -403,13 +404,22 @@ const AdminDashboard = () => {
                 <h2 className="text-lg font-semibold text-primary">
                   Products
                 </h2>
-                <Link
-                  to="/admin/products/new"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
-                >
-                  <Package className="h-4 w-4" />
-                  Add Product
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/admin/products"
+                    className="inline-flex items-center gap-1 rounded-lg border border-default bg-surface-card px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-surface-elevated"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View All Products
+                  </Link>
+                  <Link
+                    to="/admin/products/new"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
+                  >
+                    <Package className="h-4 w-4" />
+                    Add Product
+                  </Link>
+                </div>
               </div>
 
               {productsError ? (

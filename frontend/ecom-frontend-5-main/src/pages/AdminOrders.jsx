@@ -78,21 +78,22 @@ const ALLOWED_TRANSITIONS = {
   REFUND_PROCESSING: ["REFUNDED"],
 };
 
-const AdminOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { toast } = useToast();
+ const AdminOrders = () => {
+   const [orders, setOrders] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState("");
+   const [selectedOrder, setSelectedOrder] = useState(null);
+   const [detailLoading, setDetailLoading] = useState(false);
+   const [searchParams, setSearchParams] = useSearchParams();
+   const { toast } = useToast();
 
-  const status = searchParams.get("status") || "ALL";
-  const paymentMethod = searchParams.get("paymentMethod") || "ALL";
-  const searchQuery = searchParams.get("search") || "";
-  const fromDate = searchParams.get("fromDate") || "";
-  const toDate = searchParams.get("toDate") || "";
-  const page = Number(searchParams.get("page") || "0");
+   const status = searchParams.get("status") || "ALL";
+   const paymentMethod = searchParams.get("paymentMethod") || "ALL";
+   const searchQuery = searchParams.get("search") || "";
+   const fromDate = searchParams.get("fromDate") || "";
+   const toDate = searchParams.get("toDate") || "";
+   const page = Number(searchParams.get("page") || "0");
+   const pageSize = Number(searchParams.get("pageSize") || "20");
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [statusForm, setStatusForm] = useState({
@@ -107,52 +108,57 @@ const AdminOrders = () => {
 
   const orderDrawerRef = useFocusTrap(!!selectedOrder, () => setSelectedOrder(null));
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const params = {
-        page,
-        pageSize: 20,
-        ...(status !== "ALL" ? { status } : {}),
-        ...(paymentMethod !== "ALL" ? { paymentMethod } : {}),
-        ...(searchQuery ? { search: searchQuery } : {}),
-        ...(fromDate ? { startDate: fromDate } : {}),
-        ...(toDate ? { endDate: toDate } : {}),
-      };
-      const data = await getOrders(params);
-      const dataArr = data.content || data.data || [];
-      setOrders(dataArr);
-      setTotalElements(data.totalElements || dataArr.length);
-      setTotalPages(data.totalPages || 1);
-    } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load orders";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, status, paymentMethod, searchQuery, fromDate, toDate, toast]);
+   const fetchOrders = useCallback(async () => {
+     setLoading(true);
+     setError("");
+     try {
+       const params = {
+         page,
+         pageSize,
+         ...(status !== "ALL" ? { status } : {}),
+         ...(paymentMethod !== "ALL" ? { paymentMethod } : {}),
+         ...(searchQuery ? { search: searchQuery } : {}),
+         ...(fromDate ? { startDate: fromDate } : {}),
+         ...(toDate ? { endDate: toDate } : {}),
+       };
+       const data = await getOrders(params);
+       const dataArr = data.content || data.data || [];
+       setOrders(dataArr);
+       setTotalElements(data.totalElements || dataArr.length);
+       setTotalPages(data.totalPages || 1);
+     } catch (err) {
+       const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load orders";
+       setError(msg);
+       toast.error(msg);
+     } finally {
+       setLoading(false);
+     }
+   }, [page, pageSize, status, paymentMethod, searchQuery, fromDate, toDate, toast]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [status, paymentMethod, searchQuery, fromDate, toDate, page, fetchOrders]);
+   useEffect(() => {
+     fetchOrders();
+   }, [status, paymentMethod, searchQuery, fromDate, toDate, page, pageSize, fetchOrders]);
 
   useEffect(() => {
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
-  const updateSearchParam = (key, value) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value && value !== "ALL" && value !== "") next.set(key, value);
-      else next.delete(key);
-      if (key !== "page") next.delete("page");
-      return next;
-    });
-  };
+   const updateSearchParam = (key, value) => {
+     setSearchParams((prev) => {
+       const next = new URLSearchParams(prev);
+       if (value && value !== "ALL" && value !== "") next.set(key, value);
+       else next.delete(key);
+       if (key !== "page" && key !== "pageSize") next.delete("page");
+       return next;
+     });
+   };
 
-  const updateFilter = (key, value) => {
+   const handlePageSizeChange = (newPageSize) => {
+     updateSearchParam("pageSize", String(newPageSize));
+     updateSearchParam("page", "0");
+   };
+
+   const updateFilter = (key, value) => {
     if (key === "status") updateSearchParam("status", value);
     if (key === "paymentMethod") updateSearchParam("paymentMethod", value);
     if (key === "search") {
@@ -400,15 +406,16 @@ const renderTimeline = (history) => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalElements={totalElements}
-          pageSize={20}
-          onPageChange={(nextPage) => updateSearchParam("page", String(nextPage))}
-        />
-      </div>
+       <div className="mb-4">
+         <Pagination
+           currentPage={page}
+           totalPages={totalPages}
+           totalElements={totalElements}
+           pageSize={pageSize}
+           onPageChange={(nextPage) => updateSearchParam("page", String(nextPage))}
+           onPageSizeChange={handlePageSizeChange}
+         />
+       </div>
 
 {loading && orders.length === 0 ? (
     <div className="space-y-4">
@@ -459,24 +466,24 @@ const renderTimeline = (history) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-default text-left text-xs font-semibold text-muted uppercase">
-                <th className="pb-3 pr-4">Order ID</th>
-                <th className="pb-3 pr-4">Customer</th>
-                <th className="pb-3 pr-4">Items</th>
-                <th className="pb-3 pr-4">Total</th>
-                <th className="pb-3 pr-4">Payment</th>
-                <th className="pb-3 pr-4">Status</th>
-                <th className="pb-3 pr-4">Date</th>
-                <th className="pb-3 pl-4">Actions</th>
+                <th className="pb-3 pt-3 pl-4 pr-4">Order ID</th>
+                <th className="pb-3 pt-3 pr-4">Customer</th>
+                <th className="pb-3 pt-3 pr-4">Items</th>
+                <th className="pb-3 pt-3 pr-4">Total</th>
+                <th className="pb-3 pt-3 pr-4">Payment</th>
+                <th className="pb-3 pt-3 pr-4">Status</th>
+                <th className="pb-3 pt-3 pr-4">Date</th>
+                <th className="pb-3 pt-3 pl-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => {
-                const itemCount = order.itemCount ?? 0;
-                const firstItem = "";
-                const statusColor = STATUS_COLORS[order.status] || { bg: "var(--color-border)", text: "var(--text-primary)" };
-                return (
-                  <tr key={order.id} className="border-b border-default hover:bg-surface-elevated">
-                    <td className="py-4 pr-4 font-mono text-primary">{order.id}</td>
+               {orders.map((order) => {
+                 const itemCount = order.itemCount ?? 0;
+                 const firstItem = "";
+                 const statusColor = STATUS_COLORS[order.status] || { bg: "var(--color-border)", text: "var(--text-primary)" };
+                 return (
+                   <tr key={order.id} className="border-b border-default hover:bg-surface-elevated">
+                     <td className="py-4 pl-4 pr-4 font-mono text-primary">{order.id}</td>
                     <td className="py-4 pr-4">
                       <div className="flex items-center gap-3">
                         <div
@@ -536,19 +543,9 @@ const renderTimeline = (history) => {
                 );
               })}
             </tbody>
-          </table>
-        </div>
-      )}
-
-      <div className="mt-4">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalElements={totalElements}
-          pageSize={20}
-          onPageChange={(nextPage) => updateSearchParam("page", String(nextPage))}
-        />
-      </div>
+           </table>
+         </div>
+       )}
 
       {detailLoading && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
