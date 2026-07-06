@@ -35,13 +35,13 @@ import {
 const StatCard = ({ icon: Icon, label, value, trend }) => {
   const isPositive = trend > 0;
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+    <div className="rounded-2xl border border-default bg-surface-card p-5 shadow-sm transition-shadow hover:shadow-md dark:shadow-none">
       <div className="flex items-center justify-between">
-        <div className="rounded-xl bg-blue-100 p-3 dark:bg-blue-900">
-          <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="rounded-xl bg-primary/10 p-3">
+          <Icon className="h-6 w-6 text-primary" />
         </div>
         <div
-          className={`flex items-center gap-1 text-xs font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}
+          className={`flex items-center gap-1 text-xs font-medium ${isPositive ? "text-success" : "text-danger"}`}
         >
           {isPositive ? (
             <ArrowUpRight className="h-3 w-3" />
@@ -52,10 +52,10 @@ const StatCard = ({ icon: Icon, label, value, trend }) => {
         </div>
       </div>
       <div className="mt-4">
-        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-xs text-muted">{label}</p>
       </div>
       <div className="mt-1">
-        <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <p className="text-2xl font-semibold text-primary">
           {value}
         </p>
       </div>
@@ -175,13 +175,13 @@ const AdminDashboard = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <LayoutDashboard className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <LayoutDashboard className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-primary mb-2">
             Loading Admin Dashboard
           </h2>
-          <p className="text-gray-500 dark:text-gray-400">Please wait...</p>
+          <p className="text-muted">Please wait...</p>
         </div>
       </div>
     );
@@ -195,35 +195,35 @@ const AdminDashboard = () => {
     `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 page-transition">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-primary">
               Admin Dashboard
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-muted">
               Manage your store and track performance
             </p>
           </div>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="inline-flex items-center gap-2 rounded-lg border border-default bg-surface-card px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-surface-elevated"
           >
             <Home className="h-4 w-4" />
             Back to Store
           </Link>
         </div>
 
-        <div className="mb-6 flex gap-1 border-b border-gray-200 dark:border-gray-700">
+        <div className="mb-6 flex gap-1 border-b border-default">
           {["overview", "analytics", "products", "quicklinks"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                  : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-muted hover:text-primary"
               }`}
             >
               {tab === "overview" && <LayoutDashboard className="h-4 w-4" />}
@@ -294,13 +294,13 @@ const AdminDashboard = () => {
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-primary">
                   Analytics
                 </h2>
                 <select
                   value={analyticsPeriod}
                   onChange={(e) => setAnalyticsPeriod(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                  className="rounded-lg border border-default bg-surface-card px-3 py-1.5 text-sm text-primary"
                 >
                   <option value="7d">Last 7 days</option>
                   <option value="30d">Last 30 days</option>
@@ -313,13 +313,13 @@ const AdminDashboard = () => {
                 <ErrorState message={analyticsError} onRetry={loadAnalytics} />
               ) : (
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="rounded-2xl border border-default bg-surface-card p-5">
+                    <h3 className="mb-4 text-sm font-semibold text-secondary">
                       Revenue
                     </h3>
                     {analyticsLoading ? (
                       <div className="flex h-64 items-center justify-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       </div>
                     ) : (
                       <div className="h-64">
@@ -327,28 +327,28 @@ const AdminDashboard = () => {
                           <LineChart data={revenueData}>
                             <CartesianGrid
                               strokeDasharray="3 3"
-                              stroke="#e5e7eb"
+                              stroke="var(--color-border)"
                             />
                             <XAxis
                               dataKey="date"
-                              stroke="#9ca3af"
+                              stroke="var(--text-muted)"
                               fontSize={12}
                             />
                             <YAxis
-                              stroke="#9ca3af"
+                              stroke="var(--text-muted)"
                               fontSize={12}
                               tickFormatter={(v) => `₹${v / 1000}k`}
                             />
                             <Tooltip
                               contentStyle={{
-                                backgroundColor: "#fff",
-                                border: "1px solid #e5e7eb",
+                                backgroundColor: "var(--color-surface-card)",
+                                border: "1px solid var(--color-border)",
                               }}
                             />
                             <Line
                               type="monotone"
                               dataKey="amount"
-                              stroke="var(--color-brand)"
+                              stroke="var(--color-primary)"
                               strokeWidth={2}
                               dot={{ r: 4 }}
                             />
@@ -358,13 +358,13 @@ const AdminDashboard = () => {
                     )}
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="rounded-2xl border border-default bg-surface-card p-5">
+                    <h3 className="mb-4 text-sm font-semibold text-secondary">
                       Orders
                     </h3>
                     {analyticsLoading ? (
                       <div className="flex h-64 items-center justify-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       </div>
                     ) : (
                       <div className="h-64">
@@ -372,21 +372,21 @@ const AdminDashboard = () => {
                           <BarChart data={ordersData}>
                             <CartesianGrid
                               strokeDasharray="3 3"
-                              stroke="#e5e7eb"
+                              stroke="var(--color-border)"
                             />
                             <XAxis
                               dataKey="date"
-                              stroke="#9ca3af"
+                              stroke="var(--text-muted)"
                               fontSize={12}
                             />
-                            <YAxis stroke="#9ca3af" fontSize={12} />
+                            <YAxis stroke="var(--text-muted)" fontSize={12} />
                             <Tooltip
                               contentStyle={{
-                                backgroundColor: "#fff",
-                                border: "1px solid #e5e7eb",
+                                backgroundColor: "var(--color-surface-card)",
+                                border: "1px solid var(--color-border)",
                               }}
                             />
-                            <Bar dataKey="count" fill="var(--color-brand)" />
+                            <Bar dataKey="count" fill="var(--color-primary)" />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
@@ -400,12 +400,12 @@ const AdminDashboard = () => {
           {activeTab === "products" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-primary">
                   Products
                 </h2>
                 <Link
                   to="/admin/products/new"
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
                 >
                   <Package className="h-4 w-4" />
                   Add Product
@@ -415,19 +415,19 @@ const AdminDashboard = () => {
               {productsError ? (
                 <ErrorState message={productsError} onRetry={loadProducts} />
               ) : (
-                <div className="admin-table-container rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                <div className="overflow-x-auto rounded-2xl border border-default bg-surface-card">
                   {productsLoading ? (
                     <div className="p-4">
                       {Array.from({ length: 6 }).map((_, idx) => (
                         <div
                           key={idx}
-                          className="border-b border-gray-100 py-3 last:border-0 dark:border-gray-700"
+                          className="border-b border-default py-3 last:border-0"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+                            <div className="h-12 w-12 animate-pulse rounded-lg bg-surface-elevated" />
                             <div className="flex-1 space-y-2">
-                              <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-                              <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                              <div className="h-4 w-3/4 animate-pulse rounded bg-surface-elevated" />
+                              <div className="h-3 w-1/2 animate-pulse rounded bg-surface-elevated" />
                             </div>
                           </div>
                         </div>
@@ -442,34 +442,22 @@ const AdminDashboard = () => {
                       actionHref="/admin/products/new"
                     />
                   ) : (
-                    <table className="admin-table text-sm">
+                    <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-700">
-                          <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                            Name
-                          </th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                            Category
-                          </th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                            Price
-                          </th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                            Stock
-                          </th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                            Status
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
-                            Actions
-                          </th>
+                        <tr className="border-b border-default text-left text-xs font-semibold text-muted uppercase">
+                          <th className="px-4 py-3">Name</th>
+                          <th className="px-4 py-3">Category</th>
+                          <th className="px-4 py-3">Price</th>
+                          <th className="px-4 py-3">Stock</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {products.map((p) => (
                           <tr
                             key={p.id}
-                            className="border-b border-gray-100 last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/50"
+                            className="border-b border-default hover:bg-surface-elevated"
                           >
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
@@ -480,25 +468,25 @@ const AdminDashboard = () => {
                                     className="h-10 w-10 rounded-lg object-cover"
                                   />
                                 ) : (
-                                  <div className="h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-700" />
+                                  <div className="h-10 w-10 rounded-lg bg-surface-elevated" />
                                 )}
-                                <span className="font-medium text-gray-900 dark:text-white">
+                                <span className="font-medium text-primary">
                                   {p.name}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                            <td className="px-4 py-3 text-secondary">
                               {p.category?.name || "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-900 dark:text-white">
+                            <td className="px-4 py-3 text-primary">
                               {formatCurrency(p.price)}
                             </td>
                             <td className="px-4 py-3">
                               <span
                                 className={`font-medium ${
                                   p.stockQuantity <= (p.lowStockThreshold || 5)
-                                    ? "text-red-600 dark:text-red-400"
-                                    : "text-green-600 dark:text-green-400"
+                                    ? "text-danger"
+                                    : "text-success"
                                 }`}
                               >
                                 {p.stockQuantity ?? 0}
@@ -508,8 +496,8 @@ const AdminDashboard = () => {
                               <span
                                 className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                                   p.isActive
-                                    ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                    ? "bg-success/10 text-success"
+                                    : "bg-surface-elevated text-muted"
                                 }`}
                               >
                                 {p.isActive ? "Active" : "Inactive"}
@@ -518,7 +506,7 @@ const AdminDashboard = () => {
                             <td className="px-4 py-3 text-right">
                               <Link
                                 to={`/admin/products/${p.id}/edit`}
-                                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                className="inline-flex items-center gap-1 rounded-lg border border-default bg-surface-card px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-surface-elevated"
                               >
                                 Edit
                               </Link>
@@ -537,16 +525,16 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Link
                 to="/admin/users"
-                className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                className="flex items-center gap-4 rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="rounded-xl bg-blue-100 p-3 dark:bg-blue-900">
-                  <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="rounded-xl bg-primary/10 p-3">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-primary">
                     Manage Users
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted">
                     View and manage user accounts
                   </p>
                 </div>
@@ -554,16 +542,16 @@ const AdminDashboard = () => {
 
               <Link
                 to="/admin/orders"
-                className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                className="flex items-center gap-4 rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="rounded-xl bg-amber-100 p-3 dark:bg-amber-900">
-                  <ShoppingBag className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                <div className="rounded-xl bg-warning/10 p-3">
+                  <ShoppingBag className="h-6 w-6 text-warning" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-primary">
                     Manage Orders
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted">
                     View and update order status
                   </p>
                 </div>
@@ -571,16 +559,16 @@ const AdminDashboard = () => {
 
               <Link
                 to="/admin/products/new"
-                className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                className="flex items-center gap-4 rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="rounded-xl bg-green-100 p-3 dark:bg-green-900">
-                  <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="rounded-xl bg-success/10 p-3">
+                  <Package className="h-6 w-6 text-success" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-primary">
                     Add Product
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted">
                     Create a new product listing
                   </p>
                 </div>

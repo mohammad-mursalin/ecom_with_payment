@@ -146,255 +146,251 @@ const AdminAddProductPage = () => {
 
   if (initError) {
     return (
-      <div className="page-container">
-        <div className="container mx-auto max-w-4xl px-4 py-8">
-          <ErrorState message={initError} onRetry={fetchData} />
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <ErrorState message={initError} onRetry={fetchData} />
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="page-title">Add New Product</h1>
-          <p className="page-subtitle">Create a new product for your store</p>
-        </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-primary">Add New Product</h1>
+        <p className="text-sm text-muted">Create a new product for your store</p>
+      </div>
 
-        <div className="card">
-          <div className="p-6 space-y-6" onKeyDown={handleKeyDown}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label" htmlFor="add-product-name">Product Name *</label>
-                <input
-                  ref={firstFieldRef}
-                  id="add-product-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => updateField('name', e.target.value)}
-                  placeholder="Enter product name"
-                  maxLength={200}
-                  className={`form-input ${errors.name ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.name ? 'add-product-name-error' : undefined}
-                />
-                {errors.name && <p id="add-product-name-error" className="form-helper text-danger">{errors.name}</p>}
-                <p className="form-helper">{form.name.length}/200</p>
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="add-product-category">Category *</label>
-                <select
-                  id="add-product-category"
-                  value={form.categoryId}
-                  onChange={(e) => updateField('categoryId', e.target.value)}
-                  className={`form-select ${errors.categoryId ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.categoryId ? 'add-product-category-error' : undefined}
-                >
-                  <option value="">Select category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.categoryId && (
-                  <p id="add-product-category-error" className="form-helper text-danger">{errors.categoryId}</p>
-                )}
-              </div>
+      <div className="rounded-2xl border border-default bg-surface-card shadow-sm">
+        <div className="p-6 space-y-6" onKeyDown={handleKeyDown}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-name">Product Name *</label>
+              <input
+                ref={firstFieldRef}
+                id="add-product-name"
+                type="text"
+                value={form.name}
+                onChange={(e) => updateField('name', e.target.value)}
+                placeholder="Enter product name"
+                maxLength={200}
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.name ? 'border-danger' : ''}`}
+                aria-describedby={errors.name ? 'add-product-name-error' : undefined}
+              />
+              {errors.name && <p id="add-product-name-error" className="mt-1 text-xs text-danger">{errors.name}</p>}
+              <p className="mt-1 text-xs text-muted">{form.name.length}/200</p>
             </div>
 
             <div>
-              <label className="form-label" htmlFor="add-product-brand">Brand *</label>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-category">Category *</label>
               <select
-                id="add-product-brand"
-                value={form.brandId}
-                onChange={(e) => updateField('brandId', e.target.value)}
-                className={`form-select ${errors.brandId ? 'border-red-500' : ''}`}
-                aria-describedby={errors.brandId ? 'add-product-brand-error' : undefined}
+                id="add-product-category"
+                value={form.categoryId}
+                onChange={(e) => updateField('categoryId', e.target.value)}
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.categoryId ? 'border-danger' : ''}`}
+                aria-describedby={errors.categoryId ? 'add-product-category-error' : undefined}
               >
-                <option value="">Select brand</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
+                <option value="">Select category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.name}
                   </option>
                 ))}
               </select>
-              {errors.brandId && <p id="add-product-brand-error" className="form-helper text-danger">{errors.brandId}</p>}
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="add-product-description">Description *</label>
-              <textarea
-                id="add-product-description"
-                value={form.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="Enter product description"
-                rows={4}
-                className={`form-input ${errors.description ? 'border-red-500' : ''}`}
-                aria-describedby={errors.description ? 'add-product-description-error' : undefined}
-              />
-              {errors.description && (
-                <p id="add-product-description-error" className="form-helper text-danger">{errors.description}</p>
+              {errors.categoryId && (
+                <p id="add-product-category-error" className="mt-1 text-xs text-danger">{errors.categoryId}</p>
               )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label" htmlFor="add-product-price">Price (₹) *</label>
-                <input
-                  id="add-product-price"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={form.price}
-                  onChange={(e) => updateField('price', e.target.value)}
-                  placeholder="0.00"
-                  className={`form-input ${errors.price ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.price ? 'add-product-price-error' : undefined}
-                />
-                {errors.price && <p id="add-product-price-error" className="form-helper text-danger">{errors.price}</p>}
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="add-product-originalPrice">Original Price (₹)</label>
-                <input
-                  id="add-product-originalPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.originalPrice}
-                  onChange={(e) => updateField('originalPrice', e.target.value)}
-                  placeholder="Optional"
-                  className={`form-input ${errors.originalPrice ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.originalPrice ? 'add-product-originalPrice-error' : undefined}
-                />
-                {errors.originalPrice && (
-                  <p id="add-product-originalPrice-error" className="form-helper text-danger">{errors.originalPrice}</p>
-                )}
-                {discountPercent > 0 && (
-                  <p className="form-helper text-green-600">
-                    {discountPercent}% discount will be shown
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="add-product-stock">Stock Quantity *</label>
-              <input
-                id="add-product-stock"
-                type="number"
-                min="0"
-                value={form.stockQuantity}
-                onChange={(e) => updateField('stockQuantity', e.target.value)}
-                placeholder="0"
-                className={`form-input ${errors.stockQuantity ? 'border-red-500' : ''}`}
-                aria-describedby={errors.stockQuantity ? 'add-product-stock-error' : undefined}
-              />
-              {errors.stockQuantity && (
-                <p id="add-product-stock-error" className="form-helper text-danger">{errors.stockQuantity}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isFeatured}
-                  onChange={(e) => updateField('isFeatured', e.target.checked)}
-                  className="form-checkbox"
-                />
-                <span>Is Featured</span>
-              </label>
-            </div>
-
-            <div>
-              <label className="form-label mb-2">Image URLs (up to 5)</label>
-              {form.imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => updateImageUrl(index, e.target.value)}
-                    placeholder={`Image URL ${index + 1}`}
-                    className="form-input flex-1"
-                  />
-                  {url && (
-                    <button
-                      type="button"
-                      onClick={() => updateImageUrl(index, '')}
-                      className="icon-button text-gray-400 hover:text-red-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-brand">Brand *</label>
+            <select
+              id="add-product-brand"
+              value={form.brandId}
+              onChange={(e) => updateField('brandId', e.target.value)}
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.brandId ? 'border-danger' : ''}`}
+              aria-describedby={errors.brandId ? 'add-product-brand-error' : undefined}
+            >
+              <option value="">Select brand</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </option>
               ))}
-              <p className="form-helper mt-1">
-                Enter image URLs. The first image will be the primary image.
-              </p>
+            </select>
+            {errors.brandId && <p id="add-product-brand-error" className="mt-1 text-xs text-danger">{errors.brandId}</p>}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-description">Description *</label>
+            <textarea
+              id="add-product-description"
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              placeholder="Enter product description"
+              rows={4}
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.description ? 'border-danger' : ''}`}
+              aria-describedby={errors.description ? 'add-product-description-error' : undefined}
+            />
+            {errors.description && (
+              <p id="add-product-description-error" className="mt-1 text-xs text-danger">{errors.description}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-price">Price (₹) *</label>
+              <input
+                id="add-product-price"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={form.price}
+                onChange={(e) => updateField('price', e.target.value)}
+                placeholder="0.00"
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.price ? 'border-danger' : ''}`}
+                aria-describedby={errors.price ? 'add-product-price-error' : undefined}
+              />
+              {errors.price && <p id="add-product-price-error" className="mt-1 text-xs text-danger">{errors.price}</p>}
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="form-label mb-0">Specifications</label>
-                <button
-                  type="button"
-                  onClick={addSpec}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  + Add Row
-                </button>
-              </div>
-              {form.specifications.map((spec, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={spec.key}
-                    onChange={(e) => updateSpec(index, 'key', e.target.value)}
-                    placeholder="Key"
-                    className="form-input flex-1"
-                  />
-                  <input
-                    type="text"
-                    value={spec.value}
-                    onChange={(e) => updateSpec(index, 'value', e.target.value)}
-                    placeholder="Value"
-                    className="form-input flex-1"
-                  />
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-originalPrice">Original Price (₹)</label>
+              <input
+                id="add-product-originalPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.originalPrice}
+                onChange={(e) => updateField('originalPrice', e.target.value)}
+                placeholder="Optional"
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.originalPrice ? 'border-danger' : ''}`}
+                aria-describedby={errors.originalPrice ? 'add-product-originalPrice-error' : undefined}
+              />
+              {errors.originalPrice && (
+                <p id="add-product-originalPrice-error" className="mt-1 text-xs text-danger">{errors.originalPrice}</p>
+              )}
+              {discountPercent > 0 && (
+                <p className="mt-1 text-xs text-success">
+                  {discountPercent}% discount will be shown
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="add-product-stock">Stock Quantity *</label>
+            <input
+              id="add-product-stock"
+              type="number"
+              min="0"
+              value={form.stockQuantity}
+              onChange={(e) => updateField('stockQuantity', e.target.value)}
+              placeholder="0"
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.stockQuantity ? 'border-danger' : ''}`}
+              aria-describedby={errors.stockQuantity ? 'add-product-stock-error' : undefined}
+            />
+            {errors.stockQuantity && (
+              <p id="add-product-stock-error" className="mt-1 text-xs text-danger">{errors.stockQuantity}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isFeatured}
+                onChange={(e) => updateField('isFeatured', e.target.checked)}
+                className="h-4 w-4 rounded border-default accent-primary"
+              />
+              <span className="text-sm text-secondary">Is Featured</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-secondary">Image URLs (up to 5)</label>
+            {form.imageUrls.map((url, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => updateImageUrl(index, e.target.value)}
+                  placeholder={`Image URL ${index + 1}`}
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                />
+                {url && (
                   <button
                     type="button"
-                    onClick={() => removeSpec(index)}
-                    className="icon-button text-gray-400 hover:text-red-600"
+                    onClick={() => updateImageUrl(index, '')}
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
-                </div>
-              ))}
-              {form.specifications.length === 0 && (
-                <p className="form-helper">No specifications added.</p>
-              )}
-            </div>
+                )}
+              </div>
+            ))}
+            <p className="text-xs text-muted mt-1">
+              Enter image URLs. The first image will be the primary image.
+            </p>
+          </div>
 
-            <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-secondary mb-0">Specifications</label>
               <button
                 type="button"
-                onClick={() => navigate('/admin/products')}
-                className="btn-modern btn-modern-secondary"
+                onClick={addSpec}
+                className="text-sm text-primary hover:text-primary-hover"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn-modern btn-modern-primary"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                {loading ? 'Saving...' : 'Save Product'}
+                + Add Row
               </button>
             </div>
+            {form.specifications.map((spec, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={spec.key}
+                  onChange={(e) => updateSpec(index, 'key', e.target.value)}
+                  placeholder="Key"
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                />
+                <input
+                  type="text"
+                  value={spec.value}
+                  onChange={(e) => updateSpec(index, 'value', e.target.value)}
+                  placeholder="Value"
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSpec(index)}
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {form.specifications.length === 0 && (
+              <p className="text-xs text-muted">No specifications added.</p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-4 pt-4 border-t border-default">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/products')}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {loading ? 'Saving...' : 'Save Product'}
+            </button>
           </div>
         </div>
       </div>

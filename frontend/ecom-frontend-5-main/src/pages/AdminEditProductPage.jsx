@@ -168,250 +168,248 @@ const AdminEditProductPage = () => {
   }
 
   return (
-    <div className="page-container">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="page-title">Edit Product</h1>
-          <p className="page-subtitle">Update product details</p>
-        </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-primary">Edit Product</h1>
+        <p className="text-sm text-muted">Update product details</p>
+      </div>
 
-        <div className="card">
-          <div className="p-6 space-y-6" onKeyDown={handleKeyDown}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label" htmlFor="edit-product-name">Product Name *</label>
-                <input
-                  ref={firstFieldRef}
-                  id="edit-product-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => updateField('name', e.target.value)}
-                  placeholder="Enter product name"
-                  maxLength={200}
-                  className={`form-input ${errors.name ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.name ? 'edit-product-name-error' : undefined}
-                />
-                {errors.name && <p id="edit-product-name-error" className="form-helper text-danger">{errors.name}</p>}
-                <p className="form-helper">{form.name.length}/200</p>
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="edit-product-category">Category *</label>
-                <select
-                  id="edit-product-category"
-                  value={form.categoryId}
-                  onChange={(e) => updateField('categoryId', e.target.value)}
-                  className={`form-select ${errors.categoryId ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.categoryId ? 'edit-product-category-error' : undefined}
-                >
-                  <option value="">Select category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.categoryId && (
-                  <p id="edit-product-category-error" className="form-helper text-danger">{errors.categoryId}</p>
-                )}
-              </div>
+      <div className="rounded-2xl border border-default bg-surface-card shadow-sm">
+        <div className="p-6 space-y-6" onKeyDown={handleKeyDown}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-name">Product Name *</label>
+              <input
+                ref={firstFieldRef}
+                id="edit-product-name"
+                type="text"
+                value={form.name}
+                onChange={(e) => updateField('name', e.target.value)}
+                placeholder="Enter product name"
+                maxLength={200}
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.name ? 'border-danger' : ''}`}
+                aria-describedby={errors.name ? 'edit-product-name-error' : undefined}
+              />
+              {errors.name && <p id="edit-product-name-error" className="mt-1 text-xs text-danger">{errors.name}</p>}
+              <p className="mt-1 text-xs text-muted">{form.name.length}/200</p>
             </div>
 
             <div>
-              <label className="form-label" htmlFor="edit-product-brand">Brand *</label>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-category">Category *</label>
               <select
-                id="edit-product-brand"
-                value={form.brandId}
-                onChange={(e) => updateField('brandId', e.target.value)}
-                className={`form-select ${errors.brandId ? 'border-red-500' : ''}`}
-                aria-describedby={errors.brandId ? 'edit-product-brand-error' : undefined}
+                id="edit-product-category"
+                value={form.categoryId}
+                onChange={(e) => updateField('categoryId', e.target.value)}
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.categoryId ? 'border-danger' : ''}`}
+                aria-describedby={errors.categoryId ? 'edit-product-category-error' : undefined}
               >
-                <option value="">Select brand</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
+                <option value="">Select category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.name}
                   </option>
                 ))}
               </select>
-              {errors.brandId && <p id="edit-product-brand-error" className="form-helper text-danger">{errors.brandId}</p>}
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="edit-product-description">Description *</label>
-              <textarea
-                id="edit-product-description"
-                value={form.description}
-                onChange={(e) => updateField('description', e.target.value)}
-                placeholder="Enter product description"
-                rows={4}
-                className={`form-input ${errors.description ? 'border-red-500' : ''}`}
-                aria-describedby={errors.description ? 'edit-product-description-error' : undefined}
-              />
-              {errors.description && (
-                <p id="edit-product-description-error" className="form-helper text-danger">{errors.description}</p>
+              {errors.categoryId && (
+                <p id="edit-product-category-error" className="mt-1 text-xs text-danger">{errors.categoryId}</p>
               )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label" htmlFor="edit-product-price">Price (₹) *</label>
-                <input
-                  id="edit-product-price"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={form.price}
-                  onChange={(e) => updateField('price', e.target.value)}
-                  placeholder="0.00"
-                  className={`form-input ${errors.price ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.price ? 'edit-product-price-error' : undefined}
-                />
-                {errors.price && <p id="edit-product-price-error" className="form-helper text-danger">{errors.price}</p>}
-              </div>
-
-              <div>
-                <label className="form-label" htmlFor="edit-product-originalPrice">Original Price (₹)</label>
-                <input
-                  id="edit-product-originalPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.originalPrice}
-                  onChange={(e) => updateField('originalPrice', e.target.value)}
-                  placeholder="Optional"
-                  className={`form-input ${errors.originalPrice ? 'border-red-500' : ''}`}
-                  aria-describedby={errors.originalPrice ? 'edit-product-originalPrice-error' : undefined}
-                />
-                {errors.originalPrice && (
-                  <p id="edit-product-originalPrice-error" className="form-helper text-danger">{errors.originalPrice}</p>
-                )}
-                {discountPercent > 0 && (
-                  <p className="form-helper text-green-600">
-                    {discountPercent}% discount will be shown
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="edit-product-stock">Stock Quantity *</label>
-              <input
-                id="edit-product-stock"
-                type="number"
-                min="0"
-                value={form.stockQuantity}
-                onChange={(e) => updateField('stockQuantity', e.target.value)}
-                placeholder="0"
-                className={`form-input ${errors.stockQuantity ? 'border-red-500' : ''}`}
-                aria-describedby={errors.stockQuantity ? 'edit-product-stock-error' : undefined}
-              />
-              {errors.stockQuantity && <p id="edit-product-stock-error" className="form-helper text-danger">{errors.stockQuantity}</p>}
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="edit-product-isFeatured"
-                  checked={form.isFeatured}
-                  onChange={(e) => updateField('isFeatured', e.target.checked)}
-                  className="form-checkbox"
-                />
-                <span>Is Featured</span>
-              </label>
-            </div>
-
-            <div>
-              <label className="form-label mb-2" htmlFor="edit-product-images">Image URLs (up to 5)</label>
-              {form.imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    id={`edit-product-image-${index}`}
-                    value={url}
-                    onChange={(e) => updateImageUrl(index, e.target.value)}
-                    placeholder={`Image URL ${index + 1}`}
-                    className="form-input flex-1"
-                  />
-                  {url && (
-                    <button
-                      type="button"
-                      onClick={() => updateImageUrl(index, '')}
-                      className="icon-button text-gray-400 hover:text-red-600"
-                      aria-label={`Remove image ${index + 1}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-brand">Brand *</label>
+            <select
+              id="edit-product-brand"
+              value={form.brandId}
+              onChange={(e) => updateField('brandId', e.target.value)}
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.brandId ? 'border-danger' : ''}`}
+              aria-describedby={errors.brandId ? 'edit-product-brand-error' : undefined}
+            >
+              <option value="">Select brand</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </option>
               ))}
-              <p className="form-helper mt-1">
-                Enter image URLs. The first image will be the primary image.
-              </p>
+            </select>
+            {errors.brandId && <p id="edit-product-brand-error" className="mt-1 text-xs text-danger">{errors.brandId}</p>}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-description">Description *</label>
+            <textarea
+              id="edit-product-description"
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              placeholder="Enter product description"
+              rows={4}
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.description ? 'border-danger' : ''}`}
+              aria-describedby={errors.description ? 'edit-product-description-error' : undefined}
+            />
+            {errors.description && (
+              <p id="edit-product-description-error" className="mt-1 text-xs text-danger">{errors.description}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-price">Price (₹) *</label>
+              <input
+                id="edit-product-price"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={form.price}
+                onChange={(e) => updateField('price', e.target.value)}
+                placeholder="0.00"
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.price ? 'border-danger' : ''}`}
+                aria-describedby={errors.price ? 'edit-product-price-error' : undefined}
+              />
+              {errors.price && <p id="edit-product-price-error" className="mt-1 text-xs text-danger">{errors.price}</p>}
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="form-label mb-0">Specifications</label>
-                <button
-                  type="button"
-                  onClick={addSpec}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  + Add Row
-                </button>
-              </div>
-              {form.specifications.map((spec, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={spec.key}
-                    onChange={(e) => updateSpec(index, 'key', e.target.value)}
-                    placeholder="Key"
-                    className="form-input flex-1"
-                    aria-label={`Specification key ${index + 1}`}
-                  />
-                  <input
-                    type="text"
-                    value={spec.value}
-                    onChange={(e) => updateSpec(index, 'value', e.target.value)}
-                    placeholder="Value"
-                    className="form-input flex-1"
-                    aria-label={`Specification value ${index + 1}`}
-                  />
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-originalPrice">Original Price (₹)</label>
+              <input
+                id="edit-product-originalPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.originalPrice}
+                onChange={(e) => updateField('originalPrice', e.target.value)}
+                placeholder="Optional"
+                className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.originalPrice ? 'border-danger' : ''}`}
+                aria-describedby={errors.originalPrice ? 'edit-product-originalPrice-error' : undefined}
+              />
+              {errors.originalPrice && (
+                <p id="edit-product-originalPrice-error" className="mt-1 text-xs text-danger">{errors.originalPrice}</p>
+              )}
+              {discountPercent > 0 && (
+                <p className="mt-1 text-xs text-success">
+                  {discountPercent}% discount will be shown
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-stock">Stock Quantity *</label>
+            <input
+              id="edit-product-stock"
+              type="number"
+              min="0"
+              value={form.stockQuantity}
+              onChange={(e) => updateField('stockQuantity', e.target.value)}
+              placeholder="0"
+              className={`w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${errors.stockQuantity ? 'border-danger' : ''}`}
+              aria-describedby={errors.stockQuantity ? 'edit-product-stock-error' : undefined}
+            />
+            {errors.stockQuantity && <p id="edit-product-stock-error" className="mt-1 text-xs text-danger">{errors.stockQuantity}</p>}
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                id="edit-product-isFeatured"
+                checked={form.isFeatured}
+                onChange={(e) => updateField('isFeatured', e.target.checked)}
+                className="h-4 w-4 rounded border-default accent-primary"
+              />
+              <span className="text-sm text-secondary">Is Featured</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-secondary" htmlFor="edit-product-images">Image URLs (up to 5)</label>
+            {form.imageUrls.map((url, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="url"
+                  id={`edit-product-image-${index}`}
+                  value={url}
+                  onChange={(e) => updateImageUrl(index, e.target.value)}
+                  placeholder={`Image URL ${index + 1}`}
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                />
+                {url && (
                   <button
                     type="button"
-                    onClick={() => removeSpec(index)}
-                    className="icon-button text-gray-400 hover:text-red-600"
-                    aria-label={`Remove specification ${index + 1}`}
+                    onClick={() => updateImageUrl(index, '')}
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
+                    aria-label={`Remove image ${index + 1}`}
                   >
                     <X className="w-4 h-4" />
                   </button>
-                </div>
-              ))}
-              {form.specifications.length === 0 && (
-                <p className="form-helper">No specifications added.</p>
-              )}
-            </div>
+                )}
+              </div>
+            ))}
+            <p className="text-xs text-muted mt-1">
+              Enter image URLs. The first image will be the primary image.
+            </p>
+          </div>
 
-            <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-secondary mb-0">Specifications</label>
               <button
                 type="button"
-                onClick={() => navigate('/admin/products')}
-                className="btn-modern btn-modern-secondary"
+                onClick={addSpec}
+                className="text-sm text-primary hover:text-primary-hover"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn-modern btn-modern-primary"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                {loading ? 'Saving...' : 'Save Product'}
+                + Add Row
               </button>
             </div>
+            {form.specifications.map((spec, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={spec.key}
+                  onChange={(e) => updateSpec(index, 'key', e.target.value)}
+                  placeholder="Key"
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                  aria-label={`Specification key ${index + 1}`}
+                />
+                <input
+                  type="text"
+                  value={spec.value}
+                  onChange={(e) => updateSpec(index, 'value', e.target.value)}
+                  placeholder="Value"
+                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+                  aria-label={`Specification value ${index + 1}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSpec(index)}
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
+                  aria-label={`Remove specification ${index + 1}`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {form.specifications.length === 0 && (
+              <p className="text-xs text-muted">No specifications added.</p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-4 pt-4 border-t border-default">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/products')}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-default bg-surface-card px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-surface-elevated"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {loading ? 'Saving...' : 'Save Product'}
+            </button>
           </div>
         </div>
       </div>
