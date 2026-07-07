@@ -659,17 +659,16 @@ function CheckoutForm({ onPaymentSuccess, processingMsg, total }) {
   const elements = useElements();
   const [stripeError, setStripeError] = useState("");
   const [paying, setPaying] = useState(false);
+  const themeRef = useRef(theme);
 
   useEffect(() => {
-    console.log('[StripeTheme] Effect triggered', { theme, elements: !!elements });
-    if (!elements) {
-      console.log('[StripeTheme] elements is null, skipping update');
-      return;
-    }
-    const newAppearance = theme === 'dark' ? darkAppearance : lightAppearance;
-    console.log('[StripeTheme] Updating with appearance:', newAppearance);
-    elements.update({ appearance: newAppearance });
-  }, [theme, elements]);
+    themeRef.current = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    if (!elements) return;
+    elements.update({ appearance: themeRef.current === 'dark' ? darkAppearance : lightAppearance });
+  }, [elements]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
