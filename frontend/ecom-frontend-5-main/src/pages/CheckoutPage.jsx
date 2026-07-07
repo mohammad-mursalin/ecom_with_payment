@@ -5,7 +5,8 @@ import { useAuth } from "../Context/AuthContext";
 import { useCart } from "../Context/CartContext";
 import { useWebSocket } from "../Context/WebSocketContext";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { stripePromise } from "../stripe";
+import { stripePromise, darkAppearance, lightAppearance } from "../stripe";
+import { useTheme } from "../hooks/useTheme";
 import { getAddresses, createAddress } from "../services/addressService";
 import { initiateOrder, confirmOrder, getOrder } from "../services/orderService";
 import { validateCoupon } from "../services/couponService";
@@ -28,6 +29,7 @@ const CheckoutPage = () => {
   const { isAuthenticated } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const { connected: wsConnected, subscribe } = useWebSocket();
+  const { theme } = useTheme();
 
   const [step, setStep] = useState(1);
   const [addresses, setAddresses] = useState([]);
@@ -280,6 +282,7 @@ const CheckoutPage = () => {
 
   const stripeOptions = {
     clientSecret: orderResult?.clientSecret,
+    appearance: theme === 'dark' ? darkAppearance : lightAppearance,
   };
 
   return (
@@ -651,10 +654,22 @@ const CheckoutPage = () => {
 
 function CheckoutForm({ onPaymentSuccess, processingMsg, total }) {
   const { toast } = useToast();
+  const { theme } = useTheme();
   const stripe = useStripe();
   const elements = useElements();
   const [stripeError, setStripeError] = useState("");
   const [paying, setPaying] = useState(false);
+
+  useEffect(() => {
+    console.log('[StripeTheme] Effect triggered', { theme, elements: !!elements });
+    if (!elements) {
+      console.log('[StripeTheme] elements is null, skipping update');
+      return;
+    }
+    const newAppearance = theme === 'dark' ? darkAppearance : lightAppearance;
+    console.log('[StripeTheme] Updating with appearance:', newAppearance);
+    elements.update({ appearance: newAppearance });
+  }, [theme, elements]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
