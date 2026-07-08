@@ -685,7 +685,7 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-surface border-r border-default z-50 md:hidden"
+              className="fixed inset-y-0 left-0 w-72 bg-surface/95 backdrop-blur border-r border-default z-50 md:hidden"
               ref={mobileMenuRef}
               role="dialog"
               aria-modal="true"
@@ -706,7 +706,7 @@ const Navbar = () => {
                   </button>
                 </div>
 
-                <div className="flex flex-col p-4 space-y-1 overflow-y-auto">
+                <div className="flex flex-col flex-1 gap-1 px-4">
                   {visibleNavLinks.map((link) => {
                     const Icon = link.icon;
                     return (
