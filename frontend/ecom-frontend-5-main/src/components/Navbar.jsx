@@ -685,7 +685,7 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-surface/95 backdrop-blur border-r border-default z-50 md:hidden"
+              className="fixed inset-y-0 left-0 w-72 bg-surface border-r border-default z-50 md:hidden"
               ref={mobileMenuRef}
               role="dialog"
               aria-modal="true"
@@ -706,7 +706,7 @@ const Navbar = () => {
                   </button>
                 </div>
 
-                <div className="flex flex-col flex-1 gap-1 px-4">
+                <div className="flex flex-col flex-1 gap-1 px-4 bg-surface">
                   {visibleNavLinks.map((link) => {
                     const Icon = link.icon;
                     return (
@@ -726,7 +726,7 @@ const Navbar = () => {
                 {isAuthenticated && (
                   <>
                     <div className="border-t border-default" />
-                    <div className="p-4">
+                    <div className="p-4 bg-surface">
                       <div className="flex items-center gap-3 p-3 rounded-lg border border-default bg-surface">
                         <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-base">
                           {user?.username?.charAt(0) || user?.email?.charAt(0)}
@@ -738,7 +738,7 @@ const Navbar = () => {
                       </div>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full mt-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-red-600 hover:text-red-700 hover:bg-surface-elevated transition-colors"
+                        className="flex items-center gap-3 w-full mt-3 px-4 py-3 rounded-lg text-sm font-medium text-left text-red-600 hover:text-red-700 bg-surface hover:bg-surface-elevated transition-colors"
                       >
                         <LogOut className="w-5 h-5" strokeWidth={2} />
                         <span>Logout</span>
