@@ -21,7 +21,7 @@ const OrderHistoryPage     = lazy(() => import('./pages/OrderHistoryPage'));
 const OrderDetailPage      = lazy(() => import('./pages/OrderDetailPage'));
 const WishlistPage         = lazy(() => import('./pages/WishlistPage'));
 const ProfilePage          = lazy(() => import('./pages/ProfilePage'));
-const AdminDashboardPage   = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminDashboard   = lazy(() => import('./pages/AdminDashboard'));
 const AdminUsersPage       = lazy(() => import('./pages/AdminUsersPage'));
 const AdminOrdersPage      = lazy(() => import('./pages/AdminOrdersPage'));
 const AdminProductsPage    = lazy(() => import('./pages/AdminProductsPage'));
@@ -78,7 +78,7 @@ function App() {
                     <Route path="/profile"     element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
                     {/* ── Admin-only routes ── */}
-                    <Route path="/admin"                    element={<RequireAuth requireAdmin><AdminDashboardPage /></RequireAuth>} />
+                    <Route path="/admin"                    element={<RequireAuth requireAdmin><AdminDashboard /></RequireAuth>} />
                     <Route path="/admin/users"              element={<RequireAuth requireAdmin><AdminUsersPage /></RequireAuth>} />
                     <Route path="/admin/orders"             element={<RequireAuth requireAdmin><AdminOrdersPage /></RequireAuth>} />
                     <Route path="/admin/products"           element={<RequireAuth requireAdmin><AdminProductsPage /></RequireAuth>} />
