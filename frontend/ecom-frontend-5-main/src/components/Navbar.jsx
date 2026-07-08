@@ -685,7 +685,7 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-72 bg-surface border-r border-default z-50 md:hidden"
+              className="fixed inset-y-0 left-0 w-65 h-screen opacity-96 bg-surface border-r border-default z-50 md:hidden"
               ref={mobileMenuRef}
               role="dialog"
               aria-modal="true"
