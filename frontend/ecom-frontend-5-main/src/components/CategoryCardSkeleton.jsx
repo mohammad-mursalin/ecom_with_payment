@@ -1,10 +1,8 @@
 import Skeleton from "./Skeleton";
 
 const CategoryCardSkeleton = () => (
-  <div className="rounded-2xl p-6 border" style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border-color)" }}>
-    <div className="flex justify-center">
-      <Skeleton width="40px" height="40px" variant="circle" />
-    </div>
+  <div className="rounded-2xl bg-surface-card border-surface-elevated border p-6 animate-pulse">
+    <Skeleton width="40px" height="40px" variant="circle" />
     <div className="mt-3 mx-auto">
       <Skeleton width="60%" height="18px" rounded />
     </div>
