@@ -22,7 +22,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="container text-center" style={{ marginTop: "100px" }}>
+        <div className="container text-center mt-24">
           <h1>Something went wrong</h1>
           <p>An unexpected error occurred. Please try again.</p>
           <button className="btn btn-primary mt-3" onClick={this.handleRetry}>

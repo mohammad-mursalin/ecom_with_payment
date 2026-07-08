@@ -215,8 +215,7 @@ const FilterSidebar = ({
               max={maxPrice}
               value={minSlider}
               onChange={handleMinSliderChange}
-              className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-              style={{ zIndex: 3 }}
+              className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none z-10 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
             />
             <input
               ref={maxRef}
@@ -225,8 +224,7 @@ const FilterSidebar = ({
               max={maxPrice}
               value={maxSlider}
               onChange={handleMaxSliderChange}
-              className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto"
-              style={{ zIndex: 5 }}
+              className="absolute inset-0 w-full h-2 appearance-none bg-transparent pointer-events-none z-20 [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto"
             />
           </div>
         </div>
