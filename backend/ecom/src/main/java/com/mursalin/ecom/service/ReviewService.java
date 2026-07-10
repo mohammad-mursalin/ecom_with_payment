@@ -100,6 +100,20 @@ public class ReviewService {
         );
     }
 
+    public ReviewListResponse getProductReviewList(Long productId, int page, int size, String sort, Integer minRating, Long currentUserId) {
+        PaginatedResponse<ReviewResponse> paginated = getReviews(productId, page, size, sort, minRating, currentUserId);
+        ReviewSummary summary = getReviewSummary(productId);
+
+        ReviewListResponse response = new ReviewListResponse();
+        response.setSummary(summary);
+        response.setContent(paginated.getContent());
+        response.setTotalElements(paginated.getTotalElements());
+        response.setTotalPages(paginated.getTotalPages());
+        response.setCurrentPage(paginated.getCurrentPage());
+
+        return response;
+    }
+
     public ReviewResponse getMyReview(Long productId, Long userId) {
         Review review = reviewRepository.findByUser_UserIdAndProductId(userId, productId)
                 .orElse(null);
