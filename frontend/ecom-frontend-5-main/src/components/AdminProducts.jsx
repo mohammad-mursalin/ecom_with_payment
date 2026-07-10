@@ -203,8 +203,9 @@ const AdminProducts = () => {
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
     try {
-      await deleteProduct(deleteConfirm.id);
-      toast.info(`"${deleteConfirm.name}" deleted`);
+      const result = await deleteProduct(deleteConfirm.id);
+      const message = result?.message || `"${deleteConfirm.name}" deleted`;
+      toast.info(message);
       await fetchProducts();
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || "Failed to delete product";

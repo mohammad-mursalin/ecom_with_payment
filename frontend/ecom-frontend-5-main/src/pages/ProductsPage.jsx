@@ -358,27 +358,27 @@ const ProductsPage = () => {
               </div>
             </div>
 
-{loading ? (
-                <div className="product-grid">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : error ? (
-                <ErrorState
-                  title="Failed to load products"
-                  message={error}
-                  onRetry={() => fetchProducts({ page, pageSize })}
-                />
-              ) : products.length === 0 ? (
-                <EmptyState
-                  icon={SlidersHorizontal}
-                  title="No Products Found"
-                  description="Try adjusting your filters or search query"
-                  actionLabel="Clear Filters"
-                  onAction={clearAll}
-                />
-              ) : (
+            {loading ? (
+              <div className="product-grid">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : error ? (
+              <ErrorState
+                title="Failed to load products"
+                message={error}
+                onRetry={() => fetchProducts({ page, pageSize })}
+              />
+            ) : products.length === 0 ? (
+              <EmptyState
+                icon={SlidersHorizontal}
+                title="No Products Found"
+                description="Try adjusting your filters or search query"
+                actionLabel="Clear Filters"
+                onAction={clearAll}
+              />
+            ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {products.map((product) => (
