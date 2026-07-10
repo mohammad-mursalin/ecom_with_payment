@@ -4,21 +4,22 @@ import com.mursalin.ecom.dto.*;
 import com.mursalin.ecom.model.Order;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.OrderService;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -73,42 +74,22 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        Pageable pageable = PageRequest.of(page, pageSize, org.springframework.data.domain.Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("createdAt").descending());
         boolean isAdmin = userPrinciple.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         boolean isUser = userPrinciple.getUserId() != null && userPrinciple.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_USER"));
 
-        Page<Order> orderPage;
+        PaginatedResponse<OrderSummaryDTO> response;
         Order.OrderStatus statusEnum = "ALL".equalsIgnoreCase(status) ? null : parseStatus(status);
 
         if (isAdmin && !isUser) {
-            orderPage = (statusEnum == null) ? orderService.getAllOrders(pageable) : orderService.getAllOrdersByStatus(statusEnum, pageable);
+            response = (statusEnum == null) ? orderService.getAllOrders(pageable) : orderService.getAllOrdersByStatus(statusEnum, pageable);
         } else {
             Long uid = userPrinciple.getUserId();
-            orderPage = (statusEnum == null) ? orderService.getOrdersByUserId(uid, pageable) : orderService.getOrdersByUserIdAndStatus(uid, statusEnum, pageable);
+            response = (statusEnum == null) ? orderService.getOrdersByUserId(uid, pageable) : orderService.getOrdersByUserIdAndStatus(uid, statusEnum, pageable);
         }
-
-        List<OrderSummaryDTO> content = orderPage.getContent().stream()
-                .map(order -> {
-                    OrderSummaryDTO dto = new OrderSummaryDTO();
-                    dto.setId(order.getId());
-                    dto.setCreatedAt(order.getCreatedAt());
-                    dto.setItemCount(order.getOrderItems().size());
-                    dto.setTotalAmount(order.getTotalAmount());
-                    dto.setStatus(order.getStatus().name());
-                    dto.setItems(order.getOrderItems().stream()
-                            .map(OrderSummaryItemDTO::fromOrderItem)
-                            .toList());
-                    return dto;
-                })
-                .toList();
-
-        PaginatedResponse<OrderSummaryDTO> result = new PaginatedResponse<>(
-                content, page, orderPage.getTotalPages(), orderPage.getTotalElements(), pageSize,
-                !orderPage.hasPrevious(), !orderPage.hasNext()
-        );
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/cancel")
@@ -154,20 +135,20 @@ public class OrderController {
             return ResponseEntity.ok(OrderDetailsResponse.fromOrder(order));
         }
         return ResponseEntity.status(404).body(
-            new com.mursalin.ecom.dto.ErrorResponse(404, "Not Found", "Order not found with id: " + id)
+            new ErrorResponse(404, "Not Found", "Order not found with id: " + id)
         );
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Order> updateOrderStatus(
+    public ResponseEntity<OrderStatusUpdateResponse> updateOrderStatus(
             @PathVariable Long id,
             @RequestParam String status
     ) {
         try {
             Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
-            Order order = orderService.updateOrderStatus(id, orderStatus);
-            return ResponseEntity.ok(order);
+            OrderStatusUpdateResponse response = orderService.updateOrderStatus(id, orderStatus);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid order status value: {}", status);
             return ResponseEntity.badRequest().build();
@@ -179,18 +160,18 @@ public class OrderController {
 
     @PatchMapping("/{id}/tracking")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Order> updateOrderTracking(
+    public ResponseEntity<OrderStatusUpdateResponse> updateOrderTracking(
             @PathVariable Long id,
-            @RequestBody com.mursalin.ecom.dto.TrackingUpdateRequest request
+            @RequestBody TrackingUpdateRequest request
     ) {
         try {
-            Order order = orderService.updateOrderTracking(
+            OrderStatusUpdateResponse response = orderService.updateOrderTracking(
                     id,
                     request.getTrackingNumber(),
                     request.getTrackingUrl(),
                     request.getShippingCarrier()
             );
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             logger.error("Error updating tracking for id={}: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
@@ -199,9 +180,9 @@ public class OrderController {
 }
 
 // Helper DTO for confirm endpoint
+@Setter
+@Getter
 class ConfirmOrderRequest {
     private String paymentIntentId;
 
-    public String getPaymentIntentId() { return paymentIntentId; }
-    public void setPaymentIntentId(String paymentIntentId) { this.paymentIntentId = paymentIntentId; }
 }

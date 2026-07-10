@@ -1,7 +1,6 @@
 package com.mursalin.ecom.controller;
 
 import com.mursalin.ecom.dto.*;
-import com.mursalin.ecom.model.ReviewVoteType;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.ReviewService;
 import jakarta.validation.Valid;
@@ -41,17 +40,7 @@ public class ReviewController {
             @RequestParam(required = false) Integer minRating
     ) {
         Long userId = userPrinciple != null ? userPrinciple.getUserId() : null;
-
-        PaginatedResponse<ReviewResponse> paginated = reviewService.getReviews(productId, page, size, sort, minRating, userId);
-        ReviewSummary summary = reviewService.getReviewSummary(productId);
-
-        ReviewListResponse listResponse = new ReviewListResponse();
-        listResponse.setSummary(summary);
-        listResponse.setContent(paginated.getContent());
-        listResponse.setTotalElements(paginated.getTotalElements());
-        listResponse.setTotalPages(paginated.getTotalPages());
-        listResponse.setCurrentPage(paginated.getCurrentPage());
-
+        ReviewListResponse listResponse = reviewService.getProductReviewList(productId, page, size, sort, minRating, userId);
         return ResponseEntity.ok(ApiResponse.success(listResponse));
     }
 

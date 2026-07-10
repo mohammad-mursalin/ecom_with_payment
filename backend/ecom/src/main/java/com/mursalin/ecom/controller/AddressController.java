@@ -1,8 +1,8 @@
 package com.mursalin.ecom.controller;
 
-import com.mursalin.ecom.dto.ApiResponse;
 import com.mursalin.ecom.dto.AddressRequest;
-import com.mursalin.ecom.model.Address;
+import com.mursalin.ecom.dto.AddressResponse;
+import com.mursalin.ecom.dto.ApiResponse;
 import com.mursalin.ecom.service.AddressService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -25,26 +25,26 @@ public class AddressController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<Address>>> getMyAddresses(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<AddressResponse>>> getMyAddresses(Authentication authentication) {
         Long userId = getUserId(authentication);
-        List<Address> addresses = addressService.getMyAddresses(userId);
-        return ResponseEntity.ok(ApiResponse.success(addresses));
+        List<AddressResponse> responses = addressService.getMyAddresses(userId);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Address>> createAddress(Authentication authentication, @Valid @RequestBody AddressRequest request) {
+    public ResponseEntity<ApiResponse<AddressResponse>> createAddress(Authentication authentication, @Valid @RequestBody AddressRequest request) {
         Long userId = getUserId(authentication);
-        Address saved = addressService.createAddress(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved, "Address added successfully"));
+        AddressResponse response = addressService.createAddress(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, "Address added successfully"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Address>> updateAddress(Authentication authentication, @PathVariable Long id, @Valid @RequestBody AddressRequest request) {
+    public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(Authentication authentication, @PathVariable Long id, @Valid @RequestBody AddressRequest request) {
         Long userId = getUserId(authentication);
-        Address updated = addressService.updateAddress(userId, id, request);
-        return ResponseEntity.ok(ApiResponse.success(updated, "Address updated successfully"));
+        AddressResponse response = addressService.updateAddress(userId, id, request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Address updated successfully"));
     }
 
     @DeleteMapping("/{id}")
@@ -57,10 +57,10 @@ public class AddressController {
 
     @PatchMapping("/{id}/default")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Address>> setDefaultAddress(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<AddressResponse>> setDefaultAddress(Authentication authentication, @PathVariable Long id) {
         Long userId = getUserId(authentication);
-        Address updated = addressService.setDefaultAddress(userId, id);
-        return ResponseEntity.ok(ApiResponse.success(updated, "Default address updated"));
+        AddressResponse response = addressService.setDefaultAddress(userId, id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Default address updated"));
     }
 
     private Long getUserId(Authentication authentication) {

@@ -1,12 +1,10 @@
 package com.mursalin.ecom.controller;
 
+import com.mursalin.ecom.dto.ApiResponse;
 import com.mursalin.ecom.dto.BrandRequest;
 import com.mursalin.ecom.dto.BrandResponse;
-import com.mursalin.ecom.dto.CategoryResponse;
-import com.mursalin.ecom.model.Brand;
-import com.mursalin.ecom.model.Product;
-import com.mursalin.ecom.repository.BrandRepository;
-import com.mursalin.ecom.repository.ProductRepo;
+import com.mursalin.ecom.dto.ErrorResponse;
+import com.mursalin.ecom.service.BrandService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,72 +12,60 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/brands")
 public class BrandController {
 
-    private final BrandRepository brandRepository;
-    private final ProductRepo productRepository;
+    private final BrandService brandService;
 
-    public BrandController(BrandRepository brandRepository, ProductRepo productRepository) {
-        this.brandRepository = brandRepository;
-        this.productRepository = productRepository;
+    public BrandController(BrandService brandService) {
+        this.brandService = brandService;
     }
 
     @GetMapping
     public ResponseEntity<List<BrandResponse>> getAllBrands() {
-        List<BrandResponse> brands = brandRepository.findAllByOrderByNameAsc()
-                .stream()
-                .map(this::toBrandResponse)
-                .collect(Collectors.toList());
+        List<BrandResponse> brands = brandService.getAllBrands();
         return new ResponseEntity<>(brands, HttpStatus.OK);
     }
 
     @GetMapping(params = "categoryId")
     public ResponseEntity<List<BrandResponse>> getBrandsByCategory(@RequestParam Long categoryId) {
-        List<Product> products = productRepository.findByCategoryEntity_IdAndIsActiveTrueAndDeletedAtIsNull(categoryId);
-        List<BrandResponse> brands = products.stream()
-                .map(Product::getBrandEntity)
-                .filter(java.util.Objects::nonNull)
-                .distinct()
-                .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName()))
-                .map(this::toBrandResponse)
-                .collect(Collectors.toList());
+        List<BrandResponse> brands = brandService.getBrandsByCategory(categoryId);
         return new ResponseEntity<>(brands, HttpStatus.OK);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createBrand(@Valid @RequestBody BrandRequest request) {
-        if (brandRepository.existsBySlug(request.getSlug())) {
-            return new ResponseEntity<>("Brand with this slug already exists", HttpStatus.BAD_REQUEST);
+        try {
+            BrandResponse brand = brandService.createBrand(request.getName(), request.getSlug());
+            return new ResponseEntity<>(ApiResponse.created(brand), HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                    new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Conflict", e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
         }
-        Brand brand = new Brand();
-        brand.setName(request.getName());
-        brand.setSlug(request.getSlug());
-        brandRepository.save(brand);
-        return new ResponseEntity<>(toBrandResponse(brand), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateBrand(@PathVariable Long id, @Valid @RequestBody BrandRequest request) {
-        Brand brand = brandRepository.findById(id).orElse(null);
-        if (brand == null) {
-            return new ResponseEntity<>("Brand not found", HttpStatus.NOT_FOUND);
+        try {
+            BrandResponse brand = brandService.updateBrand(id, request.getName(), request.getSlug());
+            return new ResponseEntity<>(ApiResponse.ok(brand), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            if ("Brand not found".equals(e.getMessage())) {
+                return new ResponseEntity<>(
+                        new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Not Found", e.getMessage()),
+                        HttpStatus.NOT_FOUND
+                );
+            }
+            return new ResponseEntity<>(
+                    new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Conflict", e.getMessage()),
+                    HttpStatus.BAD_REQUEST
+            );
         }
-        if (!brand.getSlug().equals(request.getSlug()) && brandRepository.existsBySlug(request.getSlug())) {
-            return new ResponseEntity<>("Brand with this slug already exists", HttpStatus.BAD_REQUEST);
-        }
-        brand.setName(request.getName());
-        brand.setSlug(request.getSlug());
-        brandRepository.save(brand);
-        return new ResponseEntity<>(toBrandResponse(brand), HttpStatus.OK);
-    }
-
-    private BrandResponse toBrandResponse(Brand brand) {
-        return new BrandResponse(brand.getId(), brand.getName(), brand.getSlug());
     }
 }

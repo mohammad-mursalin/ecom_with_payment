@@ -13,7 +13,6 @@ import com.mursalin.ecom.dto.UserResponse;
 import com.mursalin.ecom.exception.UnauthorizedException;
 import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.model.UserPrinciples;
-import com.mursalin.ecom.repository.UserRepository;
 import com.mursalin.ecom.service.AuthService;
 import com.mursalin.ecom.service.RefreshTokenService;
 
@@ -34,32 +33,19 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
  
     private final AuthService authService;
-    private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+
+    public AuthController(AuthService authService, RefreshTokenService refreshTokenService) {
+        this.authService = authService;
+        this.refreshTokenService = refreshTokenService;
+    }
  
     // ─── COOKIE CONFIGURATION ──────────────────────────────────────────────────
     // Cookie name used for the HttpOnly refresh token cookie.
     // Must match everywhere: login, register, refresh, logout, deleteAccount.
     private static final String REFRESH_COOKIE_NAME = "refreshToken";
- 
-    // FIX: path changed from "/api/auth/refresh" to "/".
-    //
-    // WHY: the original path "/api/auth/refresh" meant the browser only sent the
-    // cookie to that one endpoint. The logout and deleteAccount endpoints at
-    // "/api/auth/logout" and "/api/auth/me" never received the cookie, so their
-    // Set-Cookie: refreshToken="" clearing headers were setting a DIFFERENT
-    // cookie (different path = different cookie in browser storage). The original
-    // cookie was never deleted on logout. Changing to "/" fixes this:
-    // the browser sends the cookie to every /api/** endpoint and the logout
-    // clearing header deletes the correct cookie.
     private static final String COOKIE_PATH = "/";
- 
-    public AuthController(AuthService authService, UserRepository userRepository, RefreshTokenService refreshTokenService) {
-        this.authService = authService;
-        this.userRepository = userRepository;
-        this.refreshTokenService = refreshTokenService;
-    }
- 
+
     // ─── REGISTER ──────────────────────────────────────────────────────────────
     // FIX: added HttpServletResponse parameter and cookie-setting block.
     // Previously: returned the refresh token in the JSON body only. No cookie was set.
@@ -91,7 +77,7 @@ public class AuthController {
     // Unchanged.
     @GetMapping("/check-username")
     public ResponseEntity<ApiResponse<Boolean>> checkUsername(@RequestParam String username) {
-        boolean available = !userRepository.existsByUsername(username);
+        boolean available = authService.isUsernameAvailable(username);
         return ResponseEntity.ok(ApiResponse.ok(available));
     }
  
@@ -99,7 +85,7 @@ public class AuthController {
     // Unchanged.
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam String email) {
-        boolean available = !userRepository.existsByEmail(email);
+        boolean available = authService.isEmailAvailable(email);
         return ResponseEntity.ok(ApiResponse.ok(available));
     }
  

@@ -17,10 +17,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -82,7 +80,6 @@ public class AdminStatsController {
         }
         LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
         LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
-        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, pageSize);
         Page<AdminOrderSummaryDTO> result = adminStatsService.getAdminOrders(search, statusEnum, startDateTime, endDateTime, paymentMethod, page, pageSize);
         return ResponseEntity.ok(result);
     }

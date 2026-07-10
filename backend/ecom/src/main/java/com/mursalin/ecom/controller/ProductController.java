@@ -3,22 +3,12 @@ package com.mursalin.ecom.controller;
 import com.mursalin.ecom.dto.AdminProductListResponse;
 import com.mursalin.ecom.dto.AdminProductRequest;
 import com.mursalin.ecom.dto.ApiResponse;
-import com.mursalin.ecom.dto.BrandResponse;
-import com.mursalin.ecom.dto.CategoryRequest;
-import com.mursalin.ecom.dto.CategoryResponse;
 import com.mursalin.ecom.dto.PaginatedResponse;
-import com.mursalin.ecom.dto.ProductImageResponse;
 import com.mursalin.ecom.dto.ProductResponse;
-import com.mursalin.ecom.dto.ProductSpecResponse;
-import com.mursalin.ecom.dto.WishlistItemResponse;
-import com.mursalin.ecom.dto.WishlistResponse;
 import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.mursalin.ecom.model.Product;
-import com.mursalin.ecom.model.Review;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.service.ProductService;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -39,14 +28,6 @@ public class ProductController {
     public ProductController(ProductService service) {
         this.service = service;
     }
-
-    @RequestMapping("/")
-    public String greet() {
-        return "assalamualaikum";
-    }
-
-    @Autowired
-    private com.mursalin.ecom.repository.WishlistRepository wishlistRepository;
 
     @GetMapping("/products")
     public ResponseEntity<PaginatedResponse<ProductResponse>> getProducts(
@@ -78,8 +59,7 @@ public class ProductController {
             throw new ResourceNotFoundException("Product not found with id: " + prodId);
         }
         Long userId = userPrinciple != null ? userPrinciple.getUserId() : null;
-        boolean isWishlisted = userId != null && wishlistRepository.existsByUserIdAndProductId(userId, prodId);
-        return ResponseEntity.ok(ApiResponse.ok(service.toProductResponse(product, isWishlisted)));
+        return ResponseEntity.ok(ApiResponse.ok(service.toProductResponse(product, userId)));
     }
 
     @GetMapping("/product/{productId}/related")
@@ -123,13 +103,13 @@ public class ProductController {
 
     @DeleteMapping("/product/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Long id) {
         Product product = service.getProductEntityById(id);
         if (product != null) {
             service.deleteProduct(id);
-            return new ResponseEntity<>("deleted", HttpStatus.OK);
+            return new ResponseEntity<>(ApiResponse.success("deleted", "deleted"), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("delete failed", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ApiResponse.success("delete failed", "delete failed"), HttpStatus.BAD_REQUEST);
         }
     }
 
