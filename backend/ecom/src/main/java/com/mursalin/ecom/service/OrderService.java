@@ -5,7 +5,6 @@ import com.mursalin.ecom.model.*;
 import com.mursalin.ecom.repository.*;
 import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.stripe.Stripe;
-import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -340,23 +339,41 @@ public class OrderService {
         return order;
     }
 
-    public List<Order> getAllOrders() { return orderRepository.findAll(); }
-    public List<Order> getOrdersByUserId(Long userId) { return orderRepository.findByUserId(userId); }
-
-    public Page<Order> getOrdersByUserId(Long userId, Pageable pageable) {
-        return orderRepository.findByUserId(userId, pageable);
+    public PaginatedResponse<OrderSummaryDTO> getOrdersByUserId(Long userId, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findByUserId(userId, pageable);
+        List<OrderSummaryDTO> content = orderPage.getContent().stream()
+                .map(this::toOrderSummaryDTO)
+                .toList();
+        return new PaginatedResponse<>(content, pageable.getPageNumber(), orderPage.getTotalPages(),
+                orderPage.getTotalElements(), pageable.getPageSize(), !orderPage.hasPrevious(), !orderPage.hasNext());
     }
 
-    public Page<Order> getAllOrders(Pageable pageable) {
-        return orderRepository.findAll(pageable);
+    public PaginatedResponse<OrderSummaryDTO> getAllOrders(Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+        List<OrderSummaryDTO> content = orderPage.getContent().stream()
+                .map(this::toOrderSummaryDTO)
+                .toList();
+        return new PaginatedResponse<>(content, pageable.getPageNumber(), orderPage.getTotalPages(),
+                orderPage.getTotalElements(), pageable.getPageSize(), !orderPage.hasPrevious(), !orderPage.hasNext());
     }
 
-    public Page<Order> getOrdersByUserIdAndStatus(Long userId, Order.OrderStatus status, Pageable pageable) {
-        return orderRepository.findByUserIdAndStatus(userId, status, pageable);
+    public PaginatedResponse<OrderSummaryDTO> getOrdersByUserIdAndStatus(Long userId, Order.OrderStatus status, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findByUserIdAndStatus(userId, status, pageable);
+                List<OrderSummaryDTO> content = orderPage.getContent().stream()
+                .map(this::toOrderSummaryDTO)
+                .toList();
+        return new PaginatedResponse<>(content, pageable.getPageNumber(), orderPage.getTotalPages(),
+                orderPage.getTotalElements(), pageable.getPageSize(), !orderPage.hasPrevious(), !orderPage.hasNext());
     }
 
-    public Page<Order> getAllOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
-        return orderRepository.findByStatus(status, pageable);
+    public PaginatedResponse<OrderSummaryDTO> getAllOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
+        Page<Order> orderPage = orderRepository.findByStatus(status, pageable);
+        List<OrderSummaryDTO> content = orderPage.getContent().stream()
+                .map(this::toOrderSummaryDTO)
+                .toList();
+        return new PaginatedResponse<>(content, pageable.getPageNumber(), orderPage.getTotalPages(),
+                orderPage.getTotalElements(), pageable.getPageSize(), !orderPage.hasPrevious(), !orderPage.hasNext());
+
     }
 
     @Transactional
@@ -394,7 +411,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Order updateOrderStatus(Long orderId, Order.OrderStatus status) {
+    public OrderStatusUpdateResponse updateOrderStatus(Long orderId, Order.OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
         String oldStatus = order.getStatus().name();
@@ -410,7 +427,7 @@ public class OrderService {
         logger.info("Admin status update: orderId={}, {} -> {}", orderId, oldStatus, status);
         webSocketService.notifyOrderUpdate(saved);
         webSocketService.notifyOrderStatusChange(orderId, oldStatus, status.name());
-        return saved;
+        return OrderStatusUpdateResponse.fromEntity(saved);
     }
 
     @Transactional
@@ -462,7 +479,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Order updateOrderTracking(Long orderId, String trackingNumber, String trackingUrl, String shippingCarrier) {
+    public com.mursalin.ecom.dto.OrderStatusUpdateResponse updateOrderTracking(Long orderId, String trackingNumber, String trackingUrl, String shippingCarrier) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
         order.setTrackingNumber(trackingNumber);
@@ -471,7 +488,7 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         logger.info("Tracking updated orderId={} trackingNumber={}", orderId, trackingNumber);
         webSocketService.notifyOrderUpdate(saved);
-        return saved;
+        return com.mursalin.ecom.dto.OrderStatusUpdateResponse.fromEntity(saved);
     }
 
     // -------------------------------------------------------------------------
@@ -594,5 +611,19 @@ public class OrderService {
                 itemCount, est.toString(), dtos
         );
         return new InitiateOrderResponse(order.getId(), order.getStripePaymentIntentId(), summary);
+    }
+
+    public OrderSummaryDTO toOrderSummaryDTO(Order order) {
+        List<OrderSummaryItemDTO> items = order.getOrderItems().stream()
+                .map(OrderSummaryItemDTO::fromOrderItem)
+                .toList();
+        return new OrderSummaryDTO(
+                order.getId(),
+                order.getCreatedAt(),
+                items.size(),
+                order.getTotalAmount(),
+                order.getStatus().name(),
+                items
+        );
     }
 }
