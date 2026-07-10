@@ -2,12 +2,14 @@ package com.mursalin.ecom.service;
 
 import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.mursalin.ecom.dto.AddressRequest;
+import com.mursalin.ecom.dto.AddressResponse;
 import com.mursalin.ecom.model.Address;
 import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.repository.AddressRepository;
 import com.mursalin.ecom.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,11 +26,13 @@ public class AddressService {
         this.userRepository = userRepository;
     }
 
-    public List<Address> getMyAddresses(Long userId) {
-        return addressRepository.findByUserId(userId);
+    public List<AddressResponse> getMyAddresses(Long userId) {
+        return addressRepository.findByUserId(userId).stream()
+                .map(AddressResponse::fromEntity)
+                .toList();
     }
 
-    public Address createAddress(Long userId, AddressRequest request) {
+    public AddressResponse createAddress(Long userId, AddressRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -53,10 +57,10 @@ public class AddressService {
 
         address.setCreatedAt(LocalDateTime.now());
         address.setUpdatedAt(LocalDateTime.now());
-        return addressRepository.save(address);
+        return AddressResponse.fromEntity(addressRepository.save(address));
     }
 
-    public Address updateAddress(Long userId, Long addressId, AddressRequest updated) {
+    public AddressResponse updateAddress(Long userId, Long addressId, AddressRequest updated) {
         Address existing = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
@@ -80,7 +84,7 @@ public class AddressService {
         }
 
         existing.setUpdatedAt(LocalDateTime.now());
-        return addressRepository.save(existing);
+        return AddressResponse.fromEntity(addressRepository.save(existing));
     }
 
     public void deleteAddress(Long userId, Long addressId) {
@@ -94,7 +98,8 @@ public class AddressService {
         addressRepository.delete(address);
     }
 
-    public Address setDefaultAddress(Long userId, Long addressId) {
+    @Transactional
+    public AddressResponse setDefaultAddress(Long userId, Long addressId) {
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
@@ -106,7 +111,7 @@ public class AddressService {
 
         address.setDefault(true);
         address.setUpdatedAt(LocalDateTime.now());
-        return addressRepository.save(address);
+        return AddressResponse.fromEntity(addressRepository.save(address));
     }
 
     private void unsetOtherDefaults(Long userId) {

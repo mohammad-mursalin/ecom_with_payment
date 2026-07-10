@@ -241,6 +241,14 @@ if (!request.getPassword().equals(request.getConfirmPassword())) {
         userRepository.save(user);
     }
 
+    public boolean isUsernameAvailable(String username) {
+        return !userRepository.existsByUsername(username);
+    }
+
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
     public void deleteAccount(Long userId, String username) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found for deletion"));
