@@ -27,7 +27,7 @@ export const cancelOrder = async (orderId) => {
 
 export const updateOrderStatus = async (orderId, data) => {
   const response = await API.put(`/admin/orders/${orderId}/status`, data);
-  return response.data;
+  return response.data.data;
 };
 
 export const resendOrderEmail = async (orderId) => {

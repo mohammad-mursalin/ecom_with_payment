@@ -17,7 +17,7 @@ export const getOrders = async (params = {}) => {
 
 export const updateOrderStatus = async (orderId, data) => {
   const response = await API.put(`/admin/orders/${orderId}/status`, data);
-  return response.data;
+  return response.data.data;
 };
 
 export const updateUserRole = async (id, role) => {
