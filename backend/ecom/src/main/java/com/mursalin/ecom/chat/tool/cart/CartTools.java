@@ -2,14 +2,13 @@ package com.mursalin.ecom.chat.tool.cart;
 
 import com.mursalin.ecom.chat.tool.ToolErrorCode;
 import com.mursalin.ecom.chat.tool.ToolResult;
+import com.mursalin.ecom.chat.tool.ChatAuthResolver;
 import com.mursalin.ecom.dto.*;
 import com.mursalin.ecom.model.Product;
-import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.repository.CartItemRepository;
 import com.mursalin.ecom.repository.ProductRepo;
 import com.mursalin.ecom.service.CartService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,16 +25,8 @@ public class CartTools {
     private final CartItemRepository cartItemRepository;
     private final ProductRepo productRepository;
 
-    private Long resolveUserId() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof UserPrinciples)) {
-            return null;
-        }
-        return ((UserPrinciples) auth.getPrincipal()).getUserId();
-    }
-
     public ToolResult<CartToolResponse> getCart() {
-        Long userId = resolveUserId();
+        Long userId = ChatAuthResolver.resolveUserId();
         if (userId == null) {
             return ToolResult.failure(ToolErrorCode.AUTH_REQUIRED);
         }
@@ -48,7 +39,7 @@ public class CartTools {
     }
 
     public ToolResult<CartToolResponse> addToCart(Long productId, Integer quantity) {
-        Long userId = resolveUserId();
+        Long userId = ChatAuthResolver.resolveUserId();
         if (userId == null) {
             return ToolResult.failure(ToolErrorCode.AUTH_REQUIRED);
         }
@@ -95,7 +86,7 @@ public class CartTools {
     }
 
     public ToolResult<CartToolResponse> updateCartItem(Long productId, Integer quantity) {
-        Long userId = resolveUserId();
+        Long userId = ChatAuthResolver.resolveUserId();
         if (userId == null) {
             return ToolResult.failure(ToolErrorCode.AUTH_REQUIRED);
         }

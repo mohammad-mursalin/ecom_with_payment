@@ -2,15 +2,14 @@ package com.mursalin.ecom.chat.tool.cart;
 
 import com.mursalin.ecom.chat.tool.ToolErrorCode;
 import com.mursalin.ecom.chat.tool.ToolResult;
+import com.mursalin.ecom.chat.tool.ChatAuthResolver;
 import com.mursalin.ecom.dto.ProductResponse;
 import com.mursalin.ecom.dto.WishlistResponse;
-import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.model.Wishlist;
 import com.mursalin.ecom.repository.ProductRepo;
 import com.mursalin.ecom.repository.WishlistRepository;
 import com.mursalin.ecom.service.WishlistService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,16 +25,8 @@ public class WishlistTools {
     private final WishlistRepository wishlistRepository;
     private final ProductRepo productRepository;
 
-    private Long resolveUserId() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof UserPrinciples)) {
-            return null;
-        }
-        return ((UserPrinciples) auth.getPrincipal()).getUserId();
-    }
-
     public ToolResult<WishlistToolResponse> getWishlist() {
-        Long userId = resolveUserId();
+        Long userId = ChatAuthResolver.resolveUserId();
         if (userId == null) {
             return ToolResult.failure(ToolErrorCode.AUTH_REQUIRED);
         }
@@ -48,7 +39,7 @@ public class WishlistTools {
     }
 
     public ToolResult<ToggleWishlistResponse> toggleWishlist(Long productId) {
-        Long userId = resolveUserId();
+        Long userId = ChatAuthResolver.resolveUserId();
         if (userId == null) {
             return ToolResult.failure(ToolErrorCode.AUTH_REQUIRED);
         }
