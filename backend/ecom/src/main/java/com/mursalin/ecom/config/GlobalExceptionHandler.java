@@ -3,6 +3,7 @@ package com.mursalin.ecom.config;
 import com.mursalin.ecom.dto.ApiResponse;
 import com.mursalin.ecom.dto.ErrorResponse;
 import com.mursalin.ecom.exception.BadRequestException;
+import com.mursalin.ecom.exception.LlmServiceException;
 import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.mursalin.ecom.exception.UnauthorizedException;
 import com.mursalin.ecom.exception.UserAlreadyExistsException;
@@ -130,6 +131,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex) {
         ErrorResponse body = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(LlmServiceException.class)
+    public ResponseEntity<ErrorResponse> handleLlmService(LlmServiceException ex) {
+        ErrorResponse body = new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), "Service Unavailable", ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler(Exception.class)

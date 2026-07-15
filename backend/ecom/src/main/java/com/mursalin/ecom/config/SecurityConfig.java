@@ -58,6 +58,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/shipping/estimate").permitAll()
                 // Public endpoints for coupons and reviews
                 .requestMatchers(HttpMethod.POST, "/api/coupons/validate").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/chat/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                 // Stripe webhook must be publicly accessible (signature verified separately)
                 .requestMatchers(HttpMethod.POST, "/api/payment/webhook").permitAll()
