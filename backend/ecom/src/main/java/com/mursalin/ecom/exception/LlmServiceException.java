@@ -1,0 +1,18 @@
+package com.mursalin.ecom.exception;
+
+import org.springframework.http.HttpStatus;
+
+public class LlmServiceException extends RuntimeException {
+
+    public LlmServiceException(String message) {
+        super(message);
+    }
+
+    public LlmServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public HttpStatus getStatus() {
+        return HttpStatus.SERVICE_UNAVAILABLE;
+    }
+}
