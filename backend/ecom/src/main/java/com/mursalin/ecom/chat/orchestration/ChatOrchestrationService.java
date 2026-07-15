@@ -428,7 +428,7 @@ public class ChatOrchestrationService {
         } catch (LlmServiceException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new LlmServiceException("LLM request failed", ex);
+            throw new LlmServiceException("Sorry, I'm having trouble responding right now — please try again in a moment, or reach out to our support team if this keeps happening.", ex);
         }
     }
 
