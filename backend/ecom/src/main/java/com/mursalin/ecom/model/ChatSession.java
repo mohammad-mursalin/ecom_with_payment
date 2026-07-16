@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -21,6 +23,9 @@ public class ChatSession {
     @JoinColumn(name = "user_id", nullable = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @OneToMany(mappedBy = "session", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMessage> messages = new ArrayList<>();
 
     @Column(nullable = false, unique = true, length = 36)
     private String sessionToken;

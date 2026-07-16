@@ -14,8 +14,9 @@ public class KbArticle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true, length = 20)
-    private String topic;
+    private KbTopic topic;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
