@@ -1,11 +1,12 @@
 package com.mursalin.ecom.config;
 
+import com.mursalin.ecom.model.KbArticle;
+import com.mursalin.ecom.model.KbTopic;
+import com.mursalin.ecom.model.Brand;
+import com.mursalin.ecom.model.Category;
 import com.mursalin.ecom.repository.BrandRepository;
 import com.mursalin.ecom.repository.CategoryRepository;
 import com.mursalin.ecom.repository.KbArticleRepository;
-import com.mursalin.ecom.model.Brand;
-import com.mursalin.ecom.model.Category;
-import com.mursalin.ecom.model.KbArticle;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
@@ -75,7 +76,7 @@ public class DataSeeder {
         };
         for (String[] row : data) {
             KbArticle article = new KbArticle();
-            article.setTopic(row[0]);
+            article.setTopic(KbTopic.valueOf(row[0]));
             article.setContent(row[1]);
             kbArticleRepository.save(article);
         }
