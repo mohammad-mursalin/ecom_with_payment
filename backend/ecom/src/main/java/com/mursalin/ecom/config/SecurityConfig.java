@@ -67,6 +67,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/ws/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/ws/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
+                // Admin KB endpoints
+                .requestMatchers("/api/admin/kb/**").hasRole("ADMIN")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
