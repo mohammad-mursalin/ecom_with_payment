@@ -5,6 +5,7 @@ import com.mursalin.ecom.chat.tool.ToolResult;
 import com.mursalin.ecom.dto.CouponValidationResponse;
 import com.mursalin.ecom.dto.CouponValidationResult;
 import com.mursalin.ecom.model.KbArticle;
+import com.mursalin.ecom.model.KbTopic;
 import com.mursalin.ecom.repository.KbArticleRepository;
 import com.mursalin.ecom.service.CartService;
 import com.mursalin.ecom.service.ShippingService;
@@ -18,8 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SupportTools {
 
-    private static final List<String> VALID_TOPICS = List.of(
-            "RETURNS", "SHIPPING", "PAYMENT", "ACCOUNT", "STORE_INFO", "OTHER"
+    private static final List<KbTopic> VALID_TOPICS = List.of(
+            KbTopic.RETURNS, KbTopic.SHIPPING, KbTopic.PAYMENT, KbTopic.ACCOUNT, KbTopic.STORE_INFO, KbTopic.OTHER
     );
 
     private final CartService cartService;
@@ -70,18 +71,28 @@ public class SupportTools {
     }
 
     public ToolResult<PolicyInfoResult> getPolicyInfo(String topic) {
-        if (topic == null || topic.isBlank() || !VALID_TOPICS.contains(topic.toUpperCase())) {
+        if (topic == null || topic.isBlank()) {
             return ToolResult.failure(ToolErrorCode.VALIDATION_ERROR);
         }
-        String normalizedTopic = topic.toUpperCase();
+
+        KbTopic kbTopic;
+        try {
+            kbTopic = KbTopic.valueOf(topic.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ToolResult.failure(ToolErrorCode.VALIDATION_ERROR);
+        }
+
+        if (!VALID_TOPICS.contains(kbTopic)) {
+            return ToolResult.failure(ToolErrorCode.VALIDATION_ERROR);
+        }
 
         try {
-            KbArticle article = kbArticleRepository.findByTopic(normalizedTopic).orElse(null);
+            KbArticle article = kbArticleRepository.findByTopic(kbTopic).orElse(null);
             if (article == null || article.getContent() == null || article.getContent().isBlank()) {
                 return ToolResult.failure(ToolErrorCode.UNAVAILABLE,
-                        "No content configured for topic " + normalizedTopic);
+                        "No content configured for topic " + topic);
             }
-            return ToolResult.success(new PolicyInfoResult(normalizedTopic, article.getContent()));
+            return ToolResult.success(new PolicyInfoResult(topic, article.getContent()));
         } catch (Exception e) {
             return ToolResult.failure(ToolErrorCode.UNAVAILABLE);
         }
