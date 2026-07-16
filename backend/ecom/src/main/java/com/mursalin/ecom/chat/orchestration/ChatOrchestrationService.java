@@ -364,7 +364,7 @@ public class ChatOrchestrationService {
         List<String> orderedTopics = List.of("RETURNS", "SHIPPING", "PAYMENT", "ACCOUNT", "STORE_INFO", "OTHER");
         Map<String, KbArticle> byTopic = new HashMap<>();
         for (KbArticle a : articles) {
-            byTopic.put(a.getTopic(), a);
+            byTopic.put(a.getTopic().name(), a);
         }
 
         StringBuilder sb = new StringBuilder();

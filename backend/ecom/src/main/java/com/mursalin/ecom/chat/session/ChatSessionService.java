@@ -6,6 +6,7 @@ import com.mursalin.ecom.model.ChatSession;
 import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.repository.ChatMessageRepository;
 import com.mursalin.ecom.repository.ChatSessionRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +67,7 @@ public class ChatSessionService {
 
     @Transactional(readOnly = true)
     public List<ChatMessage> loadContext(Long sessionId) {
-        List<ChatMessage> recent = chatMessageRepository.findTop10BySessionIdOrderByCreatedAtDesc(sessionId);
+        List<ChatMessage> recent = chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, Pageable.unpaged());
         recent.sort((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
         return recent;
     }
