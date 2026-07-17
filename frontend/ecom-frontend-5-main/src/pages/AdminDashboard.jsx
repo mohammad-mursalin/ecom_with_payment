@@ -20,6 +20,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ExternalLink,
+  MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import {
   LineChart,
@@ -580,6 +582,40 @@ const AdminDashboard = () => {
                   </h3>
                   <p className="text-sm text-muted">
                     Create a new product listing
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/chat"
+                className="flex items-center gap-4 rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="rounded-xl bg-info/10 p-3">
+                  <MessageSquare className="h-6 w-6 text-info" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-primary">
+                    Chat Sessions
+                  </h3>
+                  <p className="text-sm text-muted">
+                    View and manage support chat sessions
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/kb"
+                className="flex items-center gap-4 rounded-2xl border border-default bg-surface-card p-6 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="rounded-xl bg-primary/10 p-3">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-primary">
+                    Knowledge Base
+                  </h3>
+                  <p className="text-sm text-muted">
+                    Manage assistant policy content
                   </p>
                 </div>
               </Link>
