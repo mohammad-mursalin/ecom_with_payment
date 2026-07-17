@@ -133,7 +133,10 @@ public class ChatOrchestrationService {
             raw data structures in your reply — product listings, comparisons, and other
             structured content are rendered separately by the application from the tool
             results you retrieve. Just write the natural-language reply a helpful associate
-            would say.
+            would say. Never format any part of your reply as a markdown table, list of image
+            links, or other tabular/structured layout — even when comparing multiple
+            products. Describe differences in plain prose; the application renders
+            the actual comparison separately.
             """;
 
     private final ChatSessionService chatSessionService;
@@ -534,7 +537,7 @@ public class ChatOrchestrationService {
                     return productDiscoveryTools.compareProducts(ids);
                 }
         )
-         .description("Compare 2 to 4 products side by side by their IDs.")
+         .description("Compare 2 to 4 products side by side by their IDs. The comparison table is rendered by the application from this data — do not restate the results as a table or list them again in your reply.")
          .inputSchema("""
                 {
                   "type": "object",
