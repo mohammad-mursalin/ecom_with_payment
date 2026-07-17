@@ -1,11 +1,12 @@
 // src/App.jsx
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider }      from './Context/AuthContext';
+import { ChatProvider }       from './Context/ChatContext';
 import { WebSocketProvider } from './Context/WebSocketContext';
 import { CartProvider }      from './Context/CartContext';
 import { WishlistProvider }  from './Context/WishlistContext';
-import { ToastProvider }     from './components/Toast';
+import { ToastProvider, useToast } from './components/Toast';
 import RequireAuth from './components/RequireAuth';
 import Layout      from './components/Layout'; // Eagerly imported — always visible
 
@@ -27,6 +28,9 @@ const AdminOrdersPage      = lazy(() => import('./pages/AdminOrdersPage'));
 const AdminProductsPage    = lazy(() => import('./pages/AdminProductsPage'));
 const AdminAddProductPage  = lazy(() => import('./pages/AdminAddProductPage'));
 const AdminEditProductPage = lazy(() => import('./pages/AdminEditProductPage'));
+const AdminChatSessionsPage = lazy(() => import('./pages/AdminChatSessionsPage'));
+const AdminChatSessionDetailPage = lazy(() => import('./pages/AdminChatSessionDetailPage'));
+const AdminKbPage = lazy(() => import('./pages/AdminKbPage'));
 const PaymentSuccessPage   = lazy(() => import('./pages/PaymentSuccessPage'));
 const PaymentCancelPage    = lazy(() => import('./pages/PaymentCancelPage'));
 const UnauthorizedPage     = lazy(() => import('./pages/UnauthorizedPage'));
@@ -44,57 +48,75 @@ const PageSpinner = () => (
   </div>
 );
 
+function ChatConnectivityListener() {
+  const { toast } = useToast();
+  useEffect(() => {
+    const handler = (e) => {
+      toast.error(e.detail?.message || "Unable to connect. Please check your network and try again.");
+    };
+    window.addEventListener("chat:connectivity-error", handler);
+    return () => window.removeEventListener("chat:connectivity-error", handler);
+  }, [toast]);
+  return null;
+}
+
 function App() {
   return (
     // Provider nesting order is load-bearing. Do not change it.
     // AuthProvider must be outermost so all other providers can read auth state.
     <AuthProvider>
-      <WebSocketProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <ToastProvider>
-              <Suspense fallback={<PageSpinner />}>
-                <Routes>
-                  <Route element={<Layout />}>
+      <ChatProvider>
+        <WebSocketProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <ToastProvider>
+                <ChatConnectivityListener />
+                <Suspense fallback={<PageSpinner />}>
+                  <Routes>
+                    <Route element={<Layout />}>
 
-                    {/* ── Public routes ── */}
-                    <Route path="/"                  element={<HomePage />} />
-                    <Route path="/products"          element={<ProductsPage />} />
-                    <Route path="/products/:id"      element={<ProductDetailPage />} />
-                    <Route path="/payment/success"   element={<PaymentSuccessPage />} />
-                    <Route path="/payment/cancel"    element={<PaymentCancelPage />} />
-                    <Route path="/unauthorized"      element={<UnauthorizedPage />} />
+                      {/* ── Public routes ── */}
+                      <Route path="/"                  element={<HomePage />} />
+                      <Route path="/products"          element={<ProductsPage />} />
+                      <Route path="/products/:id"      element={<ProductDetailPage />} />
+                      <Route path="/payment/success"   element={<PaymentSuccessPage />} />
+                      <Route path="/payment/cancel"    element={<PaymentCancelPage />} />
+                      <Route path="/unauthorized"      element={<UnauthorizedPage />} />
 
-                    {/* ── Guest-only routes (redirect away if already authenticated) ── */}
-                    <Route path="/login"    element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
+                      {/* ── Guest-only routes (redirect away if already authenticated) ── */}
+                      <Route path="/login"    element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
 
-                    {/* ── Authenticated user routes ── */}
-                    <Route path="/cart"        element={<RequireAuth><CartPage /></RequireAuth>} />
-                    <Route path="/checkout"    element={<RequireAuth><CheckoutPage /></RequireAuth>} />
-                    <Route path="/orders"      element={<RequireAuth><OrderHistoryPage /></RequireAuth>} />
-                    <Route path="/orders/:id"  element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
-                    <Route path="/wishlist"    element={<RequireAuth><WishlistPage /></RequireAuth>} />
-                    <Route path="/profile"     element={<RequireAuth><ProfilePage /></RequireAuth>} />
+                      {/* ── Authenticated user routes ── */}
+                      <Route path="/cart"        element={<RequireAuth><CartPage /></RequireAuth>} />
+                      <Route path="/checkout"    element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+                      <Route path="/orders"      element={<RequireAuth><OrderHistoryPage /></RequireAuth>} />
+                      <Route path="/orders/:id"  element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
+                      <Route path="/wishlist"    element={<RequireAuth><WishlistPage /></RequireAuth>} />
+                      <Route path="/profile"     element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
-                    {/* ── Admin-only routes ── */}
-                    <Route path="/admin"                    element={<RequireAuth requireAdmin><AdminDashboard /></RequireAuth>} />
-                    <Route path="/admin/users"              element={<RequireAuth requireAdmin><AdminUsersPage /></RequireAuth>} />
-                    <Route path="/admin/orders"             element={<RequireAuth requireAdmin><AdminOrdersPage /></RequireAuth>} />
-                    <Route path="/admin/products"           element={<RequireAuth requireAdmin><AdminProductsPage /></RequireAuth>} />
-                    <Route path="/admin/products/new"       element={<RequireAuth requireAdmin><AdminAddProductPage /></RequireAuth>} />
-                    <Route path="/admin/products/:id/edit"  element={<RequireAuth requireAdmin><AdminEditProductPage /></RequireAuth>} />
+                      {/* ── Admin-only routes ── */}
+                      <Route path="/admin"                    element={<RequireAuth requireAdmin><AdminDashboard /></RequireAuth>} />
+                      <Route path="/admin/users"              element={<RequireAuth requireAdmin><AdminUsersPage /></RequireAuth>} />
+                      <Route path="/admin/orders"             element={<RequireAuth requireAdmin><AdminOrdersPage /></RequireAuth>} />
+                      <Route path="/admin/products"           element={<RequireAuth requireAdmin><AdminProductsPage /></RequireAuth>} />
+                      <Route path="/admin/products/new"       element={<RequireAuth requireAdmin><AdminAddProductPage /></RequireAuth>} />
+                      <Route path="/admin/products/:id/edit"  element={<RequireAuth requireAdmin><AdminEditProductPage /></RequireAuth>} />
+                      <Route path="/admin/chat"                element={<RequireAuth requireAdmin><AdminChatSessionsPage /></RequireAuth>} />
+                      <Route path="/admin/chat/:id"            element={<RequireAuth requireAdmin><AdminChatSessionDetailPage /></RequireAuth>} />
+                      <Route path="/admin/kb"                  element={<RequireAuth requireAdmin><AdminKbPage /></RequireAuth>} />
 
-                    {/* ── Catch-all ── */}
-                    <Route path="*" element={<NotFoundPage />} />
+                      {/* ── Catch-all ── */}
+                      <Route path="*" element={<NotFoundPage />} />
 
-                  </Route>
-                </Routes>
-              </Suspense>
-            </ToastProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </WebSocketProvider>
+                    </Route>
+                  </Routes>
+                </Suspense>
+              </ToastProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </WebSocketProvider>
+      </ChatProvider>
     </AuthProvider>
   );
 }
