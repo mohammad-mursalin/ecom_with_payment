@@ -11,6 +11,7 @@ export default {
         surface: 'rgb(var(--color-surface) / <alpha-value>)',
         'surface-card': 'rgb(var(--color-surface-card) / <alpha-value>)',
         'surface-elevated': 'rgb(var(--color-surface-elevated) / <alpha-value>)',
+        muted: 'rgb(var(--text-muted) / <alpha-value>)',
         success: 'rgb(var(--color-success) / <alpha-value>)',
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
