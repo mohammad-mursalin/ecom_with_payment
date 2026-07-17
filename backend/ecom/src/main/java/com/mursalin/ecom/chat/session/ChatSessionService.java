@@ -67,7 +67,7 @@ public class ChatSessionService {
 
     @Transactional(readOnly = true)
     public List<ChatMessage> loadContext(Long sessionId) {
-        List<ChatMessage> recent = chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, Pageable.unpaged());
+        List<ChatMessage> recent = chatMessageRepository.findBySessionIdOrderByCreatedAtDesc(sessionId, Pageable.ofSize(CONTEXT_WINDOW_SIZE));
         recent.sort((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
         return recent;
     }
