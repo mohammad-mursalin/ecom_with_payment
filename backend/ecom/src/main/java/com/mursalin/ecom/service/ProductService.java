@@ -305,7 +305,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         Product savedProduct = repo.save(product);
 
         if (imageFile != null && !imageFile.isEmpty()) {
-            com.mursalin.ecom.dto.ImageResponse image = imageService.uploadImage(imageFile);
+            ImageResponse image = imageService.uploadImage(imageFile);
             savedProduct.setImageUrl(image.getImageUrl());
             savedProduct.setDeleteHash(image.getDeleteHash());
             repo.save(savedProduct);
