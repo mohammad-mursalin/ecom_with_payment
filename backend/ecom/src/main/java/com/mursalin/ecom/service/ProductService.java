@@ -4,6 +4,8 @@ import com.mursalin.ecom.dto.*;
 import com.mursalin.ecom.model.*;
 import com.mursalin.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +43,7 @@ public class ProductService {
         return new PaginatedResponse<>(responseContent, page, productPage.getTotalPages(), productPage.getTotalElements(), size, !productPage.hasPrevious(), !productPage.hasNext());
     }
 
+    @Cacheable(value = "homeProducts")
     public PaginatedResponse<ProductResponse> getFilteredProducts(int page, int size, String search, List<String> categorySlugs, List<String> brandSlugs, BigDecimal minPrice, BigDecimal maxPrice, Integer minRating, String sort, Long userId) {
         Pageable pageable = createPageable(page, size, sort);
         String keyword = normalize(search);
@@ -182,6 +185,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
                 .toList();
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public Product addProduct(Product product, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
             com.mursalin.ecom.dto.ImageResponse image = imageService.uploadImage(imageFile);
@@ -191,6 +195,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         return repo.save(product);
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public Product updateProduct(Long id, Product product, MultipartFile imageFile) throws IOException {
         Product productDB = repo.findById(id).orElseThrow(() -> new RuntimeException("No product found with the id"));
         productDB.setProductAvailable(product.isProductAvailable());
@@ -210,6 +215,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         return repo.save(productDB);
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public void deleteProduct(Long id) {
         Product product = repo.findById(id).orElseThrow(() -> new RuntimeException("No product found with the id"));
         imageService.deleteImage(product.getDeleteHash());
@@ -270,6 +276,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         );
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public ProductResponse createAdminProduct(AdminProductRequest request, MultipartFile imageFile) throws Exception {
         Product product = new Product();
         product.setName(request.getName());
@@ -337,6 +344,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         return toProductResponse(savedProduct, null);
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public ProductResponse updateAdminProduct(Long id, AdminProductRequest request, MultipartFile imageFile) throws Exception {
         Product productDB = repo.findById(id).orElseThrow(() -> new RuntimeException("No product found with the id"));
 
@@ -409,6 +417,7 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         return toProductResponse(savedProduct, null);
     }
 
+    @CacheEvict(value = "homeProducts", allEntries = true)
     public ProductResponse toggleProductStatus(Long id, boolean isActive) {
         Product product = repo.findById(id).orElseThrow(() -> new RuntimeException("No product found with the id"));
         product.setActive(isActive);
