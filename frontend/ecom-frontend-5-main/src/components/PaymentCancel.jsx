@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./Toast";
-import { AlertTriangle, XCircle } from "lucide-react";
+import { XCircle } from "lucide-react";
 
 const PaymentCancel = () => {
   const navigate = useNavigate();
