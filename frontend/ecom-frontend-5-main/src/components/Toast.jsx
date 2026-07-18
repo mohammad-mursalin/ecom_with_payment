@@ -49,20 +49,6 @@ export const ToastProvider = ({ children }) => {
     warning: (msg) => showToast(msg, "warning"),
   };
 
-  const bgMap = {
-    success: "bg-success",
-    error: "bg-danger",
-    info: "bg-info",
-    warning: "bg-warning",
-  };
-
-  const textMap = {
-    success: "text-success",
-    error: "text-danger",
-    info: "text-info",
-    warning: "text-warning",
-  };
-
   const bgClassMap = {
     success: "bg-success/10",
     error: "bg-danger/10",
@@ -71,9 +57,6 @@ export const ToastProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const container = containerRef.current;
     let timeoutId = null;
 
     const autoHideToast = (id, delay) => {
