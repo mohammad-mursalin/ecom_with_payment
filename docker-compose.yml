@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecom-postgres
+    environment:
+      POSTGRES_DB: project_showcasing
+      POSTGRES_USER: mursalin
+      POSTGRES_PASSWORD: '@mursalin'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mursalin -d project_showcasing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecom-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend/ecom
+      dockerfile: Dockerfile
+    container_name: ecom-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/project_showcasing
+      SPRING_DATASOURCE_USERNAME: mursalin
+      SPRING_DATASOURCE_PASSWORD: '@mursalin'
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 2000ms
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/ecom-frontend-5-main/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost/api
+        VITE_WS_BASE_URL: ws://localhost/api/ws
+        VITE_STRIPE_PUBLISHABLE_KEY: pk_test_51TMlakA0mPH9eDymwRPdwJGTQ48PxIEzw1rqFoO7c6MEkyOcXYRLD0jIOvjeRnm4H4p4rOwA3uotaEGYCBWYIhue00sq8Erapp
+    container_name: ecom-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      backend:
+        condition: service_started
+        required: true
+
+volumes:
+  postgres_data:
+  redis_data:
