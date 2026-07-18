@@ -56,8 +56,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/ecom-frontend-5-main/Dockerfile
+      context: ./frontend/ecom-frontend-5-main
+      dockerfile: Dockerfile
       target: dev
       args:
         VITE_API_BASE_URL: http://localhost:8080/api
