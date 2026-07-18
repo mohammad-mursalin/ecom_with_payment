@@ -25,12 +25,13 @@ useEffect(() => {
 
         setUser(minimalUser);
 
-        try {
-          const profileResponse = await API.get('/auth/profile');
-          setUser(profileResponse.data.data);
-        } catch {
-          // Keep the minimal user object — profile fetch is best-effort
-        }
+    try {
+      const profileResponse = await API.get('/auth/profile');
+      setUser(profileResponse.data.data);
+    } catch (error) {
+      console.warn('Failed to fetch user profile:', error);
+      // Keep the minimal user object — profile fetch is best-effort
+    }
 
       } catch {
         setUser(null);
@@ -77,7 +78,8 @@ useEffect(() => {
     try {
       const profileResponse = await authService.getProfile();
       setUser(profileResponse.data);
-    } catch {
+    } catch (error) {
+      console.warn('Failed to fetch user profile:', error);
       // Non-fatal
     }
   }, []);
@@ -93,9 +95,24 @@ useEffect(() => {
     } catch {
       // Silent — even if the network call fails, we still clear locally
     } finally {
-      clearTokens();   // Clear in-memory access token
+      clearTokens();
+      try {
+        sessionStorage.removeItem("chat_session_token");
+      } catch (error) {
+        console.warn('Failed to clear chat session token:', error);
+      }
+      try {
+        sessionStorage.removeItem("chat_messages");
+      } catch (error) {
+        console.warn('Failed to clear chat messages:', error);
+      }
+      try {
+        sessionStorage.removeItem("chat_is_open");
+      } catch (error) {
+        console.warn('Failed to clear chat is open:', error);
+      }
       setUser(null);
-      window.location.href = '/'; // Hard redirect — clears all React state
+      window.location.href = "/";
     }
   }, []);
 
