@@ -44,7 +44,9 @@ public class StripeService {
     public CheckoutSessionResponse createCheckoutSession(
             List<OrderItemDTO> items,
             Long orderId,
-            String customerEmail
+            String customerEmail,
+            BigDecimal shippingCost,
+            String shippingMethod
     ) throws StripeException {
 
         List<SessionCreateParams.LineItem> lineItems = new ArrayList<>();
@@ -88,6 +90,8 @@ public class StripeService {
         response.setSessionId(session.getId());
         response.setCheckoutUrl(session.getUrl());
         response.setOrderId(orderId);
+        response.setShippingCost(shippingCost);
+        response.setShippingMethod(shippingMethod);
 
         return response;
     }
@@ -119,8 +123,14 @@ public class StripeService {
         return PaymentIntent.retrieve(paymentIntentId);
     }
 
-    public Session retrieveSession(String sessionId) throws StripeException {
-        return Session.retrieve(sessionId);
+    public CheckoutSessionResponse getSessionStatus(String sessionId) throws StripeException {
+        Session session = Session.retrieve(sessionId);
+
+        CheckoutSessionResponse response = new CheckoutSessionResponse();
+        response.setSessionId(session.getId());
+        response.setCheckoutUrl(session.getUrl());
+
+        return response;
     }
 
     public String getPublishableKey() {
