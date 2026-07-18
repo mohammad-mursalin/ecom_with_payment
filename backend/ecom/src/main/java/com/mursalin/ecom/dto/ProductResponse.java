@@ -2,12 +2,14 @@ package com.mursalin.ecom.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductResponse {
     private Long id;
     private String name;
@@ -30,6 +32,7 @@ public class ProductResponse {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class BrandInfo {
         private Long id;
         private String name;
@@ -37,6 +40,7 @@ public class ProductResponse {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class CategoryInfo {
         private Long id;
         private String name;
