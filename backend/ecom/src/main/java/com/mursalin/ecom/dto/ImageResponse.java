@@ -2,11 +2,11 @@ package com.mursalin.ecom.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class ImageResponse {
 
     private Data data;
@@ -23,6 +23,8 @@ public class ImageResponse {
     }
 
     // Static inner class
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Data {
 
         private String deletehash;

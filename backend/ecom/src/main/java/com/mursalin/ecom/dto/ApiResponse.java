@@ -2,15 +2,19 @@ package com.mursalin.ecom.dto;
 
 import java.time.Instant;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ApiResponse<T> {
 
     private boolean success;
     private T data;
     private String message;
     private Instant timestamp;
-
-    protected ApiResponse() {
-    }
 
     public ApiResponse(boolean success, T data, String message) {
         this.success = success;
@@ -50,17 +54,5 @@ public class ApiResponse<T> {
 
     public boolean isSuccess() {
         return success;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
     }
 }

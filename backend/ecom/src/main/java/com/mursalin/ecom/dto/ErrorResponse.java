@@ -3,11 +3,11 @@ package com.mursalin.ecom.dto;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class ErrorResponse {
 
     private int status;
