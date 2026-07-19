@@ -17,7 +17,6 @@ public class AdminProductRequest {
     private String brandName;
     private List<String> tags;
     private List<SpecItem> specs;
-    private String imageUrl;
 
     private boolean isActive = true;
     private boolean isFeatured = false;
