@@ -36,9 +36,22 @@
   --color-info: 56 189 248;
 }
 
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   background-color: rgb(var(--color-bg));
   color: rgb(var(--text-primary));
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
