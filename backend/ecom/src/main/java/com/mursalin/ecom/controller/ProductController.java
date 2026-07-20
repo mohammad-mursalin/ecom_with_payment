@@ -49,6 +49,14 @@ public class ProductController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping("/products/featured")
+    public ResponseEntity<List<ProductResponse>> getFeaturedProducts(
+            @RequestParam(defaultValue = "8") int size
+    ) {
+        List<ProductResponse> featured = service.getFeaturedProducts(size);
+        return new ResponseEntity<>(featured, HttpStatus.OK);
+    }
+
     @GetMapping("/product/{prodId}")
     public ResponseEntity<ApiResponse<ProductResponse>> getProduct(
             @AuthenticationPrincipal UserPrinciples userPrinciple,
@@ -74,7 +82,7 @@ public class ProductController {
         return new ResponseEntity<>(alsoBought, HttpStatus.OK);
     }
 
-    @PostMapping("/product")
+    @PostMapping("/products")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProductResponse>> addProduct(
             @RequestPart AdminProductRequest request,

@@ -10,13 +10,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,62 +46,46 @@ public class ProductService {
         return new PaginatedResponse<>(responseContent, page, productPage.getTotalPages(), productPage.getTotalElements(), size, !productPage.hasPrevious(), !productPage.hasNext());
     }
 
-    @Cacheable(value = "homeProducts")
     public PaginatedResponse<ProductResponse> getFilteredProducts(int page, int size, String search, List<String> categorySlugs, List<String> brandSlugs, BigDecimal minPrice, BigDecimal maxPrice, Integer minRating, String sort, Long userId) {
         Pageable pageable = createPageable(page, size, sort);
         String keyword = normalize(search);
 
-        Page<Product> productPage;
+        List<Category> matchedCategories = categorySlugs.isEmpty()
+                ? List.of()
+                : categorySlugs.stream()
+                .map(categoryRepository::findBySlug)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
 
-if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
-             List<Category> matchedCategories = categorySlugs.isEmpty()
-                     ? List.of()
-                     : categorySlugs.stream()
-                     .map(categoryRepository::findBySlug)
-                     .filter(java.util.Objects::nonNull)
-                     .collect(Collectors.toList());
+        List<Brand> matchedBrands = brandSlugs.isEmpty()
+                ? List.of()
+                : brandSlugs.stream()
+                .map(brandRepository::findBySlug)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
 
-             List<Brand> matchedBrands = brandSlugs.isEmpty()
-                     ? List.of()
-                     : brandSlugs.stream()
-                     .map(brandRepository::findBySlug)
-                     .filter(java.util.Objects::nonNull)
-                     .collect(Collectors.toList());
+        List<Long> categoryIds = matchedCategories.stream().map(Category::getId).toList();
+        List<Long> brandIds = matchedBrands.stream().map(Brand::getId).toList();
 
-             List<Long> categoryIds = matchedCategories.stream().map(Category::getId).toList();
-             List<Long> brandIds = matchedBrands.stream().map(Brand::getId).toList();
+        Specification<Product> spec = ProductSpecification.isActiveAndVisible();
 
-             if (!categoryIds.isEmpty() || !brandIds.isEmpty()) {
-                 productPage = repo.findByIsActiveTrueAndDeletedAtIsNull(pageable);
-             } else {
-                 productPage = repo.findWithFilters(keyword, pageable);
-             }
-         } else {
-             productPage = repo.findByIsActiveTrueAndDeletedAtIsNull(pageable);
-         }
-
-        if (minPrice != null || maxPrice != null) {
-            List<ProductResponse> filtered = productPage.getContent().stream()
-                    .map(p -> toProductResponse(p, userId))
-                    .filter(p -> (minPrice == null || p.getPrice().compareTo(minPrice) >= 0)
-                            && (maxPrice == null || p.getPrice().compareTo(maxPrice) <= 0))
-                    .collect(Collectors.toList());
-            int totalElements = filtered.size();
-            int start = page * size;
-            int end = Math.min(start + size, totalElements);
-            List<ProductResponse> pagedContent = start >= end ? List.of() : filtered.subList(start, end);
-            int totalPages = (int) Math.ceil((double) totalElements / size);
-            PaginatedResponse<ProductResponse> result = new PaginatedResponse<>(
-                    pagedContent,
-                    page,
-                    totalPages,
-                    totalElements,
-                    size,
-                    page == 0,
-                    end >= totalElements
-            );
-            return result;
+        if (!keyword.isEmpty()) {
+            spec = spec.and(ProductSpecification.hasKeyword(keyword));
         }
+        if (!categoryIds.isEmpty()) {
+            spec = spec.and(ProductSpecification.inCategoryIds(categoryIds));
+        }
+        if (!brandIds.isEmpty()) {
+            spec = spec.and(ProductSpecification.inBrandIds(brandIds));
+        }
+        if (minPrice != null || maxPrice != null) {
+            spec = spec.and(ProductSpecification.priceBetween(minPrice, maxPrice));
+        }
+        if (minRating != null) {
+            spec = spec.and(ProductSpecification.hasMinAverageRating(minRating));
+        }
+
+        Page<Product> productPage = repo.findAll(spec, pageable);
 
         List<ProductResponse> responseContent = productPage.getContent().stream()
                 .map(p -> toProductResponse(p, userId))
@@ -431,6 +418,15 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
         return buildPaginatedResponse(productPage, page, size);
     }
 
+    @Cacheable(value = "homeProducts", key = "'featured:' + #size")
+    public List<ProductResponse> getFeaturedProducts(int size) {
+        Pageable pageable = PageRequest.of(0, size);
+        Page<Product> productPage = repo.findByIsFeaturedTrueAndIsActiveTrueOrderByCreatedAtDesc(pageable);
+        return productPage.getContent().stream()
+                .map(p -> toProductResponse(p, false))
+                .collect(Collectors.toList());
+    }
+
     private Pageable createPageable(int page, int size, String sort) {
         Sort.Direction direction = Sort.Direction.DESC;
         String sortField = "createdAt";
@@ -458,10 +454,10 @@ if (!categorySlugs.isEmpty() || !brandSlugs.isEmpty()) {
                 direction = Sort.Direction.DESC;
                 break;
         }
-        return PageRequest.of(page, size, Sort.by(direction, sortField));
+        return PageRequest.of(page, size, Sort.by(direction, sortField).and(Sort.by(Sort.Direction.DESC, "id")));
     }
 
-    private static final java.util.Map<String, String> CATEGORY_EMPTY_SLUGS = java.util.Collections.emptyMap();
+    private static final Map<String, String> CATEGORY_EMPTY_SLUGS = Collections.emptyMap();
 
     public ProductResponse toProductResponse(Product product, boolean isWishlisted) {
         List<ProductImageResponse> imageResponses;

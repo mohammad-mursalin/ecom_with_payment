@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Service
 public class ImageService {
@@ -20,7 +21,23 @@ public class ImageService {
     @Value("${imgur.client.id}")
     private String CLIENT_ID;
 
+    private static final long MAX_FILE_SIZE = 2 * 1024 * 1024;
+    private static final String[] ALLOWED_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"};
+
     public ImageResponse uploadImage(MultipartFile imageFile) throws IOException {
+
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new RuntimeException("Image file is required");
+        }
+
+        if (imageFile.getSize() > MAX_FILE_SIZE) {
+            throw new RuntimeException("Image file size exceeds " + (MAX_FILE_SIZE / (1024 * 1024)) + "MB limit");
+        }
+
+        String contentType = imageFile.getContentType();
+        if (!Arrays.asList(ALLOWED_TYPES).contains(contentType)) {
+            throw new RuntimeException("Invalid image type. Allowed types: " + String.join(", ", ALLOWED_TYPES));
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
