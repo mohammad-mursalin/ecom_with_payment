@@ -6,9 +6,6 @@ import { performRefresh } from './refreshCoordinator';
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, // Always send cookies — required for HttpOnly refresh cookie
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // ─── REQUEST INTERCEPTOR ─────────────────────────────────────────────────────

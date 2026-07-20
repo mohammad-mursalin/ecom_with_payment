@@ -60,10 +60,10 @@ export const getAdminProducts = async (params = {}) => {
   return response.data;
 };
 
-export const createProduct = async (productData) => {
-  const response = await API.post('/admin/products', productData);
-  return response.data;
-};
+export const createProduct = async (formData) => {
+    const response = await API.post('/admin/products', formData);
+    return response.data;
+  };
 
 export const updateProduct = async (id, productData) => {
   const response = await API.put(`/admin/products/${id}`, productData);

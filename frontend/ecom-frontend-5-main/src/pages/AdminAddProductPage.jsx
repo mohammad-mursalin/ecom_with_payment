@@ -4,7 +4,7 @@ import { useToast } from '../components/Toast';
 import { getCategories } from '../services/categoryService';
 import { getBrands } from '../services/brandService';
 import { createProduct } from '../services/adminService';
-import { Loader2, X, Save } from 'lucide-react';
+import { Loader2, X, Save, Upload } from 'lucide-react';
 import PageLoader from '../components/PageLoader';
 import ErrorState from '../components/ErrorState';
 
@@ -45,7 +45,7 @@ const AdminAddProductPage = () => {
     originalPrice: '',
     stockQuantity: '',
     isFeatured: false,
-    imageUrls: ['', '', '', '', ''],
+    images: [],
     specifications: [{ key: '', value: '' }],
   });
   const [errors, setErrors] = useState({});
@@ -56,10 +56,35 @@ const AdminAddProductPage = () => {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const updateImageUrl = (index, value) => {
-    const newUrls = [...form.imageUrls];
-    newUrls[index] = value;
-    setForm((prev) => ({ ...prev, imageUrls: newUrls }));
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const MAX_IMAGES = 5;
+
+    if (files.length + form.images.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    const validFiles = files.filter(file => {
+      const sizeMB = file.size / (1024 * 1024);
+      if (sizeMB > 2) {
+        toast.error(`${file.name} exceeds 2MB limit`);
+        return false;
+      }
+      return true;
+    });
+
+    setForm((prev) => ({
+      ...prev,
+      images: [...prev.images, ...validFiles]
+    }));
+  };
+
+  const removeImage = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const addSpec = () => {
@@ -95,6 +120,9 @@ const AdminAddProductPage = () => {
     if (form.stockQuantity === '' || Number(form.stockQuantity) < 0) {
       errs.stockQuantity = 'Stock must be >= 0';
     }
+    if (form.images.length === 0) {
+      errs.images = 'Product image is required';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -103,6 +131,13 @@ const AdminAddProductPage = () => {
     if (!validate()) return;
     setLoading(true);
     try {
+      const specsArray = form.specifications
+        .filter((s) => s.key.trim() && s.value.trim())
+        .map((s) => ({
+          specKey: s.key.trim(),
+          specValue: s.value.trim(),
+        }));
+
       const productData = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -112,12 +147,21 @@ const AdminAddProductPage = () => {
         originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
         stockQuantity: Number(form.stockQuantity),
         isFeatured: form.isFeatured,
-        imageUrls: form.imageUrls.filter((url) => url.trim()),
-        specifications: form.specifications
-          .filter((s) => s.key.trim() && s.value.trim())
-          .reduce((acc, s) => ({ ...acc, [s.key.trim()]: s.value.trim() }), {}),
+        tags: form.tags || [],
+        specs: specsArray,
       };
-      await createProduct(productData);
+
+      const formData = new FormData();
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(productData)], { type: "application/json" })
+      );
+
+      if (form.images.length > 0) {
+        formData.append("imageFile", form.images[0]);
+      }
+
+      await createProduct(formData);
       toast.success('Product created successfully');
       navigate('/admin/products');
     } catch (err) {
@@ -307,29 +351,49 @@ const AdminAddProductPage = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-secondary">Image URLs (up to 5)</label>
-            {form.imageUrls.map((url, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => updateImageUrl(index, e.target.value)}
-                  placeholder={`Image URL ${index + 1}`}
-                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
-                />
-                {url && (
-                  <button
-                    type="button"
-                    onClick={() => updateImageUrl(index, '')}
-                    className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-secondary mb-0">Product Image (max 2MB)</label>
+              <span className="text-xs text-muted">{form.images.length}/1</span>
+            </div>
+
+            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-default rounded-lg cursor-pointer hover:border-primary hover:bg-surface-elevated/50 transition-colors">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <Upload className="w-8 h-8 text-muted mb-2" />
+                <p className="text-sm text-secondary">
+                  <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs text-muted mt-1">JPG, PNG, or WebP (max 2MB)</p>
               </div>
-            ))}
-            <p className="text-xs text-muted mt-1">
-              Enter image URLs. The first image will be the primary image.
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </label>
+
+            {form.images.length > 0 && (
+              <div className="mt-4 relative group">
+                <img
+                  src={URL.createObjectURL(form.images[0])}
+                  alt="Preview"
+                  className="w-full h-48 object-cover rounded-lg border border-default"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(0)}
+                  className="absolute top-1 right-1 bg-danger text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+                <p className="text-xs text-muted text-center mt-1">
+                  {(form.images[0].size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-muted mt-2">
+              This will be the primary image
             </p>
           </div>
 

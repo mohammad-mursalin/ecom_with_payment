@@ -148,6 +148,19 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userMenuOpen]);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowSearchResults(false);
+        setShowRecentSearches(false);
+      }
+    }
+    if (showSearchResults || showRecentSearches) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSearchResults, showRecentSearches]);
+
   const saveRecentSearch = useCallback(
     (query) => {
       if (!query || !query.trim()) return;
@@ -179,14 +192,17 @@ const Navbar = () => {
       const q = (query || "").trim();
       if (q.length < 1) {
         setSearchResults([]);
+        setShowSearchResults(false);
         return;
       }
       try {
         const data = await searchSuggestions(q, 8);
         setSearchResults(Array.isArray(data) ? data : []);
+        setShowSearchResults(true);
       } catch (error) {
         console.error("Search error:", error);
         setSearchResults([]);
+        setShowSearchResults(false);
       }
     },
     []
@@ -285,7 +301,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", href: "/", icon: Home },
     { name: "Products", href: "/products", icon: Package },
-    { name: "Orders", href: "/orders", icon: ShoppingCart, auth: true },
+    { name: "Orders", href: isAdmin ? "/admin/orders" : "/orders", icon: ShoppingCart, auth: true },
   ];
 
   const visibleNavLinks = navLinks.filter((link) => !link.auth || isAuthenticated);

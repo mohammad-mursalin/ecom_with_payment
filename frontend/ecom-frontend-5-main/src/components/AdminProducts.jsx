@@ -165,27 +165,41 @@ const AdminProducts = () => {
   const handleSave = async (formData) => {
     setSubmitting(true);
     try {
-      const payload = {
+      const specsArray = (formData.specs || [])
+        .filter(s => s.key && s.value)
+        .map(s => ({ specKey: s.key, specValue: s.value }));
+
+      const productData = {
         name: formData.name,
         description: formData.description,
+        categoryId: formData.categoryId,
+        brandId: formData.brandId,
         price: Number(formData.price),
         originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
         stockQuantity: Number(formData.stockQuantity),
         lowStockThreshold: Number(formData.lowStockThreshold) || 5,
-        categoryId: formData.categoryId,
-        brandId: formData.brandId,
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
         tags: formData.tags || [],
-        specifications: (formData.specs || []).filter(s => s.key && s.value).reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}),
-        imageUrls: imagePreviews.map(img => img.url).filter(Boolean),
+        specs: specsArray,
       };
 
+      const multipart = new FormData();
+      multipart.append(
+        "request",
+        new Blob([JSON.stringify(productData)], { type: "application/json" })
+      );
+
+      const primaryImage = imagePreviews.find(img => img.isPrimary);
+      if (primaryImage && primaryImage.file) {
+        multipart.append("imageFile", primaryImage.file);
+      }
+
       if (editingProduct) {
-        await updateProduct(editingProduct.id, payload);
+        await updateProduct(editingProduct.id, multipart);
         toast.success("Product updated successfully");
       } else {
-        await createProduct(payload);
+        await createProduct(multipart);
         toast.success("Product created successfully");
       }
       await fetchProducts();

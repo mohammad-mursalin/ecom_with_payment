@@ -5,7 +5,7 @@ import { getCategories } from '../services/categoryService';
 import { getBrands } from '../services/brandService';
 import { getProduct } from '../services/productService';
 import { updateProduct } from '../services/adminService';
-import { Loader2, X, Save } from 'lucide-react';
+import { Loader2, X, Save, Upload } from 'lucide-react';
 import PageLoader from '../components/PageLoader';
 
 const AdminEditProductPage = () => {
@@ -25,10 +25,11 @@ const AdminEditProductPage = () => {
     originalPrice: '',
     stockQuantity: '',
     isFeatured: false,
-    imageUrls: ['', '', '', '', ''],
+    images: [],
     specifications: [{ key: '', value: '' }],
   });
   const [errors, setErrors] = useState({});
+  const [existingImageUrl, setExistingImageUrl] = useState('');
   const firstFieldRef = useRef(null);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ const AdminEditProductPage = () => {
         setBrands(brnds || []);
 
         const spec = productData.specifications || {};
+        setExistingImageUrl(productData.imageUrl || '');
         setForm({
           name: productData.name || '',
           description: productData.description || '',
@@ -52,13 +54,7 @@ const AdminEditProductPage = () => {
           originalPrice: productData.originalPrice?.toString() || '',
           stockQuantity: productData.stockQuantity?.toString() || '',
           isFeatured: productData.isFeatured || false,
-          imageUrls: [
-            productData.imageUrl || '',
-            productData.imageUrl2 || '',
-            productData.imageUrl3 || '',
-            productData.imageUrl4 || '',
-            productData.imageUrl5 || '',
-          ],
+          images: [],
           specifications: Object.entries(spec).map(([key, value]) => ({
             key,
             value: value?.toString() || '',
@@ -79,10 +75,24 @@ const AdminEditProductPage = () => {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const updateImageUrl = (index, value) => {
-    const newUrls = [...form.imageUrls];
-    newUrls[index] = value;
-    setForm((prev) => ({ ...prev, imageUrls: newUrls }));
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const sizeMB = file.size / (1024 * 1024);
+      if (sizeMB > 2) {
+        toast.error(`${file.name} exceeds 2MB limit`);
+        return false;
+      }
+      return true;
+    });
+    setForm((prev) => ({ ...prev, images: [...prev.images, ...validFiles].slice(0, 1) }));
+  };
+
+  const removeImage = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   };
 
   const addSpec = () => {
@@ -126,6 +136,13 @@ const AdminEditProductPage = () => {
     if (!validate()) return;
     setLoading(true);
     try {
+      const specsArray = form.specifications
+        .filter((s) => s.key.trim() && s.value.trim())
+        .map((s) => ({
+          specKey: s.key.trim(),
+          specValue: s.value.trim(),
+        }));
+
       const productData = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -135,12 +152,21 @@ const AdminEditProductPage = () => {
         originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
         stockQuantity: Number(form.stockQuantity),
         isFeatured: form.isFeatured,
-        imageUrls: form.imageUrls.filter((url) => url.trim()),
-        specifications: form.specifications
-          .filter((s) => s.key.trim() && s.value.trim())
-          .reduce((acc, s) => ({ ...acc, [s.key.trim()]: s.value.trim() }), {}),
+        tags: [],
+        specs: specsArray,
       };
-      await updateProduct(id, productData);
+
+      const multipart = new FormData();
+      multipart.append(
+        "request",
+        new Blob([JSON.stringify(productData)], { type: "application/json" })
+      );
+
+      if (form.images.length > 0) {
+        multipart.append("imageFile", form.images[0]);
+      }
+
+      await updateProduct(id, multipart);
       toast.success('Product updated successfully');
       navigate('/admin/products');
     } catch (err) {
@@ -321,32 +347,60 @@ const AdminEditProductPage = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-secondary" htmlFor="edit-product-images">Image URLs (up to 5)</label>
-            {form.imageUrls.map((url, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="url"
-                  id={`edit-product-image-${index}`}
-                  value={url}
-                  onChange={(e) => updateImageUrl(index, e.target.value)}
-                  placeholder={`Image URL ${index + 1}`}
-                  className="w-full rounded-lg border border-default bg-surface-card px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-secondary mb-0">Product Image</label>
+              {form.images.length > 0 && (
+                <span className="text-xs text-muted">New image selected</span>
+              )}
+            </div>
+
+            {existingImageUrl && !form.images.length > 0 && (
+              <div className="mb-4">
+                <img
+                  src={existingImageUrl}
+                  alt="Current product"
+                  className="w-full h-48 object-cover rounded-lg border border-default"
                 />
-                {url && (
-                  <button
-                    type="button"
-                    onClick={() => updateImageUrl(index, '')}
-                    className="inline-flex items-center justify-center rounded-lg p-2 text-muted hover:text-danger transition-colors"
-                    aria-label={`Remove image ${index + 1}`}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                <p className="text-xs text-muted text-center mt-1">Current image</p>
               </div>
-            ))}
-            <p className="text-xs text-muted mt-1">
-              Enter image URLs. The first image will be the primary image.
-            </p>
+            )}
+
+            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-default rounded-lg cursor-pointer hover:border-primary hover:bg-surface-elevated/50 transition-colors">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <Upload className="w-8 h-8 text-muted mb-2" />
+                <p className="text-sm text-secondary">
+                  <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs text-muted mt-1">JPG, PNG, or WebP (max 2MB)</p>
+              </div>
+              <input
+                id="edit-image-upload"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </label>
+
+            {form.images.length > 0 && (
+              <div className="mt-4 relative group">
+                <img
+                  src={URL.createObjectURL(form.images[0])}
+                  alt="Preview"
+                  className="w-full h-48 object-cover rounded-lg border border-default"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(0)}
+                  className="absolute top-1 right-1 bg-danger text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+                <p className="text-xs text-muted text-center mt-1">
+                  {(form.images[0].size / (1024 * 1024)).toFixed(2)} MB
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

@@ -219,7 +219,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="mb-6 flex gap-1 border-b border-default">
-          {["overview", "analytics", "products", "quicklinks"].map((tab) => (
+          {["quicklinks", "products", "overview", "analytics"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
