@@ -40,3 +40,12 @@ body {
   background-color: rgb(var(--color-bg));
   color: rgb(var(--text-primary));
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

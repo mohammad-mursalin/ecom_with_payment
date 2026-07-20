@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Package, Truck, Lock, RotateCcw, Headset } from "lucide-react";
 import { getCategories } from "../services/categoryService";
-import { getProducts } from "../services/productService";
+import { getFeaturedProducts, getProducts } from "../services/productService";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton";
 import CategoryCardSkeleton from "./CategoryCardSkeleton";
@@ -47,9 +47,9 @@ const Home = () => {
     setFeaturedLoading(true);
     setFeaturedError("");
     try {
-      const data = await getProducts({ isFeatured: true, size: 8 });
-      const items = data?.content ?? [];
-      setFeaturedProducts(Array.isArray(items) ? items : []);
+      const data = await getFeaturedProducts(8);
+      const items = Array.isArray(data) ? data : [];
+      setFeaturedProducts(items);
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load featured products";
       setFeaturedError(msg);

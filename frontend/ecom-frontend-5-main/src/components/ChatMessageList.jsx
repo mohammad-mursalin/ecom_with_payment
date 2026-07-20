@@ -16,7 +16,7 @@ export default function ChatMessageList({ messages, loading }) {
   return (
     <div
       aria-live="polite"
-      className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0"
+      className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0 no-scrollbar"
     >
       {isEmpty && (
         <div className="flex items-start gap-3">

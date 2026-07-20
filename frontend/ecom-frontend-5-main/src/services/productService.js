@@ -15,6 +15,11 @@ export const searchSuggestions = async (query, limit = 8) => {
   return response.data;
 };
 
+export const getFeaturedProducts = async (size = 8) => {
+  const response = await API.get('/products/featured', { params: { size } });
+  return response.data;
+};
+
 export const getRelated = async (productId) => {
   const response = await API.get(`/product/${productId}/related`);
   return response.data;

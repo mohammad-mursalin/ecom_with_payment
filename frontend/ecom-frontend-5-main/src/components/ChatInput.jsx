@@ -44,7 +44,7 @@ export default function ChatInput() {
         onInput={adjustHeight}
         placeholder="Ask me anything about products, your order, or your account..."
         disabled={loading}
-        className="flex-1 resize-none rounded-xl border border-default bg-background px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 overflow-y-auto"
+        className="flex-1 resize-none rounded-xl border border-default bg-background px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 overflow-y-auto no-scrollbar"
         style={{ maxHeight: "120px" }}
       />
       <button

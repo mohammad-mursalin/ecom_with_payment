@@ -114,7 +114,7 @@ const ProductsPage = () => {
         const params = {
           page: pageVal,
           size: pageSizeVal,
-          keyword: searchQuery || undefined,
+          search: searchQuery || undefined,
           sort: opts.sort ?? sort,
         };
         if (categorySlugs.length > 0) {
