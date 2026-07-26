@@ -29,8 +29,9 @@ const AdminEditProductPage = () => {
     specifications: [{ key: '', value: '' }],
   });
   const [errors, setErrors] = useState({});
-  const [existingImageUrl, setExistingImageUrl] = useState('');
-  const firstFieldRef = useRef(null);
+      const [existingImageUrl, setExistingImageUrl] = useState('');
+      const firstFieldRef = useRef(null);
+      const MAX_IMAGES = 5;
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -43,8 +44,8 @@ const AdminEditProductPage = () => {
         setCategories(cats || []);
         setBrands(brnds || []);
 
-        const spec = productData.specifications || {};
-        setExistingImageUrl(productData.imageUrl || '');
+        const spec = productData.specs || {};
+        setExistingImageUrl(productData.primaryImageUrl || '');
         setForm({
           name: productData.name || '',
           description: productData.description || '',
@@ -52,7 +53,7 @@ const AdminEditProductPage = () => {
           brandId: productData.brand?.id?.toString() || '',
           price: productData.price?.toString() || '',
           originalPrice: productData.originalPrice?.toString() || '',
-          stockQuantity: productData.stockQuantity?.toString() || '',
+          stockQuantity: productData.stock?.toString() || '',
           isFeatured: productData.isFeatured || false,
           images: [],
           specifications: Object.entries(spec).map(([key, value]) => ({
@@ -77,6 +78,11 @@ const AdminEditProductPage = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
+    const MAX_IMAGES = 5;
+    if (files.length + form.images.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
     const validFiles = files.filter(file => {
       const sizeMB = file.size / (1024 * 1024);
       if (sizeMB > 2) {
@@ -85,7 +91,7 @@ const AdminEditProductPage = () => {
       }
       return true;
     });
-    setForm((prev) => ({ ...prev, images: [...prev.images, ...validFiles].slice(0, 1) }));
+    setForm((prev) => ({ ...prev, images: [...prev.images, ...validFiles] }));
   };
 
   const removeImage = (index) => {
@@ -347,12 +353,10 @@ const AdminEditProductPage = () => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-secondary mb-0">Product Image</label>
-              {form.images.length > 0 && (
-                <span className="text-xs text-muted">New image selected</span>
-              )}
-            </div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-secondary mb-0">Product Image</label>
+                <span className="text-xs text-muted">{form.images.length}/5</span>
+              </div>
 
             {existingImageUrl && !form.images.length > 0 && (
               <div className="mb-4">
@@ -401,6 +405,9 @@ const AdminEditProductPage = () => {
                 </p>
               </div>
             )}
+            <p className="text-xs text-muted mt-2">
+              This will replace the current primary image
+            </p>
           </div>
 
           <div>

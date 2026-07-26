@@ -33,6 +33,7 @@ const AdminProducts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pageSize, setPageSize] = useState(20);
+  const [currentPage, setCurrentPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -43,34 +44,30 @@ const AdminProducts = () => {
   const [brands, setBrands] = useState([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
+  const isMountedRef = useRef(true);
+  const currentRequestIdRef = useRef(0);
   const fileInputRef = useRef(null);
   const searchTimerRef = useRef(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
+      setCurrentPage(0);
     }, 300);
     return () => clearTimeout(searchTimerRef.current);
   }, [searchQuery]);
 
-  useEffect(() => {
-    let result = products;
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand.name.toLowerCase().includes(q) ||
-          p.category.name.toLowerCase().includes(q)
-      );
-    }
-    setFilteredProducts(result);
-    setSelectedIds(new Set());
-  }, [debouncedSearch, products]);
-
   const fetchProducts = useCallback(async () => {
+    const requestId = Date.now();
+    currentRequestIdRef.current = requestId;
     setLoadingProducts(true);
     setProductsError("");
     try {
@@ -79,17 +76,22 @@ const AdminProducts = () => {
         size: pageSize,
         search: debouncedSearch || undefined,
       });
+      if (!isMountedRef.current) return;
+      if (requestId !== currentRequestIdRef.current) return;
       const data = res.data || res;
       const content = data.content || data.items || data || [];
-      const total = data.totalElements ?? content.length;
       setProducts(content);
       setFilteredProducts(content);
-      setTotalElements(total);
+      setTotalElements(data.totalElements ?? content.length);
     } catch (err) {
+      if (!isMountedRef.current) return;
+      if (requestId !== currentRequestIdRef.current) return;
       const msg = err.response?.data?.message || err.response?.data?.error || "Failed to load products";
       setProductsError(msg);
     } finally {
-      setLoadingProducts(false);
+      if (isMountedRef.current && requestId === currentRequestIdRef.current) {
+        setLoadingProducts(false);
+      }
     }
   }, [currentPage, pageSize, debouncedSearch]);
 
@@ -122,13 +124,15 @@ const AdminProducts = () => {
   const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages - 1);
   const startIndex = safeCurrentPage * pageSize;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+  const endIndex = Math.min(startIndex + filteredProducts.length, totalElements);
+  const displayStart = totalElements === 0 ? 0 : startIndex + 1;
+  const displayEnd = endIndex;
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === paginatedProducts.length) {
+    if (selectedIds.size === filteredProducts.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(paginatedProducts.map((p) => p.id)));
+      setSelectedIds(new Set(filteredProducts.map((p) => p.id)));
     }
   };
 
@@ -149,7 +153,7 @@ const AdminProducts = () => {
   const openEditDrawer = (product) => {
     setEditingProduct(product);
     setImagePreviews(
-      product.primaryImageUrl ? [{ url: product.primaryImageUrl, isPrimary: true }] : []
+      product.imageUrl ? [{ url: product.imageUrl, isPrimary: true }] : []
     );
     setBrandSearch(product.brand?.name || "");
     setDrawerOpen(true);
@@ -378,7 +382,7 @@ const AdminProducts = () => {
                 <th className="p-3 w-10">
                   <input
                     type="checkbox"
-                    checked={paginatedProducts.length > 0 && selectedIds.size === paginatedProducts.length}
+                     checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length}
                     onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-default"
                   />
@@ -394,14 +398,14 @@ const AdminProducts = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedProducts.length === 0 ? (
+              {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-8 text-center text-muted">
                     {searchQuery ? "No products match your search." : "No products found. Add your first product!"}
                   </td>
                 </tr>
               ) : (
-                paginatedProducts.map((product) => (
+                filteredProducts.map((product) => (
                   <tr key={product.id} className="border-b border-default hover:bg-surface-elevated">
                     <td className="p-3">
                       <input
@@ -412,26 +416,30 @@ const AdminProducts = () => {
                       />
                     </td>
                     <td className="p-3">
-                      <img src={product.primaryImageUrl} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-surface-elevated" />
+                      )}
                     </td>
                     <td className="p-3">
                       <div className="max-w-[200px] font-medium text-primary line-clamp-2">{product.name}</div>
                     </td>
                     <td className="p-3 text-secondary">{product.category?.name || "—"}</td>
                     <td className="p-3 text-secondary">{product.brand?.name || "—"}</td>
+                      <td className="p-3">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-primary">{formatCurrency(product.price)}</span>
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <span className="text-xs text-muted line-through">{formatCurrency(product.originalPrice)}</span>
+                          )}
+                        </div>
+                      </td>
                     <td className="p-3">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-primary">{formatCurrency(product.price)}</span>
-                        {product.originalPrice && product.originalPrice > product.price && (
-                          <span className="text-xs text-muted line-through">{formatCurrency(product.originalPrice)}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <span className={`font-semibold ${product.stock <= product.lowStockThreshold ? "text-danger" : "text-success"}`}>
-                        {product.stock}
+                      <span className={`font-semibold ${(product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 5) ? "text-danger" : "text-success"}`}>
+                        {product.stockQuantity ?? 0}
                       </span>
-                      {product.stock <= product.lowStockThreshold && product.stock > 0 && (
+                      {(product.stockQuantity ?? 0) <= (product.lowStockThreshold ?? 5) && (product.stockQuantity ?? 0) > 0 && (
                         <span className="ml-1 text-xs text-muted">low</span>
                       )}
                     </td>
@@ -466,8 +474,7 @@ const AdminProducts = () => {
 
         <div className="flex flex-col gap-3 border-t border-default p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-secondary">
-            Showing {filteredProducts.length === 0 ? 0 : startIndex + 1}–
-            {Math.min(startIndex + pageSize, filteredProducts.length)} of {filteredProducts.length} results
+            Showing {displayStart}–{displayEnd} of {totalElements} results
           </div>
           <div className="flex items-center gap-3">
             <select
@@ -594,7 +601,7 @@ const ProductDrawer = ({
         description: editingProduct.description || "",
         price: editingProduct.price?.toString() || "",
         originalPrice: editingProduct.originalPrice?.toString() || "",
-        stockQuantity: editingProduct.stock?.toString() || "",
+        stockQuantity: editingProduct.stockQuantity?.toString() || "",
         lowStockThreshold: editingProduct.lowStockThreshold || 5,
         categoryId: editingProduct.category?.id || "",
         brandId: editingProduct.brand?.id || "",
