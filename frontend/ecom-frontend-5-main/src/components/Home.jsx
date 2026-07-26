@@ -136,7 +136,7 @@ const Home = () => {
               categories.map((category) => (
                 <div key={category.id} className="flex flex-col items-center gap-2">
                   <Link
-                    to={`/products?category=${category.id}`}
+                    to={`/products?page=0&category=${encodeURIComponent(category.name.toLowerCase())}`}
                     className="flex flex-col items-center gap-2"
                   >
                     <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm hover:shadow-md transition-shadow w-40 text-center dark:shadow-none">
