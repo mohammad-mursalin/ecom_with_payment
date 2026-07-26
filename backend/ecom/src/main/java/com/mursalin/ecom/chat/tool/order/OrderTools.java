@@ -3,7 +3,6 @@ package com.mursalin.ecom.chat.tool.order;
 import com.mursalin.ecom.chat.tool.ToolErrorCode;
 import com.mursalin.ecom.chat.tool.ToolResult;
 import com.mursalin.ecom.chat.tool.ChatAuthResolver;
-import com.mursalin.ecom.dto.OrderDetailItemDTO;
 import com.mursalin.ecom.dto.OrderDetailsResponse;
 import com.mursalin.ecom.dto.OrderSummaryDTO;
 import com.mursalin.ecom.dto.PaginatedResponse;

@@ -1,4 +1,4 @@
-package com.mursalin.ecom.service;
+package com.mursalin.ecom.service.Impl;
 
 import com.mursalin.ecom.model.User;
 import com.mursalin.ecom.model.UserPrinciples;

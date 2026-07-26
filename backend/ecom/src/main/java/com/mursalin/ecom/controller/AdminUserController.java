@@ -6,7 +6,6 @@ import com.mursalin.ecom.dto.AdminUserStatusUpdateResponse;
 import com.mursalin.ecom.dto.AdminUserDetailResponse;
 import com.mursalin.ecom.dto.OrderSummaryDTO;
 import com.mursalin.ecom.dto.PaginatedResponse;
-import com.mursalin.ecom.model.Order;
 import com.mursalin.ecom.model.Role;
 import com.mursalin.ecom.model.UserPrinciples;
 import com.mursalin.ecom.model.UserStatus;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/users")

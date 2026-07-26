@@ -3,7 +3,6 @@ package com.mursalin.ecom.config;
 import com.mursalin.ecom.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;

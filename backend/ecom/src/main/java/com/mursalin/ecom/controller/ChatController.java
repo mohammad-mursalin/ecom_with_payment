@@ -9,7 +9,6 @@ import com.mursalin.ecom.chat.orchestration.ChatOrchestrationService;
 import com.mursalin.ecom.chat.tool.ChatAuthResolver;
 import com.mursalin.ecom.exception.ResourceNotFoundException;
 import com.mursalin.ecom.model.ChatFeedback;
-import com.mursalin.ecom.model.ChatFeedbackRating;
 import com.mursalin.ecom.model.ChatMessage;
 import com.mursalin.ecom.model.ChatSession;
 import com.mursalin.ecom.repository.ChatFeedbackRepository;
