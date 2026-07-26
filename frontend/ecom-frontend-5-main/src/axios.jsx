@@ -52,6 +52,14 @@ API.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Skip refresh for auth endpoints — these should return the error directly
+    // rather than triggering a silent refresh that would redirect to /login.
+    const authEndpointPaths = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+    const requestPath = originalRequest.url || '';
+    if (authEndpointPaths.some((path) => requestPath.includes(path))) {
+      return Promise.reject(error);
+    }
+
     // If this request was already a retry (i.e., the refresh itself returned 401),
     // do not retry again — that would cause an infinite loop.
     if (originalRequest._isRetry) {

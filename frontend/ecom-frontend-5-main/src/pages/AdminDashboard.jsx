@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-import { getStats, getAnalytics, getOrders } from "../services/adminService";
+import { getStats, getAnalytics, getAnalyticsOrders } from "../services/adminService";
 import { getProducts } from "../services/productService";
 import StatCardSkeleton from "../components/StatCardSkeleton";
 import EmptyState from "../components/EmptyState";
@@ -102,12 +102,12 @@ const AdminDashboard = () => {
       const response = await getStats();
       const data = response.data?.data || response.data || response;
       setStats({
-        totalRevenue: data.totalRevenue ?? 0,
-        ordersToday: data.ordersToday ?? 0,
-        totalUsers: data.totalUsers ?? 0,
-        activeProducts: data.activeProducts ?? 0,
-        pendingOrders: data.pendingOrders ?? 0,
-        totalReviews: data.totalReviews ?? 0,
+        totalRevenue: data.revenue?.total ?? 0,
+        ordersToday: data.orders?.confirmedToday ?? 0,
+        totalUsers: data.users?.total ?? 0,
+        activeProducts: data.products?.active ?? 0,
+        pendingOrders: data.orders?.pending ?? 0,
+        totalReviews: 0,
       });
     } catch (error) {
       const msg =
@@ -130,14 +130,14 @@ const AdminDashboard = () => {
     try {
       const [revRes, ordRes] = await Promise.all([
         getAnalytics(analyticsPeriod),
-        getOrders({ page: 0, pageSize: 1 }),
+        getAnalyticsOrders(),
       ]);
 
-      const revData = revRes.data || revRes;
-      setRevenueData(Array.isArray(revData) ? revData : []);
+      const revWrapper = revRes.data || revRes;
+      setRevenueData(Array.isArray(revWrapper?.data) ? revWrapper.data : []);
 
-      const ordData = ordRes.data || ordRes;
-      setOrdersData(Array.isArray(ordData) ? ordData : []);
+      const ordWrapper = ordRes.data || ordRes;
+      setOrdersData(Array.isArray(ordWrapper?.perDay) ? ordWrapper.perDay : []);
     } catch (error) {
       const msg =
         error.response?.data?.message ||
@@ -350,7 +350,7 @@ const AdminDashboard = () => {
                             />
                             <Line
                               type="monotone"
-                              dataKey="amount"
+                              dataKey="revenue"
                               stroke="var(--color-primary)"
                               strokeWidth={2}
                               dot={{ r: 4 }}
@@ -496,12 +496,12 @@ const AdminDashboard = () => {
                             <td className="px-4 py-3">
                               <span
                                 className={`font-medium ${
-                                  p.stockQuantity <= (p.lowStockThreshold || 5)
+                                  (p.stock ?? 0) <= 5
                                     ? "text-danger"
                                     : "text-success"
                                 }`}
                               >
-                                {p.stockQuantity ?? 0}
+                                {p.stock ?? 0}
                               </span>
                             </td>
                             <td className="px-4 py-3">
