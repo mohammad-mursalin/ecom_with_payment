@@ -277,7 +277,7 @@ const ProductDetailPage = () => {
            <p className="font-medium text-primary">Standard Delivery</p>
            <p className="text-sm text-secondary">
              {shippingEstimate
-               ? `₹${Number(shippingEstimate ?? 0).toFixed(2)} - Estimated 3-7 business days`
+               ? `৳${Number(shippingEstimate ?? 0).toFixed(2)} - Estimated 3-7 business days`
                : "Estimated 3-7 business days"}
            </p>
          </div>
@@ -372,12 +372,12 @@ const ProductDetailPage = () => {
 
              <div className="flex flex-wrap items-center gap-3">
                <span className="text-3xl font-bold text-primary">
-                 ₹{Number(product.price ?? 0).toFixed(2)}
+                 ৳{Number(product.price ?? 0).toFixed(2)}
                </span>
                {discountPercent > 0 && (
                  <>
                    <span className="text-sm text-muted line-through">
-                     ₹{Number(product.originalPrice).toFixed(2)}
+                     ৳{Number(product.originalPrice).toFixed(2)}
                    </span>
                    <span className="inline-flex items-center rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-medium text-danger">
                      {discountPercent}% off

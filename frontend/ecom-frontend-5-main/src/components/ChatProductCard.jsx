@@ -44,7 +44,7 @@ export function ChatProductCard({ item }) {
           {name}
         </p>
         <p className="text-sm font-semibold text-primary">
-          ₹{Number(price || 0).toFixed(2)}
+          ৳{Number(price || 0).toFixed(2)}
         </p>
         <MiniStar rating={averageRating} />
         {inStock === false && (

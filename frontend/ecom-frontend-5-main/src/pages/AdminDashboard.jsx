@@ -195,7 +195,7 @@ const AdminDashboard = () => {
   }
 
   const formatCurrency = (value) =>
-    `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `৳${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -340,7 +340,7 @@ const AdminDashboard = () => {
                             <YAxis
                               stroke="var(--text-muted)"
                               fontSize={12}
-                              tickFormatter={(v) => `₹${v / 1000}k`}
+                              tickFormatter={(v) => `৳${v / 1000}k`}
                             />
                             <Tooltip
                               contentStyle={{

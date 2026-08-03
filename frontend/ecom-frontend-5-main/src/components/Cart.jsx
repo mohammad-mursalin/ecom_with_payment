@@ -112,7 +112,7 @@ const Cart = () => {
       if (result.valid) {
         setAppliedCoupon(result);
         setCouponStatus("success");
-        setCouponMessage(`Coupon applied: ₹${result.discountAmount.toFixed(2)} off`);
+        setCouponMessage(`Coupon applied: ৳${result.discountAmount.toFixed(2)} off`);
         toast.success("Coupon applied successfully");
       } else {
         setCouponStatus("error");
@@ -191,7 +191,7 @@ const Cart = () => {
         <div className="mb-6">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-primary">Shopping Cart</h1>
           <p className="mt-2 text-muted">
-            {itemCount} {itemCount === 1 ? "Item" : "Items"} · ₹{subtotal.toFixed(2)}
+            {itemCount} {itemCount === 1 ? "Item" : "Items"} · ৳{subtotal.toFixed(2)}
           </p>
         </div>
 
@@ -223,7 +223,7 @@ const Cart = () => {
                             {item.name}
                           </Link>
                         </h3>
-                        <p className="text-sm text-muted">₹{(item.price || 0).toFixed(2)} each</p>
+                        <p className="text-sm text-muted">৳{(item.price || 0).toFixed(2)} each</p>
                         {stockWarnings[item.cartItemId] && (
                           <p className="text-xs text-warning mt-1">
                             {stockWarnings[item.cartItemId]}
@@ -268,8 +268,8 @@ const Cart = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-primary" aria-label={`Total: ₹${((item.price || 0) * (item.quantity || 0)).toFixed(2)}`}>
-                            ₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                          <span className="text-lg font-bold text-primary" aria-label={`Total: ৳${((item.price || 0) * (item.quantity || 0)).toFixed(2)}`}>
+                            ৳{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
                           </span>
                           <button
                             type="button"
@@ -305,30 +305,30 @@ const Cart = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-secondary">Subtotal</span>
-                    <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
+                    <span className="font-semibold">৳{subtotal.toFixed(2)}</span>
                   </div>
 
                   {appliedCoupon && (
                     <div className="flex items-center justify-between text-success">
                       <span className="text-sm">Discount ({appliedCoupon.couponCode})</span>
-                      <span className="font-semibold">- ₹{appliedCoupon.discountAmount.toFixed(2)}</span>
+                      <span className="font-semibold">- ৳{appliedCoupon.discountAmount.toFixed(2)}</span>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-secondary">Estimated Tax (18%)</span>
-                    <span className="font-semibold">₹{tax.toFixed(2)}</span>
+                    <span className="font-semibold">৳{tax.toFixed(2)}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-secondary">Shipping</span>
-                    <span className="font-semibold">{shippingFee === 0 ? "Free" : `₹${shippingFee}`}</span>
+                    <span className="font-semibold">{shippingFee === 0 ? "Free" : `৳${shippingFee}`}</span>
                   </div>
 
                   <div className="border-t border-default pt-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-secondary">Total</span>
-                      <span className="text-2xl font-extrabold text-primary">₹{grandTotal.toFixed(2)}</span>
+                      <span className="text-2xl font-extrabold text-primary">৳{grandTotal.toFixed(2)}</span>
                     </div>
                   </div>
 

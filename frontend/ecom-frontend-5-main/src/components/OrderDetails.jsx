@@ -189,10 +189,10 @@ const OrderDetails = () => {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-primary">{item.productName}</p>
-                          <p className="text-sm text-muted">Qty: {item.quantity} × ₹{item.unitPrice?.toFixed(2)}</p>
+                          <p className="text-sm text-muted">Qty: {item.quantity} × ৳{item.unitPrice?.toFixed(2)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-primary">₹{item.lineTotal?.toFixed(2)}</p>
+                          <p className="font-bold text-primary">৳{item.lineTotal?.toFixed(2)}</p>
                         </div>
                       </div>
                     ))}
@@ -204,12 +204,12 @@ const OrderDetails = () => {
               <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none">
                 <h3 className="text-lg font-semibold mb-4">Price Breakdown</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm"><span className="text-secondary">Subtotal</span><span className="font-medium">₹{order.subtotal?.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-secondary">Subtotal</span><span className="font-medium">৳{order.subtotal?.toFixed(2)}</span></div>
                   {order.discountAmount > 0 && (
-                    <div className="flex justify-between text-sm"><span className="text-secondary">Discount</span><span className="font-medium text-danger">- ₹{order.discountAmount?.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-secondary">Discount</span><span className="font-medium text-danger">- ৳{order.discountAmount?.toFixed(2)}</span></div>
                   )}
-                  <div className="flex justify-between text-sm"><span className="text-secondary">Shipping</span><span className="font-medium">{(order.shippingFee ?? 0) === 0 ? "Free" : `₹${order.shippingFee?.toFixed(2)}`}</span></div>
-                  <div className="border-t border-default pt-3 flex justify-between text-base"><span className="font-bold">Total</span><span className="font-bold text-primary">₹{order.totalAmount?.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-secondary">Shipping</span><span className="font-medium">{(order.shippingFee ?? 0) === 0 ? "Free" : `৳${order.shippingFee?.toFixed(2)}`}</span></div>
+                  <div className="border-t border-default pt-3 flex justify-between text-base"><span className="font-bold">Total</span><span className="font-bold text-primary">৳{order.totalAmount?.toFixed(2)}</span></div>
                 </div>
               </div>
 

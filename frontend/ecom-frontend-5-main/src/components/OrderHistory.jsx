@@ -171,7 +171,7 @@ if (loading) {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-secondary">Total</p>
-                        <p className="text-xl font-bold">₹{order.totalAmount?.toFixed(2) ?? "0.00"}</p>
+                        <p className="text-xl font-bold">৳{order.totalAmount?.toFixed(2) ?? "0.00"}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-3 mt-4">

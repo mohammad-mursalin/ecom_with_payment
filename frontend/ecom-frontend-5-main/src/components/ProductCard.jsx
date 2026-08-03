@@ -167,12 +167,12 @@ const ProductCard = ({ product }) => {
         <div className="mt-auto">
           <div className="flex items-baseline gap-2 mb-4 flex-wrap">
             <span className="text-xl font-bold text-primary">
-              ₹{Number(price || 0).toFixed(2)}
+              ৳{Number(price || 0).toFixed(2)}
             </span>
             {originalPrice && originalPrice > price && (
               <>
                 <span className="text-sm text-muted line-through">
-                  ₹{Number(originalPrice).toFixed(2)}
+                  ৳{Number(originalPrice).toFixed(2)}
                 </span>
                 <span className="text-xs font-semibold text-danger bg-danger/10 px-2.5 py-0.5 rounded-full">
                   {discountPercent}% off

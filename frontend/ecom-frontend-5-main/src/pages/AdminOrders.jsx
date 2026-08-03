@@ -287,7 +287,7 @@ const ALLOWED_TRANSITIONS = {
   };
 
   const formatCurrency = (value) =>
-    `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `৳${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const renderTimeline = (history) => {
     if (!history || history.length === 0) {

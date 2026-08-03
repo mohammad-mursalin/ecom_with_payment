@@ -125,7 +125,7 @@ const CheckoutPage = () => {
         setCouponDiscount(data.discountAmount || 0);
         setCouponCode(data.couponCode || couponCode);
         setCouponOk(true);
-        setCouponMsg(`Coupon applied: ₹${(data.discountAmount || 0).toFixed(2)} off`);
+        setCouponMsg(`Coupon applied: ৳${(data.discountAmount || 0).toFixed(2)} off`);
         toast.success("Coupon applied");
       } else {
         setCouponOk(false);
@@ -448,8 +448,8 @@ const CheckoutPage = () => {
                             <span className="font-medium text-primary truncate max-w-[200px]">{it.name}</span>
                           </td>
                           <td className="text-center py-2 text-secondary">{it.quantity}</td>
-                          <td className="text-right py-2 text-secondary">₹{(it.price || 0).toFixed(2)}</td>
-                          <td className="text-right py-2 font-semibold text-primary">₹{((it.price || 0) * (it.quantity || 0)).toFixed(2)}</td>
+                          <td className="text-right py-2 text-secondary">৳{(it.price || 0).toFixed(2)}</td>
+                          <td className="text-right py-2 font-semibold text-primary">৳{((it.price || 0) * (it.quantity || 0)).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -460,25 +460,25 @@ const CheckoutPage = () => {
               <div className="rounded-2xl border border-default bg-surface-card p-6 shadow-sm dark:shadow-none mb-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-secondary">Subtotal</span>
-                  <span className="font-medium text-primary">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-medium text-primary">৳{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-secondary">Tax (18%)</span>
-                  <span className="font-medium text-primary">₹{tax.toFixed(2)}</span>
+                  <span className="font-medium text-primary">৳{tax.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-secondary">Shipping</span>
-                  <span className="font-medium text-primary">{shippingFee === 0 ? "Free" : `₹${shippingFee}`}</span>
+                  <span className="font-medium text-primary">{shippingFee === 0 ? "Free" : `৳${shippingFee}`}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex items-center justify-between text-sm text-success">
                     <span className="text-secondary">Discount ({couponCode})</span>
-                    <span className="font-medium">- ₹{discount.toFixed(2)}</span>
+                    <span className="font-medium">- ৳{discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between border-t border-default pt-3">
                   <span className="font-bold text-primary">Total</span>
-                  <span className="font-extrabold text-xl text-primary">₹{total.toFixed(2)}</span>
+                  <span className="font-extrabold text-xl text-primary">৳{total.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -550,7 +550,7 @@ const CheckoutPage = () => {
                     <p className="text-sm font-medium text-primary truncate">{item.name}</p>
                     <p className="text-sm text-muted">Qty: {item.quantity}</p>
                   </div>
-                  <span className="text-sm font-medium text-primary">₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
+                  <span className="text-sm font-medium text-primary">৳{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -558,25 +558,25 @@ const CheckoutPage = () => {
             <div className="border-t border-default pt-4 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-secondary">Subtotal</span>
-                <span className="font-medium text-primary">₹{subtotal.toFixed(2)}</span>
+                <span className="font-medium text-primary">৳{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-secondary">Tax (18%)</span>
-                <span className="font-medium text-primary">₹{tax.toFixed(2)}</span>
+                <span className="font-medium text-primary">৳{tax.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-secondary">Shipping</span>
-                <span className="font-medium text-primary">{shippingFee === 0 ? "Free" : `₹${shippingFee}`}</span>
+                <span className="font-medium text-primary">{shippingFee === 0 ? "Free" : `৳${shippingFee}`}</span>
               </div>
               {discount > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-secondary">Discount ({couponCode})</span>
-                  <span className="font-medium text-success">- ₹{discount.toFixed(2)}</span>
+                  <span className="font-medium text-success">- ৳{discount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between border-t border-default pt-3">
                 <span className="font-bold text-primary">Total</span>
-                <span className="font-extrabold text-xl text-primary">₹{total.toFixed(2)}</span>
+                <span className="font-extrabold text-xl text-primary">৳{total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -640,7 +640,7 @@ const CheckoutPage = () => {
               {step === 3 && (
                 <div className="text-center">
                   <span className="text-sm text-muted">Complete payment in the form</span>
-                  <p className="font-extrabold text-xl text-primary">₹{total.toFixed(2)}</p>
+                  <p className="font-extrabold text-xl text-primary">৳{total.toFixed(2)}</p>
                   <p className="text-sm text-muted">Total to pay</p>
                 </div>
               )}
@@ -714,7 +714,7 @@ function CheckoutForm({ onPaymentSuccess, processingMsg, total }) {
 
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-secondary">Total to pay</span>
-        <span className="font-extrabold text-xl text-primary">₹{total.toFixed(2)}</span>
+        <span className="font-extrabold text-xl text-primary">৳{total.toFixed(2)}</span>
       </div>
 
       <div className="flex justify-between">

@@ -148,7 +148,7 @@ export function ChatComparisonModal({ items, onClose, triggerRef }) {
                                 {item.name}
                               </span>
                               <span className="text-sm font-bold text-primary">
-                                ₹{Number(item.price || 0).toFixed(2)}
+                                ৳{Number(item.price || 0).toFixed(2)}
                               </span>
                               {item.averageRating && item.averageRating > 0 && (
                                 <span className="inline-flex items-center gap-0.5 text-warning text-xs">

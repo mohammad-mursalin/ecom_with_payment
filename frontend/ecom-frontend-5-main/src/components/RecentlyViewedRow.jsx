@@ -85,7 +85,7 @@ const RecentlyViewedRow = () => {
                   {item.name || "Untitled"}
                 </p>
                 <p className="mb-0 font-semibold text-primary">
-                  ₹{Number(item.price || 0).toFixed(2)}
+                  ৳{Number(item.price || 0).toFixed(2)}
                 </p>
               </div>
             </button>

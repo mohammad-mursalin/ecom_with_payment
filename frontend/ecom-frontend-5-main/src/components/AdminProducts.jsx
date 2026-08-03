@@ -304,7 +304,7 @@ const AdminProducts = () => {
     : brands;
 
   const formatCurrency = (value) =>
-    `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `৳${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="space-y-6">
@@ -807,9 +807,9 @@ const ProductDrawer = ({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-secondary">Price (₹) <span className="text-danger">*</span></label>
+                <label className="mb-1 block text-sm font-medium text-secondary">Price (৳) <span className="text-danger">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">৳</span>
                   <input
                     type="number"
                     step="0.01"
@@ -824,9 +824,9 @@ const ProductDrawer = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-secondary">Original Price (₹)</label>
+                <label className="mb-1 block text-sm font-medium text-secondary">Original Price (৳)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">৳</span>
                   <input
                     type="number"
                     step="0.01"
@@ -839,7 +839,7 @@ const ProductDrawer = ({
                 </div>
                 {discountPercent > 0 && (
                   <p className="mt-1 text-xs text-success">
-                    Showing as: ~~₹{Number(form.originalPrice).toFixed(2)}~~ ₹{Number(form.price).toFixed(2)} ({discountPercent}% off)
+                    Showing as: ~~৳{Number(form.originalPrice).toFixed(2)}~~ ৳{Number(form.price).toFixed(2)} ({discountPercent}% off)
                   </p>
                 )}
               </div>

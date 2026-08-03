@@ -57,7 +57,7 @@ function CompactItem({ item }) {
       />
       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <p className="text-xs font-medium text-text-primary leading-snug line-clamp-2 break-words">{name}</p>
-        <p className="text-xs font-semibold text-primary">₹{Number(price || 0).toFixed(2)}</p>
+        <p className="text-xs font-semibold text-primary">৳{Number(price || 0).toFixed(2)}</p>
       </div>
     </div>
   );
@@ -85,7 +85,7 @@ function ErrorAwareCard({ item, showSpecs }) {
         />
         <div className="flex flex-col gap-1 min-w-0 flex-1">
           <p className="text-sm font-semibold text-text-primary leading-snug">{name}</p>
-          <p className="text-sm font-bold text-primary">₹{Number(price || 0).toFixed(2)}</p>
+          <p className="text-sm font-bold text-primary">৳{Number(price || 0).toFixed(2)}</p>
           {averageRating && averageRating > 0 && (
             <span className="inline-flex items-center gap-0.5 text-warning text-xs">
               ★ {averageRating.toFixed(1)}

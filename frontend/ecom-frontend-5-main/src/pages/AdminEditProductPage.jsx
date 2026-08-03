@@ -285,7 +285,7 @@ const AdminEditProductPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-price">Price (₹) *</label>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-price">Price (৳) *</label>
               <input
                 id="edit-product-price"
                 type="number"
@@ -301,7 +301,7 @@ const AdminEditProductPage = () => {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-originalPrice">Original Price (₹)</label>
+              <label className="mb-1 block text-sm font-medium text-secondary" htmlFor="edit-product-originalPrice">Original Price (৳)</label>
               <input
                 id="edit-product-originalPrice"
                 type="number"
