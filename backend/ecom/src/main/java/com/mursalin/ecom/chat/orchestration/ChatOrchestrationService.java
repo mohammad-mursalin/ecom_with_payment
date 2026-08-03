@@ -30,8 +30,6 @@ import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.definition.DefaultToolDefinition;
-import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.execution.ToolCallResultConverter;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.security.core.Authentication;
@@ -40,9 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.lang.reflect.Type;
 import java.util.*;
-import java.util.function.Function;
 
 @Service
 public class ChatOrchestrationService {
@@ -265,7 +261,7 @@ public class ChatOrchestrationService {
         );
     }
 
-    public com.mursalin.ecom.dto.chat.ChatResponse handle(ChatRequest request) {
+    public ChatResponse handle(ChatRequest request) {
         ChatSession session = chatSessionService.resolveSession(
                 Optional.ofNullable(request.getSessionToken())
         );

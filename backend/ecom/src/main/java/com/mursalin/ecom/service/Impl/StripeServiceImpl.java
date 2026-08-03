@@ -24,6 +24,9 @@ public class StripeServiceImpl implements StripeService{
 
     private static final Logger logger = LoggerFactory.getLogger(StripeService.class);
 
+    // Resolved: centralize the currency code so it isn't duplicated/hardcoded in two places
+    private static final String CURRENCY = "bdt";
+
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
 
@@ -39,7 +42,7 @@ public class StripeServiceImpl implements StripeService{
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
-        logger.info("Stripe API key initialised (currency=INR)");
+        logger.info("Stripe API key initialised (currency={})", CURRENCY.toUpperCase());
     }
 
     @Override
@@ -60,7 +63,7 @@ public class StripeServiceImpl implements StripeService{
 
             SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
                     .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                            .setCurrency("inr")
+                            .setCurrency(CURRENCY)
                             .setUnitAmount(amountInCents)
                             .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                     .setName(item.getProductName())
@@ -106,7 +109,7 @@ public class StripeServiceImpl implements StripeService{
 
         PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
                 .setAmount(amountInPaise)
-                .setCurrency("inr")
+                .setCurrency(CURRENCY)
                 .setAutomaticPaymentMethods(
                         PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)
@@ -118,7 +121,7 @@ public class StripeServiceImpl implements StripeService{
         }
 
         PaymentIntent intent = PaymentIntent.create(paramsBuilder.build());
-        logger.info("Created PaymentIntent id={} amount={} INR", intent.getId(), amountInRupees);
+        logger.info("Created PaymentIntent id={} amount={} {}", intent.getId(), amountInRupees, CURRENCY.toUpperCase());
         return intent;
     }
 
